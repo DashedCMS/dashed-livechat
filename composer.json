@@ -1,0 +1,33 @@
+{
+    "name": "dashed/dashed-livechat",
+    "description": "AI chatbot module voor Dashed CMS",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "dashed/dashed-core": "*",
+        "dashed/dashed-ai": "*",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "suggest": {
+        "dashed/dashed-ecommerce-core": "Nodig voor product-tools en (fase 2) orderstatus"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9",
+        "pestphp/pest": "^2.35"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dashed\\DashedLivechat\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Dashed\\DashedLivechat\\DashedLivechatServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

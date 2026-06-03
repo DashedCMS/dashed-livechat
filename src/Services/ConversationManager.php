@@ -1,0 +1,69 @@
+<?php
+
+// src/Services/ConversationManager.php
+
+namespace Dashed\DashedLivechat\Services;
+
+use Illuminate\Support\Str;
+use Dashed\DashedLivechat\Models\ChatAgent;
+use Dashed\DashedLivechat\Enums\MessageRole;
+use Dashed\DashedLivechat\Models\ChatMessage;
+use Dashed\DashedLivechat\Models\ChatConversation;
+
+class ConversationManager
+{
+    public function findOrCreate(string $siteId, ?string $publicToken, array $attributes = []): ChatConversation
+    {
+        if ($publicToken) {
+            $existing = ChatConversation::where('site_id', $siteId)->where('public_token', $publicToken)->first();
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        return ChatConversation::create(array_merge([
+            'site_id' => $siteId,
+            'public_token' => (string) Str::uuid(),
+            'status' => 'active',
+            'mode' => 'ai',
+        ], $attributes));
+    }
+
+    public function addVisitorMessage(ChatConversation $c, string $content): ChatMessage
+    {
+        $message = $c->messages()->create([
+            'role' => MessageRole::Visitor->value,
+            'content' => $content,
+        ]);
+        $c->forceFill(['last_message_at' => now()])->save();
+
+        return $message;
+    }
+
+    public function addAiMessage(ChatConversation $c, ChatAgent $agent, string $content, array $toolCalls = [], ?int $tokensIn = null, ?int $tokensOut = null): ChatMessage
+    {
+        $message = $c->messages()->create([
+            'role' => MessageRole::Ai->value,
+            'agent_id' => $agent->id,
+            'content' => $content,
+            'tool_calls' => $toolCalls ?: null,
+            'tokens_in' => $tokensIn,
+            'tokens_out' => $tokensOut,
+        ]);
+        $c->forceFill(['last_message_at' => now()])->save();
+
+        return $message;
+    }
+
+    public function addHumanMessage(ChatConversation $c, ChatAgent $agent, string $content): ChatMessage
+    {
+        $message = $c->messages()->create([
+            'role' => \Dashed\DashedLivechat\Enums\MessageRole::Human->value,
+            'agent_id' => $agent->id,
+            'content' => $content,
+        ]);
+        $c->forceFill(['last_message_at' => now()])->save();
+
+        return $message;
+    }
+}

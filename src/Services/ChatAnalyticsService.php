@@ -1,0 +1,42 @@
+<?php
+
+// src/Services/ChatAnalyticsService.php
+
+namespace Dashed\DashedLivechat\Services;
+
+use Dashed\DashedLivechat\Models\ChatEvent;
+use Dashed\DashedLivechat\Models\ChatMessage;
+use Dashed\DashedLivechat\Models\ChatConversation;
+
+class ChatAnalyticsService
+{
+    public function forSite(string $siteId): array
+    {
+        $conversationIds = ChatConversation::where('site_id', $siteId)->pluck('id');
+
+        $byMode = ChatConversation::where('site_id', $siteId)
+            ->selectRaw('mode, count(*) as aantal')
+            ->groupBy('mode')
+            ->pluck('aantal', 'mode')
+            ->toArray();
+
+        $tokensIn = (int) ChatMessage::whereIn('chat_conversation_id', $conversationIds)->sum('tokens_in');
+        $tokensOut = (int) ChatMessage::whereIn('chat_conversation_id', $conversationIds)->sum('tokens_out');
+
+        $escalations = ChatEvent::whereIn('chat_conversation_id', $conversationIds)
+            ->where('type', 'handoff_requested')
+            ->count();
+
+        $cost = $tokensIn / 1_000_000 * (float) config('dashed-livechat.cost_per_million_input', 3.0)
+            + $tokensOut / 1_000_000 * (float) config('dashed-livechat.cost_per_million_output', 15.0);
+
+        return [
+            'conversations' => $conversationIds->count(),
+            'by_mode' => array_merge(['ai' => 0, 'waiting_human' => 0, 'human' => 0], $byMode),
+            'escalations' => $escalations,
+            'tokens_in' => $tokensIn,
+            'tokens_out' => $tokensOut,
+            'estimated_cost' => round($cost, 4),
+        ];
+    }
+}
