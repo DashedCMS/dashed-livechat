@@ -32,9 +32,10 @@ class CreateChatAgent extends CreateRecord
 
                     try {
                         $suggestion = app(AgentConfigSuggestionService::class)->suggest((string) $siteId);
-                    } catch (\Throwable) {
+                    } catch (\Throwable $e) {
                         Notification::make()
                             ->title('AI-suggestie mislukt')
+                            ->body($e->getMessage())
                             ->danger()
                             ->send();
 
