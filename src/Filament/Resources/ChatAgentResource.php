@@ -16,7 +16,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\FileUpload;
 use Dashed\DashedLivechat\Ai\ToolRegistry;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Filament\Forms\Components\CheckboxList;
@@ -79,10 +78,7 @@ class ChatAgentResource extends Resource
                         ->label('Actief')
                         ->default(true)
                         ->helperText('Alleen actieve medewerkers worden ingezet.'),
-                    FileUpload::make('avatar')
-                        ->label('Profielfoto')
-                        ->image()
-                        ->directory('chat-avatars')
+                    mediaHelper()->field('avatar', 'Profielfoto', isImage: true)
                         ->helperText('Profielfoto die in de chat wordt getoond.'),
                 ])
                 ->columns(2),

@@ -17,9 +17,23 @@ class WidgetConfig
             'offset' => (int) Customsetting::get('chat_offset', $siteId, 24),
             'title' => Customsetting::get('chat_title', $siteId, 'Chat met ons'),
             'greeting' => Customsetting::get('chat_greeting', $siteId, 'Hoi! Waar kan ik je mee helpen?'),
-            'avatar' => Customsetting::get('chat_avatar_url', $siteId, null),
+            'avatar' => self::resolveImage(Customsetting::get('chat_avatar_url', $siteId)),
             'phone' => Customsetting::get('chat_contact_phone', $siteId) ?: Customsetting::get('company_phone_number', $siteId),
             'email' => Customsetting::get('chat_contact_email', $siteId) ?: Customsetting::get('site_from_email', $siteId),
         ];
+    }
+
+    protected static function resolveImage($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // Already a URL/path (back-compat with old FileUpload values)
+        if (is_string($value) && (str_contains($value, '/') || str_contains($value, '.'))) {
+            return $value;
+        }
+
+        return rescue(fn () => mediaHelper()->getSingleMedia($value, 'medium')?->url, null, false);
     }
 }

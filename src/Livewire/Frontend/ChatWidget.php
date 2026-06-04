@@ -6,7 +6,6 @@ namespace Dashed\DashedLivechat\Livewire\Frontend;
 
 use Livewire\Component;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Storage;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedLivechat\Guardrails\InputGuard;
@@ -49,7 +48,7 @@ class ChatWidget extends Component
             ->map(function (ChatAgent $agent) {
                 $avatarUrl = null;
                 if ($agent->avatar) {
-                    $avatarUrl = Storage::url($agent->avatar);
+                    $avatarUrl = rescue(fn () => mediaHelper()->getSingleMedia($agent->avatar, 'medium')?->url, null, false);
                 }
 
                 return [
@@ -159,7 +158,7 @@ class ChatWidget extends Component
         $agentGreeting = $agent?->greeting ?: $cfg['greeting'];
 
         if ($agent?->avatar) {
-            $agentAvatarUrl = Storage::url($agent->avatar);
+            $agentAvatarUrl = rescue(fn () => mediaHelper()->getSingleMedia($agent->avatar, 'medium')?->url, null, false);
         } else {
             $agentAvatarUrl = $cfg['avatar'];
         }

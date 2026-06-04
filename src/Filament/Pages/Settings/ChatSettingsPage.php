@@ -11,7 +11,6 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -80,10 +79,7 @@ class ChatSettingsPage extends Page implements HasSchemas
                         ->label('Titel'),
                     Textarea::make("chat_greeting_{$site['id']}")
                         ->label('Begroeting'),
-                    FileUpload::make("chat_avatar_url_{$site['id']}")
-                        ->label('Avatar')
-                        ->image()
-                        ->directory('chat-branding'),
+                    mediaHelper()->field("chat_avatar_url_{$site['id']}", 'Avatar', isImage: true),
                     Select::make("chat_out_of_hours_behavior_{$site['id']}")
                         ->label('Buiten openingstijden')
                         ->options([
