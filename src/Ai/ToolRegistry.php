@@ -56,6 +56,20 @@ class ToolRegistry
         return array_keys($this->map());
     }
 
+    public function toolLabels(): array
+    {
+        return [
+            'searchProducts' => 'Producten zoeken',
+            'searchContent' => "Pagina's en blogs doorzoeken",
+            'getProduct' => 'Productdetails ophalen',
+            'getPage' => 'Paginadetails ophalen',
+            'searchFaq' => 'Veelgestelde vragen doorzoeken',
+            'getOrderStatus' => 'Bestelstatus opvragen (geverifieerd)',
+            'getOpeningHours' => 'Openingstijden opvragen',
+            'requestHumanHandoff' => 'Doorverbinden met een medewerker',
+        ];
+    }
+
     /** @param ChatTool[] $tools */
     public function anthropicSchema(array $tools): array
     {

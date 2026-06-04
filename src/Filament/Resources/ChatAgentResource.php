@@ -40,8 +40,13 @@ class ChatAgentResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $toolNames = (new ToolRegistry())->toolNames();
-        $toolOptions = array_combine($toolNames, $toolNames);
+        $registry = new ToolRegistry();
+        $registeredNames = array_flip($registry->toolNames());
+        $toolOptions = array_filter(
+            $registry->toolLabels(),
+            fn (string $key) => isset($registeredNames[$key]),
+            ARRAY_FILTER_USE_KEY,
+        );
 
         return $schema->schema([
             Section::make('Algemeen')->columnSpanFull()
@@ -51,20 +56,25 @@ class ChatAgentResource extends Resource
                         ->options(['ai' => 'AI', 'human' => 'Mens'])
                         ->default('ai')
                         ->live()
-                        ->required(),
+                        ->required()
+                        ->helperText('AI = chatbot. Mens = medewerker die gesprekken kan overnemen.'),
                     TextInput::make('name')
                         ->label('Naam')
-                        ->required(),
+                        ->required()
+                        ->helperText('Naam die de bezoeker in de chat ziet.'),
                     TextInput::make('site_id')
                         ->label('Site')
-                        ->required(),
+                        ->required()
+                        ->helperText('Voor welke site deze medewerker werkt.'),
                     Toggle::make('is_active')
                         ->label('Actief')
-                        ->default(true),
+                        ->default(true)
+                        ->helperText('Alleen actieve medewerkers worden ingezet.'),
                     FileUpload::make('avatar')
                         ->label('Avatar')
                         ->image()
-                        ->directory('chat-avatars'),
+                        ->directory('chat-avatars')
+                        ->helperText('Avatar die in de chatwidget getoond wordt.'),
                 ])
                 ->columns(2),
 
@@ -72,34 +82,50 @@ class ChatAgentResource extends Resource
                 ->schema([
                     Textarea::make('persona')
                         ->label('Persona / Systeem-prompt')
-                        ->rows(4),
+                        ->rows(4)
+                        ->helperText('Korte beschrijving van karakter en rol, bv. "Vriendelijke webshop-assistent".'),
                     TextInput::make('tone')
-                        ->label('Toon'),
+                        ->label('Toon')
+                        ->helperText('Toon van de antwoorden, bv. informeel, zakelijk of behulpzaam.'),
                     TagsInput::make('languages')
-                        ->label('Talen'),
+                        ->label('Talen')
+                        ->helperText('Talen waarin de bot mag antwoorden, bv. nl en en.'),
                     Textarea::make('allowed_topics')
-                        ->label('Toegestane onderwerpen'),
+                        ->label('Toegestane onderwerpen')
+                        ->helperText('Onderwerpen waarover de bot wel mag praten.'),
                     Textarea::make('disallowed_topics')
-                        ->label('Verboden onderwerpen'),
+                        ->label('Verboden onderwerpen')
+                        ->helperText('Onderwerpen die de bot moet weigeren of doorverwijzen.'),
                     Textarea::make('escalation_rules')
-                        ->label('Escalatieregels'),
+                        ->label('Escalatieregels')
+                        ->helperText('Wanneer moet de bot doorverbinden naar een mens?'),
                     Textarea::make('greeting')
-                        ->label('Begroeting'),
-                    TextInput::make('model')
+                        ->label('Begroeting')
+                        ->helperText('Eerste begroeting die de bot toont in de chat.'),
+                    Select::make('model')
                         ->label('Model')
-                        ->default('claude-sonnet-4-6'),
+                        ->options([
+                            'claude-sonnet-4-6' => 'Claude Sonnet 4.6 (standaard, gebalanceerd)',
+                            'claude-opus-4-8' => 'Claude Opus 4.8 (krachtigst)',
+                            'claude-haiku-4-5-20251001' => 'Claude Haiku 4.5 (snel, goedkoop)',
+                        ])
+                        ->default('claude-sonnet-4-6')
+                        ->helperText('Welk Claude-model de bot gebruikt. Sonnet is een goede standaard.'),
                     TextInput::make('temperature')
                         ->label('Temperatuur')
                         ->numeric()
-                        ->default(0.5),
+                        ->default(0.5)
+                        ->helperText('Creativiteit: 0 = feitelijk en consistent, 1 = creatiever.'),
                     Select::make('guardrail_mode')
                         ->label('Guardrail-modus')
                         ->options(['standard' => 'Standaard', 'strict' => 'Streng'])
-                        ->default('standard'),
+                        ->default('standard')
+                        ->helperText('Streng voegt een extra controle toe die off-topic vragen harder afvangt (iets duurder).'),
                     CheckboxList::make('enabled_tools')
                         ->label('Ingeschakelde tools')
                         ->options($toolOptions)
-                        ->columns(2),
+                        ->columns(2)
+                        ->helperText('Welke gegevens en acties de bot mag gebruiken om te antwoorden.'),
                 ])
                 ->columns(2)
                 ->visible(fn (Get $get) => $get('type') === 'ai'),
@@ -108,7 +134,8 @@ class ChatAgentResource extends Resource
                 ->schema([
                     TextInput::make('email')
                         ->label('E-mailadres')
-                        ->email(),
+                        ->email()
+                        ->helperText('E-mailadres voor notificaties bij een handoff (alleen voor mensen).'),
                 ])
                 ->visible(fn (Get $get) => $get('type') === 'human'),
         ]);
