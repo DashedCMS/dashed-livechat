@@ -70,5 +70,34 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
         $cms->builder('plugins', [
             new \Dashed\DashedLivechat\DashedLivechatPlugin(),
         ]);
+
+        if (class_exists(\Dashed\DashedMobileApi\MobileApiRegistry::class)) {
+            /** @var \Dashed\DashedMobileApi\MobileApiRegistry $mobileApi */
+            $mobileApi = $this->app->make(\Dashed\DashedMobileApi\MobileApiRegistry::class);
+
+            $version = \Composer\InstalledVersions::isInstalled('dashed/dashed-livechat')
+                ? \Composer\InstalledVersions::getPrettyVersion('dashed/dashed-livechat')
+                : null;
+            $mobileApi->registerCapability('livechat', ['version' => $version]);
+
+            $mobileApi->registerAbilities(['chat.read', 'chat.reply', 'chat.takeover']);
+            $mobileApi->registerRoleAbilities([
+                'eigenaar' => ['chat.read', 'chat.reply', 'chat.takeover'],
+                'admin' => ['chat.read', 'chat.reply', 'chat.takeover'],
+                'support-agent' => ['chat.read', 'chat.reply', 'chat.takeover'],
+                'read-only' => ['chat.read'],
+            ]);
+
+            $mobileApi->registerDashboardContributor(function (string $siteId): array {
+                return [
+                    'chat_waiting_human' => \Dashed\DashedLivechat\Models\ChatConversation::query()
+                        ->where('site_id', $siteId)->where('mode', 'waiting_human')->count(),
+                    'chat_open' => \Dashed\DashedLivechat\Models\ChatConversation::query()
+                        ->where('site_id', $siteId)->where('status', 'active')->count(),
+                ];
+            });
+
+            $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
+        }
     }
 }
