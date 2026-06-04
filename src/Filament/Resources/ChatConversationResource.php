@@ -6,6 +6,9 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Dashed\DashedLivechat\Models\ChatConversation;
@@ -57,6 +60,14 @@ class ChatConversationResource extends Resource
                     ->sortable(),
             ])
             ->defaultSort('last_message_at', 'desc')
+            ->recordActions([
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->filters([
                 SelectFilter::make('mode')
                     ->label('Modus')

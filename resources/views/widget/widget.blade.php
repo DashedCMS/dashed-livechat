@@ -87,6 +87,12 @@
         <header style="background: var(--chat-primary); color: var(--chat-on-primary); padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
             @if($cfg['avatar'])<img src="{{ $cfg['avatar'] }}" alt="" style="width: 32px; height: 32px; border-radius: 9999px;">@endif
             <strong style="flex: 1;">{{ $cfg['title'] }}</strong>
+            @if($publicToken)
+            <button type="button" title="Nieuw gesprek"
+                wire:click="startNewChat"
+                x-on:click="localStorage.removeItem('dashed_livechat_token_' + @js($siteId))"
+                style="background: transparent; border: 0; color: inherit; cursor: pointer; font-size: 16px;">&#8635;</button>
+            @endif
             <button @click="open = false" type="button" aria-label="Sluiten" style="background: transparent; border: 0; color: inherit; font-size: 20px; cursor: pointer;">&times;</button>
         </header>
 

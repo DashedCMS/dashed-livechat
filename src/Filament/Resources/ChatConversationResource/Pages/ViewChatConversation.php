@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedLivechat\Filament\Resources\ChatConversationResource\Pages;
 
+use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,21 @@ class ViewChatConversation extends Page
     {
         $this->conversation = ChatConversation::with('messages.agent')->findOrFail($record);
         $this->mode = $this->conversation->mode;
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('delete')
+                ->label('Verwijderen')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->action(function (): void {
+                    $this->conversation->delete();
+                    $this->redirect(ChatConversationResource::getUrl('index'));
+                }),
+        ];
     }
 
     public function takeOver(): void

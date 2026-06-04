@@ -14,6 +14,14 @@ class ChatConversation extends Model
     protected $guarded = [];
     protected $casts = ['meta' => 'array', 'last_message_at' => 'datetime'];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $conversation): void {
+            $conversation->messages()->delete();
+            $conversation->events()->delete();
+        });
+    }
+
     public function messages(): HasMany
     {
         return $this->hasMany(ChatMessage::class)->orderBy('id');

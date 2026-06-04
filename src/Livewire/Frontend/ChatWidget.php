@@ -259,6 +259,16 @@ class ChatWidget extends Component
         }
     }
 
+    public function startNewChat(): void
+    {
+        $this->publicToken = null;
+        $this->contactStep = null;
+        $this->contactDismissed = false;
+        $this->awaitingReply = false;
+        $this->draft = '';
+        $this->streamUrl = null;
+    }
+
     // Feature C: dismiss the conversational contact capture
     public function dismissContact(): void
     {
