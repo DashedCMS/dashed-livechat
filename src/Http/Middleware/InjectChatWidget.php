@@ -25,8 +25,10 @@ class InjectChatWidget
         if (! str_contains($contentType, 'text/html')) {
             return $response;
         }
+        // Alleen op de frontend: nooit in het Filament-admin (panel-routes heten
+        // filament.*), niet op api-routes en niet op het admin-pad.
         $adminPrefix = config('filament-old.path', env('FILAMENT_PATH', 'dashed'));
-        if ($request->is($adminPrefix . '/*') || $request->is('api/*')) {
+        if ($request->routeIs('filament.*') || $request->is($adminPrefix) || $request->is($adminPrefix . '/*') || $request->is('api/*')) {
             return $response;
         }
 

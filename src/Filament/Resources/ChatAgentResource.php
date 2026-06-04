@@ -134,13 +134,17 @@ class ChatAgentResource extends Resource
                 ->schema([
                     Select::make('user_id')
                         ->label('Gekoppelde gebruiker')
-                        ->options(User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->pluck('name', 'id'))
+                        ->options(
+                            User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->get()
+                                ->mapWithKeys(fn ($u) => [$u->id => $u->name ?: ($u->email ?: 'Gebruiker #' . $u->id)])
+                                ->all()
+                        )
                         ->searchable()
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set): void {
                             $user = $state ? User::find($state) : null;
                             if ($user) {
-                                $set('name', $user->name);
+                                $set('name', $user->name ?: $user->email);
                                 $set('email', $user->email);
                             }
                         })
