@@ -58,9 +58,11 @@ class ChatOpeningHourResource extends Resource
                         ->label('Gesloten'),
                     TimePicker::make('opens_at')
                         ->label('Opent om')
+                        ->seconds(false)
                         ->nullable(),
                     TimePicker::make('closes_at')
                         ->label('Sluit om')
+                        ->seconds(false)
                         ->nullable(),
                     TextInput::make('label')
                         ->label('Label')
