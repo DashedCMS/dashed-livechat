@@ -14,6 +14,7 @@ class ChatMessage extends Model
     protected $casts = [
         'tool_calls' => 'array',
         'is_internal' => 'boolean',
+        'feedback' => 'string',
     ];
 
     public function conversation(): BelongsTo

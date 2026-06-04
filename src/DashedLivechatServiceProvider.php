@@ -38,6 +38,8 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'create_chat_events_table',
                 'create_chat_opening_hours_table',
                 'create_chat_embeddings_table',
+                'add_feedback_to_chat_messages_table',
+                'create_chat_learnings_table',
             ])
             ->runsMigrations();
     }

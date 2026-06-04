@@ -6,6 +6,7 @@ namespace Dashed\DashedLivechat\Ai;
 
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatAgent;
+use Dashed\DashedLivechat\Models\ChatLearning;
 use Dashed\DashedLivechat\Models\ChatConversation;
 
 class SystemPromptBuilder
@@ -39,6 +40,21 @@ class SystemPromptBuilder
 
         // Globale schrijfregels conform huisstijl (geen em-dashes, geen AI-clichés).
         $parts[] = "Schrijf natuurlijk en concreet. Gebruik geen em-dashes en geen AI-clichés.";
+
+        // Geleerde voorbeelden en correcties.
+        $learnings = ChatLearning::where('site_id', $conversation->site_id)
+            ->where('is_active', true)
+            ->latest('id')
+            ->limit(20)
+            ->get();
+
+        if ($learnings->isNotEmpty()) {
+            $lines = ["GELEERDE VOORBEELDEN EN CORRECTIES (pas deze toe waar relevant):"];
+            foreach ($learnings as $learning) {
+                $lines[] = '- Vraag: "' . $learning->question . '" -> Gewenst antwoord: "' . $learning->answer . '"';
+            }
+            $parts[] = implode("\n", $lines);
+        }
 
         return implode("\n\n", $parts);
     }

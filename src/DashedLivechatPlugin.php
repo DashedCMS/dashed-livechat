@@ -7,6 +7,7 @@ use Filament\Contracts\Plugin;
 use Dashed\DashedLivechat\Filament\Pages\ChatDashboard;
 use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource;
+use Dashed\DashedLivechat\Filament\Resources\ChatLearningResource;
 use Dashed\DashedLivechat\Filament\Pages\Settings\ChatSettingsPage;
 use Dashed\DashedLivechat\Filament\Resources\ChatOpeningHourResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource;
@@ -24,6 +25,7 @@ class DashedLivechatPlugin implements Plugin
             ->resources([
                 ChatAgentResource::class,
                 ChatConversationResource::class,
+                ChatLearningResource::class,
                 ChatOpeningHourResource::class,
                 ChatTriggerResource::class,
             ])

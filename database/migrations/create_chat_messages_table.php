@@ -18,6 +18,8 @@ return new class () extends Migration {
             $table->text('content');
             $table->json('tool_calls')->nullable();
             $table->boolean('is_internal')->default(false);
+            $table->string('feedback')->nullable();
+            $table->text('feedback_note')->nullable();
             $table->integer('tokens_in')->nullable();
             $table->integer('tokens_out')->nullable();
             $table->timestamps();
