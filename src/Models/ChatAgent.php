@@ -16,4 +16,26 @@ class ChatAgent extends Model
         'enabled_tools' => 'array',
         'temperature' => 'float',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (ChatAgent $agent): void {
+            if ($agent->type !== 'human' || ! $agent->user_id) {
+                return;
+            }
+
+            $user = \Dashed\DashedCore\Models\User::find($agent->user_id);
+            if (! $user) {
+                return;
+            }
+
+            if (empty($agent->name)) {
+                $agent->name = $user->name ?: $user->email;
+            }
+
+            if (empty($agent->email)) {
+                $agent->email = $user->email;
+            }
+        });
+    }
 }

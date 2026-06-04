@@ -61,8 +61,8 @@ class ChatAgentResource extends Resource
                         ->helperText('AI = chatbot. Mens = medewerker die gesprekken kan overnemen.'),
                     TextInput::make('name')
                         ->label('Naam')
-                        ->required()
-                        ->helperText('Naam die de bezoeker in de chat ziet.'),
+                        ->required(fn (Get $get) => $get('type') === 'ai')
+                        ->helperText('Naam die de bezoeker in de chat ziet. Voor een mens wordt dit automatisch ingevuld vanuit de gekoppelde gebruiker als leeg gelaten.'),
                     Toggle::make('is_active')
                         ->label('Actief')
                         ->default(true)
@@ -152,7 +152,7 @@ class ChatAgentResource extends Resource
                     TextInput::make('email')
                         ->label('E-mailadres')
                         ->email()
-                        ->helperText('E-mailadres voor notificaties bij een handoff (alleen voor mensen).'),
+                        ->helperText('E-mailadres voor notificaties bij een handoff. Wordt automatisch ingevuld vanuit de gekoppelde gebruiker als leeg gelaten.'),
                 ])
                 ->visible(fn (Get $get) => $get('type') === 'human'),
         ]);

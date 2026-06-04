@@ -1,4 +1,5 @@
 @php($cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($siteId))
+<style>[x-cloak]{display:none !important;}</style>
 <div
     x-data="{
         open: @entangle('open'),
@@ -61,7 +62,7 @@
     wire:poll.{{ config('dashed-livechat.poll_interval_ms', 1500) }}ms="pollReply"
 >
     {{-- Launcher --}}
-    <button x-show="!open" @click="$wire.toggle()" type="button"
+    <button x-show="!open" @click="open = true" type="button"
         style="background: var(--chat-primary); color: var(--chat-on-primary); border-radius: 9999px; width: 60px; height: 60px; box-shadow: 0 8px 24px rgba(0,0,0,.18); border: 0; cursor: pointer;"
         aria-label="Open chat">
         @if($cfg['avatar'])
@@ -72,12 +73,12 @@
     </button>
 
     {{-- Panel --}}
-    <div x-show="open" x-transition
+    <div x-show="open" x-cloak x-transition
         style="width: 360px; max-width: calc(100vw - 32px); height: 520px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: #fff; border-radius: var(--chat-radius); overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,.22);">
         <header style="background: var(--chat-primary); color: var(--chat-on-primary); padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
             @if($cfg['avatar'])<img src="{{ $cfg['avatar'] }}" alt="" style="width: 32px; height: 32px; border-radius: 9999px;">@endif
             <strong style="flex: 1;">{{ $cfg['title'] }}</strong>
-            <button @click="$wire.toggle()" type="button" aria-label="Sluiten" style="background: transparent; border: 0; color: inherit; font-size: 20px; cursor: pointer;">&times;</button>
+            <button @click="open = false" type="button" aria-label="Sluiten" style="background: transparent; border: 0; color: inherit; font-size: 20px; cursor: pointer;">&times;</button>
         </header>
 
         <div style="flex: 1; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
@@ -112,18 +113,39 @@
                     @elseif($agentGreeting)
                         <div style="font-size: 14px; color: #374151; line-height: 1.5;">{{ $agentGreeting }}</div>
                     @endif
+                    @if(!empty($availableAgents) && count($availableAgents) > 0)
+                        <div style="margin-top: 16px; text-align: left;">
+                            <div style="font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Beschikbaar</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                @foreach($availableAgents as $avAgent)
+                                    <div style="display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 9999px; padding: 4px 12px 4px 4px; box-shadow: 0 1px 3px rgba(0,0,0,.08);">
+                                        <div style="position: relative; flex-shrink: 0;">
+                                            @if($avAgent['avatar'])
+                                                <img src="{{ $avAgent['avatar'] }}" alt="{{ $avAgent['name'] }}"
+                                                     style="width: 28px; height: 28px; border-radius: 9999px; object-fit: cover; display: block;">
+                                            @else
+                                                <div style="width: 28px; height: 28px; border-radius: 9999px; background: var(--chat-primary); color: var(--chat-on-primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">{{ mb_strtoupper(mb_substr($avAgent['name'], 0, 1)) }}</div>
+                                            @endif
+                                            <span style="position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; background: #22c55e; border-radius: 9999px; border: 1.5px solid #fff; display: block;"></span>
+                                        </div>
+                                        <span style="font-size: 12px; font-weight: 500; color: #374151; white-space: nowrap;">{{ $avAgent['name'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                     @if($cfg['phone'] || $cfg['email'])
                         <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                             @if($cfg['phone'])
                                 <a href="tel:{{ preg_replace('/\s+/', '', $cfg['phone']) }}"
                                    style="display: inline-flex; align-items: center; gap: 6px; background: var(--chat-primary); color: var(--chat-on-primary); text-decoration: none; border-radius: 9999px; padding: 8px 18px; font-size: 13px; font-weight: 500; box-shadow: 0 1px 4px rgba(0,0,0,.12);">
-                                    &#128222; {{ $cfg['phone'] }}
+                                    <span style="font-size:16px; line-height:1;">&#128222;</span> {{ $cfg['phone'] }}
                                 </a>
                             @endif
                             @if($cfg['email'])
                                 <a href="mailto:{{ $cfg['email'] }}"
                                    style="display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--chat-primary); text-decoration: none; border-radius: 9999px; padding: 8px 18px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--chat-primary); box-shadow: 0 1px 4px rgba(0,0,0,.08);">
-                                    &#9993; {{ $cfg['email'] }}
+                                    <span style="font-size:16px; line-height:1;">&#9993;&#65039;</span> {{ $cfg['email'] }}
                                 </a>
                             @endif
                         </div>
@@ -153,11 +175,11 @@
             @endif
         </div>
 
-        <form wire:submit.prevent="sendMessage" style="display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee;">
+        @error('draft') <div style="color:#b91c1c; font-size:12px; padding:4px 12px 0;">{{ $message }}</div> @enderror
+        <form wire:submit.prevent="sendMessage" style="display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
             <input wire:model="draft" type="text" placeholder="Typ je bericht…" autocomplete="off"
                 style="flex: 1; border: 1px solid #ddd; border-radius: 9999px; padding: 10px 14px; outline: none;">
             <button type="submit" style="background: var(--chat-primary); color: var(--chat-on-primary); border: 0; border-radius: 9999px; padding: 0 16px; cursor: pointer;">&uarr;</button>
         </form>
-        @error('draft') <div style="color:#b91c1c; font-size:12px; padding:0 12px 10px;">{{ $message }}</div> @enderror
     </div>
 </div>

@@ -39,6 +39,28 @@ class ChatWidget extends Component
             ->first();
     }
 
+    public function getAvailableAgentsProperty(): array
+    {
+        return ChatAgent::where('site_id', $this->siteId)
+            ->where('is_active', true)
+            ->orderBy('type')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function (ChatAgent $agent) {
+                $avatarUrl = null;
+                if ($agent->avatar) {
+                    $avatarUrl = Storage::url($agent->avatar);
+                }
+
+                return [
+                    'name' => $agent->name ?: 'Medewerker',
+                    'avatar' => $avatarUrl,
+                    'type' => $agent->type,
+                ];
+            })
+            ->all();
+    }
+
     public function getMessagesProperty()
     {
         if (! $this->publicToken) {
@@ -151,6 +173,7 @@ class ChatWidget extends Component
             'agentName' => $agentName,
             'agentGreeting' => $agentGreeting,
             'agentAvatarUrl' => $agentAvatarUrl,
+            'availableAgents' => $this->availableAgents,
         ]);
     }
 }
