@@ -39,9 +39,6 @@ class ChatOpeningHourResource extends Resource
         return $schema->schema([
             Section::make('Openingstijd')->columnSpanFull()
                 ->schema([
-                    TextInput::make('site_id')
-                        ->label('Site')
-                        ->required(),
                     Select::make('day_of_week')
                         ->label('Dag van de week')
                         ->options([
@@ -77,9 +74,6 @@ class ChatOpeningHourResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('site_id')
-                    ->label('Site')
-                    ->sortable(),
                 TextColumn::make('day_of_week')
                     ->label('Dag / Datum')
                     ->formatStateUsing(function ($record) {
@@ -107,7 +101,7 @@ class ChatOpeningHourResource extends Resource
                     ->label('Gesloten')
                     ->boolean(),
             ])
-            ->defaultSort('site_id');
+            ->defaultSort('day_of_week');
     }
 
     public static function getPages(): array

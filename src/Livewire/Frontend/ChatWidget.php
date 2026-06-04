@@ -51,8 +51,13 @@ class ChatWidget extends Component
                     $avatarUrl = rescue(fn () => mediaHelper()->getSingleMedia($agent->avatar, 'medium')?->url, null, false);
                 }
 
+                $displayName = $agent->name ?: 'Medewerker';
+                if ($agent->type === 'human') {
+                    $displayName = explode(' ', trim($displayName))[0] ?: $displayName;
+                }
+
                 return [
-                    'name' => $agent->name ?: 'Medewerker',
+                    'name' => $displayName,
                     'avatar' => $avatarUrl,
                     'type' => $agent->type,
                 ];

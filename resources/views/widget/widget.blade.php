@@ -1,5 +1,4 @@
 @php($cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($siteId))
-<style>[x-cloak]{display:none !important;}</style>
 <div
     x-data="{
         open: @entangle('open'),
@@ -61,6 +60,7 @@
     "
     wire:poll.{{ config('dashed-livechat.poll_interval_ms', 1500) }}ms="pollReply"
 >
+    <style>[x-cloak]{display:none !important;}</style>
     {{-- Launcher --}}
     <button x-show="!open" @click="open = true" type="button"
         style="background: var(--chat-primary); color: var(--chat-on-primary); border-radius: 9999px; width: 60px; height: 60px; box-shadow: 0 8px 24px rgba(0,0,0,.18); border: 0; cursor: pointer;"
