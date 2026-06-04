@@ -19,9 +19,11 @@ return [
     // Model voor samenvattingen (goedkoop).
     'summary_model' => 'claude-haiku-4-5-20251001',
 
-    // Ruwe kostenschatting (USD per miljoen tokens).
+    // Ruwe kostenschatting (USD per miljoen tokens; Anthropic rekent in USD).
     'cost_per_million_input' => 3.0,
     'cost_per_million_output' => 15.0,
+    // Wisselkoers USD -> EUR voor de weergegeven kostenschatting.
+    'usd_to_eur' => 0.92,
 
     // SSE token-streaming voor de widget (opt-in, default uit zodat fase-1 polling-tests groen blijven).
     'streaming' => false,

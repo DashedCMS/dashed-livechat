@@ -27,8 +27,10 @@ class ChatAnalyticsService
             ->where('type', 'handoff_requested')
             ->count();
 
-        $cost = $tokensIn / 1_000_000 * (float) config('dashed-livechat.cost_per_million_input', 3.0)
+        $costUsd = $tokensIn / 1_000_000 * (float) config('dashed-livechat.cost_per_million_input', 3.0)
             + $tokensOut / 1_000_000 * (float) config('dashed-livechat.cost_per_million_output', 15.0);
+
+        $costEur = $costUsd * (float) config('dashed-livechat.usd_to_eur', 0.92);
 
         return [
             'conversations' => $conversationIds->count(),
@@ -36,7 +38,8 @@ class ChatAnalyticsService
             'escalations' => $escalations,
             'tokens_in' => $tokensIn,
             'tokens_out' => $tokensOut,
-            'estimated_cost' => round($cost, 4),
+            'estimated_cost' => round($costUsd, 4),
+            'estimated_cost_eur' => round($costEur, 4),
         ];
     }
 }
