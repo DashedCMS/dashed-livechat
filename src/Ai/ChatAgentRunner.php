@@ -4,7 +4,7 @@
 
 namespace Dashed\DashedLivechat\Ai;
 
-use Dashed\DashedAi\Facades\Ai;
+use Dashed\DashedLivechat\Ai\LivechatAi;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatConversation;
@@ -62,7 +62,7 @@ class ChatAgentRunner
             }
 
             if ($onText !== null) {
-                $response = Ai::streamMessages($messages, [
+                $response = LivechatAi::requireClaude()->streamMessages($messages, [
                     'system' => $system,
                     'tools' => $toolSchema,
                     'model' => $agent->model,
@@ -70,7 +70,7 @@ class ChatAgentRunner
                     'max_tokens' => 1024,
                 ], $onText);
             } else {
-                $response = Ai::messages($messages, [
+                $response = LivechatAi::requireClaude()->messages($messages, [
                     'system' => $system,
                     'tools' => $toolSchema,
                     'model' => $agent->model,
