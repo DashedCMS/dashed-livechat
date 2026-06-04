@@ -24,10 +24,9 @@ class ChatWidget extends Component
     public ?array $trigger = null;
     public ?string $streamUrl = null;
 
-    // Feature B: contact capture
-    public string $contactName = '';
-    public string $contactEmail = '';
+    // Feature C: conversational contact capture
     public bool $contactDismissed = false;
+    public ?string $contactStep = null; // null | 'email' | 'name'
 
     public function mount(?string $siteId = null, ?array $trigger = null): void
     {
@@ -83,15 +82,86 @@ class ChatWidget extends Component
             : collect();
     }
 
-    protected function conversation()
+    protected function conversation(): ?ChatConversation
     {
         return $this->publicToken
-            ? \Dashed\DashedLivechat\Models\ChatConversation::where('site_id', $this->siteId)->where('public_token', $this->publicToken)->first()
+            ? ChatConversation::where('site_id', $this->siteId)->where('public_token', $this->publicToken)->first()
             : null;
+    }
+
+    /**
+     * Post a bot question as a persisted AI message without triggering the AI job.
+     */
+    private function postBotMessage(ChatConversation $conversation, string $content): void
+    {
+        $conversation->messages()->create([
+            'role' => 'ai',
+            'agent_id' => $conversation->ai_agent_id,
+            'content' => $content,
+        ]);
     }
 
     public function sendMessage(ConversationManager $manager, InputGuard $guard): void
     {
+        // Intercept contact-capture steps before normal flow.
+        if ($this->contactStep === 'email') {
+            $email = trim($this->draft);
+            if ($email === '') {
+                return;
+            }
+            $this->draft = '';
+
+            $conversation = $this->conversation();
+            if (! $conversation) {
+                return;
+            }
+
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->postBotMessage($conversation, 'Dat lijkt geen geldig e-mailadres. Wil je het nog eens proberen? Of klik op Overslaan.');
+
+                return;
+            }
+
+            // Persist visitor answer + update conversation.
+            $conversation->messages()->create([
+                'role' => 'visitor',
+                'content' => $email,
+            ]);
+            $conversation->visitor_email = $email;
+            $conversation->save();
+
+            $this->postBotMessage($conversation, 'Dank je! En wat is je naam?');
+            $this->contactStep = 'name';
+
+            return;
+        }
+
+        if ($this->contactStep === 'name') {
+            $name = trim($this->draft);
+            if ($name === '') {
+                return;
+            }
+            $this->draft = '';
+
+            $conversation = $this->conversation();
+            if (! $conversation) {
+                return;
+            }
+
+            $conversation->messages()->create([
+                'role' => 'visitor',
+                'content' => $name,
+            ]);
+            $conversation->visitor_name = $name;
+            $conversation->save();
+
+            $this->postBotMessage($conversation, "Dank je, {$name}! Waar kan ik je verder mee helpen?");
+            $this->contactStep = null;
+
+            return;
+        }
+
+        // Normal flow.
         $text = trim($this->draft);
         if ($text === '') {
             return;
@@ -136,6 +206,19 @@ class ChatWidget extends Component
             return;
         }
 
+        // Trigger e-mail ask after first visitor message (if not dismissed and no email yet).
+        if (
+            ! $this->contactDismissed
+            && $this->contactStep === null
+            && ! $conversation->visitor_email
+            && $conversation->messages()->where('role', 'visitor')->count() === 1
+        ) {
+            $this->contactStep = 'email';
+            $this->postBotMessage($conversation, 'Mag ik je e-mailadres? Dan kunnen we je ook later nog verder helpen.');
+
+            return;
+        }
+
         if ($conversation->mode !== 'human') {
             $this->awaitingReply = true;
             if (config('dashed-livechat.streaming', false)) {
@@ -172,52 +255,36 @@ class ChatWidget extends Component
             ->first();
         if ($conversation) {
             $this->publicToken = $conversation->public_token;
+            $this->deriveContactStep($conversation);
         }
     }
 
-    // Feature C: computed — show contact form when visitor sent at least one message but email is unknown
-    public function getNeedsContactProperty(): bool
-    {
-        if (! $this->publicToken) {
-            return false;
-        }
-        if ($this->contactDismissed) {
-            return false;
-        }
-        $conversation = $this->conversation();
-        if (! $conversation) {
-            return false;
-        }
-        if ($conversation->visitor_email) {
-            return false;
-        }
-
-        return $conversation->messages()->where('role', 'visitor')->exists();
-    }
-
-    // Feature C: save visitor name + email on the conversation
-    public function saveContact(): void
-    {
-        if (! filter_var($this->contactEmail, FILTER_VALIDATE_EMAIL)) {
-            $this->addError('contactEmail', 'Vul een geldig e-mailadres in.');
-
-            return;
-        }
-        $conversation = $this->conversation();
-        if (! $conversation) {
-            return;
-        }
-        $conversation->visitor_name = trim($this->contactName) ?: null;
-        $conversation->visitor_email = $this->contactEmail;
-        $conversation->save();
-        $this->contactName = '';
-        $this->contactEmail = '';
-    }
-
-    // Feature C: dismiss the contact form without saving
+    // Feature C: dismiss the conversational contact capture
     public function dismissContact(): void
     {
         $this->contactDismissed = true;
+        $this->contactStep = null;
+
+        $conversation = $this->conversation();
+        if ($conversation) {
+            $this->postBotMessage($conversation, 'Geen probleem. Typ gerust verder.');
+        }
+    }
+
+    /**
+     * Re-derive contactStep from conversation state so refreshes keep the flow going.
+     */
+    private function deriveContactStep(ChatConversation $conversation): void
+    {
+        if ($this->contactDismissed || $conversation->visitor_email) {
+            return;
+        }
+        if ($conversation->messages()->where('role', 'visitor')->exists()) {
+            if ($this->contactStep === null) {
+                // Check whether we already asked for name (visitor_email is set) or still need email.
+                $this->contactStep = 'email';
+            }
+        }
     }
 
     public function render()
@@ -244,7 +311,7 @@ class ChatWidget extends Component
             'agentGreeting' => $agentGreeting,
             'agentAvatarUrl' => $agentAvatarUrl,
             'availableAgents' => $this->availableAgents,
-            'needsContact' => $this->needsContact,
+            'contactStep' => $this->contactStep,
         ]);
     }
 }
