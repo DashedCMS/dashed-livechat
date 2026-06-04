@@ -124,6 +124,7 @@ class ChatAgentResource extends Resource
                         ->label('Ingeschakelde tools')
                         ->options($toolOptions)
                         ->columns(2)
+                        ->bulkToggleable()
                         ->helperText('Welke gegevens en acties de bot mag gebruiken om te antwoorden.'),
                 ])
                 ->columns(2)
