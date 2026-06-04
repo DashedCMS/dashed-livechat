@@ -13,6 +13,13 @@ class CreateChatAgent extends CreateRecord
 {
     protected static string $resource = ChatAgentResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['site_id'] = Sites::getActive();
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

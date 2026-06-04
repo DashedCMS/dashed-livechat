@@ -7,12 +7,13 @@ use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
+use Dashed\DashedCore\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\FileUpload;
@@ -62,19 +63,15 @@ class ChatAgentResource extends Resource
                         ->label('Naam')
                         ->required()
                         ->helperText('Naam die de bezoeker in de chat ziet.'),
-                    TextInput::make('site_id')
-                        ->label('Site')
-                        ->required()
-                        ->helperText('Voor welke site deze medewerker werkt.'),
                     Toggle::make('is_active')
                         ->label('Actief')
                         ->default(true)
                         ->helperText('Alleen actieve medewerkers worden ingezet.'),
                     FileUpload::make('avatar')
-                        ->label('Avatar')
+                        ->label('Profielfoto')
                         ->image()
                         ->directory('chat-avatars')
-                        ->helperText('Avatar die in de chatwidget getoond wordt.'),
+                        ->helperText('Profielfoto die in de chat wordt getoond.'),
                 ])
                 ->columns(2),
 
@@ -87,9 +84,11 @@ class ChatAgentResource extends Resource
                     TextInput::make('tone')
                         ->label('Toon')
                         ->helperText('Toon van de antwoorden, bv. informeel, zakelijk of behulpzaam.'),
-                    TagsInput::make('languages')
+                    Select::make('languages')
                         ->label('Talen')
-                        ->helperText('Talen waarin de bot mag antwoorden, bv. nl en en.'),
+                        ->multiple()
+                        ->options(Locales::getLocalesArray())
+                        ->helperText('Talen waarin de bot mag antwoorden. Kies uit de in het CMS geactiveerde talen.'),
                     Textarea::make('allowed_topics')
                         ->label('Toegestane onderwerpen')
                         ->helperText('Onderwerpen waarover de bot wel mag praten.'),
@@ -132,6 +131,19 @@ class ChatAgentResource extends Resource
 
             Section::make('Mens-instellingen')->columnSpanFull()
                 ->schema([
+                    Select::make('user_id')
+                        ->label('Gekoppelde gebruiker')
+                        ->options(User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->pluck('name', 'id'))
+                        ->searchable()
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set): void {
+                            $user = $state ? User::find($state) : null;
+                            if ($user) {
+                                $set('name', $user->name);
+                                $set('email', $user->email);
+                            }
+                        })
+                        ->helperText('Kies de medewerker (admin of superadmin) die deze gesprekken voert.'),
                     TextInput::make('email')
                         ->label('E-mailadres')
                         ->email()
