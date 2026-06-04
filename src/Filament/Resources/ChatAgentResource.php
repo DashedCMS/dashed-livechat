@@ -59,10 +59,22 @@ class ChatAgentResource extends Resource
                         ->live()
                         ->required()
                         ->helperText('AI = chatbot. Mens = medewerker die gesprekken kan overnemen.'),
+                    Select::make('user_id')
+                        ->label('Gekoppelde gebruiker')
+                        ->options(
+                            User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->get()
+                                ->mapWithKeys(fn ($u) => [$u->id => $u->name ?: ($u->email ?: 'Gebruiker #' . $u->id)])
+                                ->all()
+                        )
+                        ->searchable()
+                        ->visible(fn (Get $get) => $get('type') === 'human')
+                        ->required(fn (Get $get) => $get('type') === 'human')
+                        ->helperText('De medewerker (admin of superadmin) die deze gesprekken voert. Naam en e-mail komen automatisch van deze gebruiker.'),
                     TextInput::make('name')
                         ->label('Naam')
+                        ->visible(fn (Get $get) => $get('type') === 'ai')
                         ->required(fn (Get $get) => $get('type') === 'ai')
-                        ->helperText('Naam die de bezoeker in de chat ziet. Voor een mens wordt dit automatisch ingevuld vanuit de gekoppelde gebruiker als leeg gelaten.'),
+                        ->helperText('Naam die de bezoeker in de chat ziet.'),
                     Toggle::make('is_active')
                         ->label('Actief')
                         ->default(true)
@@ -129,32 +141,6 @@ class ChatAgentResource extends Resource
                 ])
                 ->columns(2)
                 ->visible(fn (Get $get) => $get('type') === 'ai'),
-
-            Section::make('Mens-instellingen')->columnSpanFull()
-                ->schema([
-                    Select::make('user_id')
-                        ->label('Gekoppelde gebruiker')
-                        ->options(
-                            User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->get()
-                                ->mapWithKeys(fn ($u) => [$u->id => $u->name ?: ($u->email ?: 'Gebruiker #' . $u->id)])
-                                ->all()
-                        )
-                        ->searchable()
-                        ->live()
-                        ->afterStateUpdated(function ($state, callable $set): void {
-                            $user = $state ? User::find($state) : null;
-                            if ($user) {
-                                $set('name', $user->name ?: $user->email);
-                                $set('email', $user->email);
-                            }
-                        })
-                        ->helperText('Kies de medewerker (admin of superadmin) die deze gesprekken voert.'),
-                    TextInput::make('email')
-                        ->label('E-mailadres')
-                        ->email()
-                        ->helperText('E-mailadres voor notificaties bij een handoff. Wordt automatisch ingevuld vanuit de gekoppelde gebruiker als leeg gelaten.'),
-                ])
-                ->visible(fn (Get $get) => $get('type') === 'human'),
         ]);
     }
 
