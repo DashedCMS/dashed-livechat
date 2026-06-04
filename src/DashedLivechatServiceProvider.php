@@ -50,7 +50,10 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
     public function bootingPackage(): void
     {
         Livewire::component('chat.widget', ChatWidget::class);
-        $this->app['router']->pushMiddlewareToGroup('web', \Dashed\DashedLivechat\Http\Middleware\InjectChatWidget::class);
+        $this->app->booted(function () {
+            $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
+                ->appendMiddlewareToGroup('web', \Dashed\DashedLivechat\Http\Middleware\InjectChatWidget::class);
+        });
 
         Route::middleware(['web', 'throttle:30,1'])
             ->get('dashed-livechat/stream/{token}', StreamChatReplyController::class)
