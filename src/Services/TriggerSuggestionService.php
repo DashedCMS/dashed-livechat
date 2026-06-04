@@ -2,7 +2,7 @@
 
 namespace Dashed\DashedLivechat\Services;
 
-use Dashed\DashedAi\Facades\Ai;
+use Dashed\DashedLivechat\Ai\LivechatAi;
 use Dashed\DashedLivechat\Enums\TriggerType;
 use Dashed\DashedLivechat\Enums\TriggerPlacement;
 
@@ -16,7 +16,7 @@ class TriggerSuggestionService
             . "Geef geldige JSON: {\"suggestions\":[{\"name\":string,\"placement\":\"all_pages|include_urls|url_pattern\",\"url_rules\":[string],\"trigger_type\":\"immediate|time_on_page|scroll_depth|exit_intent\",\"trigger_value\":number,\"proactive_message\":string}]}. "
             . "Schrijf de proactive_message in het Nederlands, kort en uitnodigend, zonder em-dashes.\n\nSite-inhoud:\n" . $context;
 
-        $response = Ai::json($prompt) ?? [];
+        $response = LivechatAi::json($prompt);
         $raw = $response['suggestions'] ?? [];
 
         return collect($raw)->map(fn ($s) => [

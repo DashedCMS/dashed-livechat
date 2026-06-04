@@ -2,7 +2,7 @@
 
 namespace Dashed\DashedLivechat\Services;
 
-use Dashed\DashedAi\Facades\Ai;
+use Dashed\DashedLivechat\Ai\LivechatAi;
 use Dashed\DashedCore\Models\Customsetting;
 
 class AgentConfigSuggestionService
@@ -18,7 +18,7 @@ class AgentConfigSuggestionService
             . "Schrijf alle tekst in het Nederlands, kort en professioneel, zonder em-dashes.\n\n"
             . "Sitenaam: " . $siteName . "\n\nSite-inhoud:\n" . $context;
 
-        $response = Ai::json($prompt) ?? [];
+        $response = LivechatAi::json($prompt);
 
         return $this->normalize($response);
     }
