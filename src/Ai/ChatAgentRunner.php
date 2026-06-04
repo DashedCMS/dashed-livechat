@@ -4,7 +4,6 @@
 
 namespace Dashed\DashedLivechat\Ai;
 
-use Dashed\DashedLivechat\Ai\LivechatAi;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatConversation;

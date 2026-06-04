@@ -18,6 +18,8 @@ class WidgetConfig
             'title' => Customsetting::get('chat_title', $siteId, 'Chat met ons'),
             'greeting' => Customsetting::get('chat_greeting', $siteId, 'Hoi! Waar kan ik je mee helpen?'),
             'avatar' => Customsetting::get('chat_avatar_url', $siteId, null),
+            'phone' => Customsetting::get('chat_contact_phone', $siteId) ?: Customsetting::get('company_phone_number', $siteId),
+            'email' => Customsetting::get('chat_contact_email', $siteId) ?: Customsetting::get('site_from_email', $siteId),
         ];
     }
 }

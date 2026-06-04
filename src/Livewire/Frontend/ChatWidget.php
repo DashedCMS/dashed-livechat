@@ -6,6 +6,7 @@ namespace Dashed\DashedLivechat\Livewire\Frontend;
 
 use Livewire\Component;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedLivechat\Guardrails\InputGuard;
@@ -27,6 +28,15 @@ class ChatWidget extends Component
     {
         $this->siteId = $siteId ?: Sites::getActive();
         $this->trigger = $trigger;
+    }
+
+    public function getActiveAgentProperty(): ?ChatAgent
+    {
+        return ChatAgent::where('site_id', $this->siteId)
+            ->where('type', 'ai')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->first();
     }
 
     public function getMessagesProperty()
@@ -120,12 +130,27 @@ class ChatWidget extends Component
 
     public function render()
     {
+        $cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($this->siteId);
+        $agent = $this->activeAgent;
+
+        $agentName = $agent?->name ?: null;
+        $agentGreeting = $agent?->greeting ?: $cfg['greeting'];
+
+        if ($agent?->avatar) {
+            $agentAvatarUrl = Storage::url($agent->avatar);
+        } else {
+            $agentAvatarUrl = $cfg['avatar'];
+        }
+
         return view('dashed-livechat::widget.widget', [
             'messages' => $this->messages,
             'siteId' => $this->siteId,
             'awaitingReply' => $this->awaitingReply,
             'trigger' => $this->trigger,
             'streamUrl' => $this->streamUrl,
+            'agentName' => $agentName,
+            'agentGreeting' => $agentGreeting,
+            'agentAvatarUrl' => $agentAvatarUrl,
         ]);
     }
 }

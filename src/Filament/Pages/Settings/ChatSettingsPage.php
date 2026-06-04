@@ -47,6 +47,8 @@ class ChatSettingsPage extends Page implements HasSchemas
             $formData["chat_avatar_url_{$site['id']}"] = Customsetting::get('chat_avatar_url', $site['id'], null);
             $formData["chat_out_of_hours_behavior_{$site['id']}"] = Customsetting::get('chat_out_of_hours_behavior', $site['id'], 'ai_only');
             $formData["chat_search_driver_{$site['id']}"] = Customsetting::get('chat_search_driver', $site['id'], 'fulltext');
+            $formData["chat_contact_phone_{$site['id']}"] = Customsetting::get('chat_contact_phone', $site['id']);
+            $formData["chat_contact_email_{$site['id']}"] = Customsetting::get('chat_contact_email', $site['id']);
         }
 
         $this->form->fill($formData);
@@ -97,6 +99,14 @@ class ChatSettingsPage extends Page implements HasSchemas
                             'embedding' => 'Semantisch (embeddings)',
                         ])
                         ->default('fulltext'),
+                    TextInput::make("chat_contact_phone_{$site['id']}")
+                        ->label('Snelcontact telefoonnummer')
+                        ->tel()
+                        ->helperText('Telefoonnummer voor snelcontact in de chat. Leeg = bedrijfsnummer gebruiken.'),
+                    TextInput::make("chat_contact_email_{$site['id']}")
+                        ->label('Snelcontact e-mailadres')
+                        ->email()
+                        ->helperText('E-mailadres voor snelcontact in de chat. Leeg = standaard site-e-mail gebruiken.'),
                 ])
                 ->columns(['default' => 1, 'lg' => 2]);
         }
@@ -121,6 +131,8 @@ class ChatSettingsPage extends Page implements HasSchemas
             Customsetting::set('chat_avatar_url', $state["chat_avatar_url_{$site['id']}"] ?? null, $site['id']);
             Customsetting::set('chat_out_of_hours_behavior', $state["chat_out_of_hours_behavior_{$site['id']}"] ?? 'ai_only', $site['id']);
             Customsetting::set('chat_search_driver', $state["chat_search_driver_{$site['id']}"] ?? 'fulltext', $site['id']);
+            Customsetting::set('chat_contact_phone', $state["chat_contact_phone_{$site['id']}"] ?? null, $site['id']);
+            Customsetting::set('chat_contact_email', $state["chat_contact_email_{$site['id']}"] ?? null, $site['id']);
         }
 
         Notification::make()

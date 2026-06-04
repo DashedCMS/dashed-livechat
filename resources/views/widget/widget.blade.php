@@ -94,8 +94,41 @@
                 <span style="display:none">{{ $trigger['message'] }}</span>
             @endif
 
-            @if($messages->isEmpty() && $cfg['greeting'])
-                <div class="dashed-chat__msg dashed-chat__msg--ai">{{ $cfg['greeting'] }}</div>
+            @if($messages->isEmpty())
+                {{-- Persoonlijke welkomststaat (alleen als chat nog niet gestart) --}}
+                <div style="text-align: center; padding: 24px 16px 16px;">
+                    @php($welcomeAvatar = $agentAvatarUrl ?? $cfg['avatar'])
+                    @if($welcomeAvatar)
+                        <img src="{{ $welcomeAvatar }}" alt="{{ $agentName ?? $cfg['title'] }}"
+                             style="width: 64px; height: 64px; border-radius: 9999px; margin: 0 auto 12px; display: block; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,.12);">
+                    @else
+                        <div style="width: 64px; height: 64px; border-radius: 9999px; background: var(--chat-primary); color: var(--chat-on-primary); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 12px;">&#128172;</div>
+                    @endif
+                    @if($agentName)
+                        <div style="font-weight: 600; font-size: 15px; color: #111827; margin-bottom: 6px;">{{ $agentName }}</div>
+                        <div style="font-size: 14px; color: #374151; line-height: 1.5;">
+                            {{ $agentGreeting ?: 'Hoi! Ik ben ' . $agentName . '. Waar kan ik je mee helpen?' }}
+                        </div>
+                    @elseif($agentGreeting)
+                        <div style="font-size: 14px; color: #374151; line-height: 1.5;">{{ $agentGreeting }}</div>
+                    @endif
+                    @if($cfg['phone'] || $cfg['email'])
+                        <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                            @if($cfg['phone'])
+                                <a href="tel:{{ preg_replace('/\s+/', '', $cfg['phone']) }}"
+                                   style="display: inline-flex; align-items: center; gap: 6px; background: var(--chat-primary); color: var(--chat-on-primary); text-decoration: none; border-radius: 9999px; padding: 8px 18px; font-size: 13px; font-weight: 500; box-shadow: 0 1px 4px rgba(0,0,0,.12);">
+                                    &#128222; {{ $cfg['phone'] }}
+                                </a>
+                            @endif
+                            @if($cfg['email'])
+                                <a href="mailto:{{ $cfg['email'] }}"
+                                   style="display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--chat-primary); text-decoration: none; border-radius: 9999px; padding: 8px 18px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--chat-primary); box-shadow: 0 1px 4px rgba(0,0,0,.08);">
+                                    &#9993; {{ $cfg['email'] }}
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+                </div>
             @endif
             @foreach($messages as $message)
                 <div class="dashed-chat__msg dashed-chat__msg--{{ $message->role === 'visitor' ? 'visitor' : 'ai' }}"
