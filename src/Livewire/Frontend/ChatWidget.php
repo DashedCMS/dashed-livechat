@@ -10,6 +10,7 @@ use Dashed\DashedLivechat\Models\ChatAgent;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedLivechat\Guardrails\InputGuard;
 use Dashed\DashedLivechat\Jobs\GenerateAiReplyJob;
+use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\ConversationManager;
 
 class ChatWidget extends Component
@@ -22,6 +23,11 @@ class ChatWidget extends Component
     public ?int $proactiveTriggerId = null;
     public ?array $trigger = null;
     public ?string $streamUrl = null;
+
+    // Feature B: contact capture
+    public string $contactName = '';
+    public string $contactEmail = '';
+    public bool $contactDismissed = false;
 
     public function mount(?string $siteId = null, ?array $trigger = null): void
     {
@@ -154,6 +160,66 @@ class ChatWidget extends Component
         $this->open = ! $this->open;
     }
 
+    // Feature B: restore conversation from localStorage token
+    public function resumeConversation(?string $token): void
+    {
+        if (! $token) {
+            return;
+        }
+        $conversation = ChatConversation::where('site_id', $this->siteId)
+            ->where('public_token', $token)
+            ->where('status', 'active')
+            ->first();
+        if ($conversation) {
+            $this->publicToken = $conversation->public_token;
+        }
+    }
+
+    // Feature C: computed — show contact form when visitor sent at least one message but email is unknown
+    public function getNeedsContactProperty(): bool
+    {
+        if (! $this->publicToken) {
+            return false;
+        }
+        if ($this->contactDismissed) {
+            return false;
+        }
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return false;
+        }
+        if ($conversation->visitor_email) {
+            return false;
+        }
+
+        return $conversation->messages()->where('role', 'visitor')->exists();
+    }
+
+    // Feature C: save visitor name + email on the conversation
+    public function saveContact(): void
+    {
+        if (! filter_var($this->contactEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->addError('contactEmail', 'Vul een geldig e-mailadres in.');
+
+            return;
+        }
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return;
+        }
+        $conversation->visitor_name = trim($this->contactName) ?: null;
+        $conversation->visitor_email = $this->contactEmail;
+        $conversation->save();
+        $this->contactName = '';
+        $this->contactEmail = '';
+    }
+
+    // Feature C: dismiss the contact form without saving
+    public function dismissContact(): void
+    {
+        $this->contactDismissed = true;
+    }
+
     public function render()
     {
         $cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($this->siteId);
@@ -178,6 +244,7 @@ class ChatWidget extends Component
             'agentGreeting' => $agentGreeting,
             'agentAvatarUrl' => $agentAvatarUrl,
             'availableAgents' => $this->availableAgents,
+            'needsContact' => $this->needsContact,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 <div
     x-data="{
         open: @entangle('open'),
+        publicToken: @entangle('publicToken'),
         proactive: @js($trigger ?? null),
         proactiveShown: false,
         streamUrl: @js($streamUrl ?? null),
@@ -47,9 +48,17 @@
                 $wire.$refresh();
             });
             es.onerror = () => { es.close(); this._es = null; $wire.$refresh(); };
+        },
+        initWidget() {
+            this.initProactive();
+            const _key = 'dashed_livechat_token_' + @js($siteId);
+            const _saved = localStorage.getItem(_key);
+            if (_saved && !this.publicToken) { this.$wire.resumeConversation(_saved); }
+            this.$watch('publicToken', v => { if (v) { localStorage.setItem(_key, v); } });
+            this.$watch('streamUrl', url => { if (url) this.startStream(url); });
         }
     }"
-    x-init="initProactive(); $watch('streamUrl', url => { if (url) startStream(url); })"
+    x-init="initWidget()"
     class="dashed-chat"
     style="
         --chat-primary: {{ $cfg['primary'] }};
@@ -174,6 +183,25 @@
                 </template>
             @endif
         </div>
+
+        @if($needsContact)
+            <div style="border-top: 1px solid #eee; padding: 12px; background: #fafafa;">
+                <p style="margin: 0 0 8px; font-size: 13px; color: #374151; line-height: 1.4;">Mogen we je naam en e-mailadres? Dan kunnen we je verder helpen, ook als je later terugkomt.</p>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <input wire:model.defer="contactName" type="text" placeholder="Naam"
+                        style="border: 1px solid #ddd; border-radius: 9999px; padding: 8px 12px; font-size: 13px; outline: none;">
+                    <input wire:model.defer="contactEmail" type="email" placeholder="E-mailadres"
+                        style="border: 1px solid #ddd; border-radius: 9999px; padding: 8px 12px; font-size: 13px; outline: none;">
+                    @error('contactEmail') <div style="color:#b91c1c; font-size:12px; padding: 0 4px;">{{ $message }}</div> @enderror
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+                        <button wire:click="saveContact" type="button"
+                            style="background: var(--chat-primary); color: var(--chat-on-primary); border: 0; border-radius: 9999px; padding: 8px 18px; font-size: 13px; font-weight: 500; cursor: pointer;">Versturen</button>
+                        <button wire:click="dismissContact" type="button"
+                            style="background: transparent; border: 0; color: #9ca3af; font-size: 12px; cursor: pointer; text-decoration: underline;">Later</button>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         @error('draft') <div style="color:#b91c1c; font-size:12px; padding:4px 12px 0;">{{ $message }}</div> @enderror
         <form wire:submit.prevent="sendMessage" style="display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
