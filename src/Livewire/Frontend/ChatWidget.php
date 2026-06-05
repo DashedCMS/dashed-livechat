@@ -425,7 +425,9 @@ class ChatWidget extends Component
             'partnerAvatarUrl' => $partnerAvatarUrl,
             'messageAvatars' => $messageAvatars,
             'chatMode' => $mode,
-            'canRequestHuman' => $mode === 'ai' && $humanAvailable,
+            // Pas tonen zodra het gesprek echt loopt (minstens één bericht),
+            // dus niet al in het welkomstscherm.
+            'canRequestHuman' => $mode === 'ai' && $humanAvailable && $this->messages->isNotEmpty(),
         ]);
     }
 }
