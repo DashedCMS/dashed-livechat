@@ -232,10 +232,23 @@ class ChatWidget extends Component
     public function pollReply(): void
     {
         $conversation = $this->conversation();
-        if ($conversation) {
-            $last = $conversation->messages()->latest('id')->first();
-            $this->awaitingReply = $last && $last->role === 'visitor';
+
+        if (! $conversation || $conversation->mode === 'human') {
+            // Geen AI-typindicator zonder gesprek of in mensmodus.
+            $this->awaitingReply = false;
+
+            return;
         }
+
+        $last = $conversation->messages()->latest('id')->first();
+
+        // Alleen "aan het typen" tonen als de bezoeker als laatste iets stuurde
+        // en dat recent was. Zo blijft de indicator niet eindeloos hangen als er
+        // (bijv. door een trage/onbeschikbare queue) geen antwoord meer komt.
+        $this->awaitingReply = $last
+            && $last->role === 'visitor'
+            && $last->created_at
+            && $last->created_at->gt(now()->subSeconds(60));
     }
 
     public function toggle(): void

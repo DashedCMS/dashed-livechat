@@ -96,7 +96,7 @@
             <button @click="open = false" type="button" aria-label="Sluiten" style="background: transparent; border: 0; color: inherit; font-size: 20px; cursor: pointer;">&times;</button>
         </header>
 
-        <div style="flex: 1; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
+        <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
              x-effect="$nextTick(() => $refs.scroll.scrollTop = $refs.scroll.scrollHeight)">
 
             {{-- Proactief bericht bubble (client-side via Alpine) --}}
