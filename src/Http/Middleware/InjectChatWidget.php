@@ -28,7 +28,15 @@ class InjectChatWidget
         // Alleen op de frontend: nooit in het Filament-admin (panel-routes heten
         // filament.*), niet op api-routes en niet op het admin-pad.
         $adminPrefix = config('filament-old.path', env('FILAMENT_PATH', 'dashed'));
-        if ($request->routeIs('filament.*') || $request->is($adminPrefix) || $request->is($adminPrefix . '/*') || $request->is('api/*')) {
+        // Geen chat-widget in admin, api of de POS-kassaschermen. De POS-frontend
+        // wrappers staan op .../point-of-sale en .../customer-point-of-sale.
+        if (
+            $request->routeIs('filament.*')
+            || $request->is('*point-of-sale')
+            || $request->is($adminPrefix)
+            || $request->is($adminPrefix . '/*')
+            || $request->is('api/*')
+        ) {
             return $response;
         }
 
