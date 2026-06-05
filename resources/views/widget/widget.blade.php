@@ -96,7 +96,7 @@
                 if (! this.open) {
                     this.unread++;
                     this.$nextTick(() => {
-                        if (this.preview) {
+                        if (! this.open && this.preview) {
                             this.previews.push(this.preview);
                             if (this.previews.length > 4) { this.previews.shift(); }
                         }
@@ -137,10 +137,10 @@
     </style>
     {{-- Voorbeeld(en) van nieuw bericht boven het icoon (indien zo ingesteld); stapelt bij meerdere --}}
     <div x-show="!open && indicator === 'preview' && previews.length > 0" x-cloak
-        style="position: absolute; bottom: 74px; {{ $cfg['position'] === 'left' ? 'left' : 'right' }}: 0; display: flex; flex-direction: column; gap: 8px; align-items: {{ $cfg['position'] === 'left' ? 'flex-start' : 'flex-end' }}; width: 320px; max-width: calc(100vw - 48px);">
+        style="position: absolute; bottom: 74px; {{ $cfg['position'] === 'left' ? 'left' : 'right' }}: 0; display: flex; flex-direction: column; align-items: {{ $cfg['position'] === 'left' ? 'flex-start' : 'flex-end' }}; width: 320px; max-width: calc(100vw - 48px);">
         <template x-for="(p, i) in previews" :key="i">
             <div @click="open = true" x-transition
-                style="width: 100%; background:#fff; color:#1f2937; padding:12px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.18); cursor:pointer; font-size:13px; line-height:1.45;">
+                style="width: 100%; margin-bottom: 8px; background:#fff; color:#1f2937; padding:12px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.18); cursor:pointer; font-size:13px; line-height:1.45;">
                 <span x-text="p"></span>
             </div>
         </template>
