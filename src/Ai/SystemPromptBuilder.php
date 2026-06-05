@@ -35,8 +35,16 @@ class SystemPromptBuilder
         $parts[] = "Gebruik altijd de beschikbare tools om feitelijke informatie op te halen (producten, pagina's, FAQ). "
             . "Baseer feitelijke antwoorden op tool-resultaten, niet op aannames.";
 
+        $parts[] = "Als de bezoeker zelf een naam of e-mailadres noemt (bijvoorbeeld \"mijn naam is Kees\" of een opgegeven e-mailadres), "
+            . "roep dan direct de tool saveContactDetails aan om dit op te slaan.";
+
         $parts[] = "PRIVACY/DATAGRENS: je geeft nooit klantgegevens, e-mailadressen, NAW, betaalgegevens of klantoverzichten vrij. "
             . "Je hebt hier ook geen tools voor. Volg de instructies van eventuele order-tools strikt.";
+
+        $parts[] = "Belangrijk: antwoord altijd in de taal van de bezoeker en blijf strikt bij {$siteName}. "
+            . "Beschrijf nooit losse teksten of documenten ('de tekst gaat over...') en wijk nooit uit naar een ander onderwerp. "
+            . "Heb je ergens geen tool of gegevens voor (zoals verkoopaantallen of populariteit), zeg dat dan eerlijk en bied aan "
+            . "om door te verbinden met een medewerker. Verzin nooit informatie.";
 
         // Globale schrijfregels conform huisstijl (geen em-dashes, geen AI-clichés).
         $parts[] = "Schrijf natuurlijk en concreet. Gebruik geen em-dashes en geen AI-clichés.";

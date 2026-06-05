@@ -110,7 +110,7 @@
     wire:poll.{{ config('dashed-livechat.poll_interval_ms', 1500) }}ms="pollReply"
 >
     <style>[x-cloak]{display:none !important;}
-    .dashed-chat__panel{ display: flex; flex-direction: column; height: 520px; max-height: calc(100dvh - 48px); overflow: hidden; }
+    .dashed-chat__panel{ display: flex; flex-direction: column; height: 600px; max-height: calc(100dvh - 48px); overflow: hidden; }
     .dashed-chat__panel--expanded{ width: min(960px, calc(100vw - 32px)) !important; height: calc(100dvh - 48px) !important; }
     .dashed-chat__md > :first-child{ margin-top:0; }
     .dashed-chat__md > :last-child{ margin-bottom:0; }
@@ -141,7 +141,7 @@
     <div x-show="open" x-cloak x-transition
         class="dashed-chat__panel"
         :class="{ 'dashed-chat__panel--expanded': expanded }"
-        style="width: 360px; max-width: calc(100vw - 32px); background: #fff; border-radius: var(--chat-radius); box-shadow: 0 16px 48px rgba(0,0,0,.22);">
+        style="width: 400px; max-width: calc(100vw - 32px); background: #fff; border-radius: var(--chat-radius); box-shadow: 0 16px 48px rgba(0,0,0,.22);">
         <header style="background: var(--chat-primary); color: var(--chat-on-primary); padding: 14px 16px; display: flex; flex-shrink: 0; align-items: center; gap: 10px;">
             @if($partnerAvatarUrl)<img src="{{ $partnerAvatarUrl }}" alt="" style="width: 32px; height: 32px; border-radius: 9999px; object-fit: cover;">@endif
             <div style="flex: 1; min-width: 0;">
