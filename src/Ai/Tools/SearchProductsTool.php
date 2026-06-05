@@ -51,12 +51,20 @@ class SearchProductsTool implements ChatTool
         );
 
         return [
-            'results' => $products->map(fn (Product $p) => [
-                'name' => $p->name,
-                'short_description' => $p->short_description,
-                'price' => $p->current_price ?? $p->price ?? null,
-                'url' => rescue(fn () => $p->getUrl(), null, false),
-            ])->values()->all(),
+            'results' => $products->map(function (Product $p) {
+                $stock = rescue(fn () => $p->stock(), null, false);
+
+                return [
+                    'name' => $p->name,
+                    'short_description' => $p->short_description,
+                    'price' => $p->current_price ?? $p->price ?? null,
+                    'in_stock' => rescue(fn () => $p->inStock(), null, false),
+                    // Exact aantal alleen als het echt geteld wordt; anders null
+                    // (100000 is de "gewoon op voorraad"-sentinel).
+                    'stock' => ($stock !== null && $stock < 100000) ? $stock : null,
+                    'url' => rescue(fn () => $p->getUrl(), null, false),
+                ];
+            })->values()->all(),
         ];
     }
 }
