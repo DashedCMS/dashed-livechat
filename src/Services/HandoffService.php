@@ -7,6 +7,7 @@ namespace Dashed\DashedLivechat\Services;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedLivechat\Enums\AgentType;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Enums\ConversationMode;
 use Dashed\DashedLivechat\Models\ChatConversation;
@@ -66,6 +67,10 @@ class HandoffService
 
     protected function notifyAgents(ChatConversation $c, ?string $reason): void
     {
+        if (! Customsetting::get('chat_handoff_notifications', $c->site_id, true)) {
+            return;
+        }
+
         $emails = ChatAgent::where('site_id', $c->site_id)
             ->where('type', AgentType::Human->value)
             ->where('is_active', true)

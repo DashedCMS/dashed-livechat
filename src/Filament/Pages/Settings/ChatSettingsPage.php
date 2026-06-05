@@ -48,6 +48,7 @@ class ChatSettingsPage extends Page implements HasSchemas
             $formData["chat_search_driver_{$site['id']}"] = Customsetting::get('chat_search_driver', $site['id'], 'fulltext');
             $formData["chat_contact_phone_{$site['id']}"] = Customsetting::get('chat_contact_phone', $site['id']);
             $formData["chat_contact_email_{$site['id']}"] = Customsetting::get('chat_contact_email', $site['id']);
+            $formData["chat_handoff_notifications_{$site['id']}"] = (bool) Customsetting::get('chat_handoff_notifications', $site['id'], true);
         }
 
         $this->form->fill($formData);
@@ -103,6 +104,10 @@ class ChatSettingsPage extends Page implements HasSchemas
                         ->label('Snelcontact e-mailadres')
                         ->email()
                         ->helperText('E-mailadres voor snelcontact in de chat. Leeg = standaard site-e-mail gebruiken.'),
+                    Toggle::make("chat_handoff_notifications_{$site['id']}")
+                        ->label('E-mail bij doorverbinden naar medewerker')
+                        ->helperText('Ontvang een e-mail wanneer een bezoeker om een medewerker vraagt.')
+                        ->default(true),
                 ])
                 ->columns(['default' => 1, 'lg' => 2]);
         }
@@ -129,6 +134,7 @@ class ChatSettingsPage extends Page implements HasSchemas
             Customsetting::set('chat_search_driver', $state["chat_search_driver_{$site['id']}"] ?? 'fulltext', $site['id']);
             Customsetting::set('chat_contact_phone', $state["chat_contact_phone_{$site['id']}"] ?? null, $site['id']);
             Customsetting::set('chat_contact_email', $state["chat_contact_email_{$site['id']}"] ?? null, $site['id']);
+            Customsetting::set('chat_handoff_notifications', $state["chat_handoff_notifications_{$site['id']}"] ? '1' : '0', $site['id']);
         }
 
         Notification::make()

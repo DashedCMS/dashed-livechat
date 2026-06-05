@@ -24,7 +24,9 @@
         <div class="dlc__layout">
             <div class="dlc__main">
         <x-filament::section class="dlc__panel">
-            <div class="dlc__thread" wire:poll.3s="pollMessages">
+            <div class="dlc__thread" wire:poll.3s="pollMessages"
+                 x-data="{ lastId: @entangle('lastMessageId') }"
+                 x-effect="lastId; $nextTick(() => { $el.scrollTop = $el.scrollHeight; })">
                 @forelse($conversation->messages as $message)
                     @php($isVisitor = $message->role === 'visitor')
                     <div @class([
@@ -43,7 +45,13 @@
                                 <span class="dlc__time">{{ $message->created_at?->format('d-m H:i') }}</span>
                             </div>
 
-                            <div class="dlc__body">{!! nl2br(e($message->content)) !!}</div>
+                            <div class="dlc__body">
+                                @if($isVisitor)
+                                    {!! nl2br(e($message->content)) !!}
+                                @else
+                                    {!! \Illuminate\Support\Str::markdown($message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
+                                @endif
+                            </div>
 
                             @if($message->tool_calls)
                                 <div class="dlc__tools">
@@ -200,6 +208,13 @@
         .dlc__meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; font-size: 0.6875rem; opacity: 0.75; margin-bottom: 0.25rem; }
         .dlc__author { font-weight: 600; }
         .dlc__body :where(a) { text-decoration: underline; }
+        .dlc__body > :first-child { margin-top: 0; }
+        .dlc__body > :last-child { margin-bottom: 0; }
+        .dlc__body :where(p) { margin: 0 0 .5em; }
+        .dlc__body :where(ul, ol) { margin: .25em 0 .5em; padding-left: 1.25em; }
+        .dlc__body :where(li) { margin: .1em 0; }
+        .dlc__body :where(code) { background: rgba(127,127,127,.18); padding: .05em .3em; border-radius: 4px; font-size: .9em; }
+        .dlc__body :where(pre) { background: rgba(127,127,127,.18); padding: .5em; border-radius: 6px; overflow: auto; }
 
         .dlc__tools { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.6875rem; opacity: 0.7; margin-top: 0.375rem; }
         .dlc__tools-icon { width: 0.875rem; height: 0.875rem; }

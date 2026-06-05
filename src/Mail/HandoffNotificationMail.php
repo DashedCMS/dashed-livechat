@@ -7,6 +7,7 @@ namespace Dashed\DashedLivechat\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatConversation;
 
 class HandoffNotificationMail extends Mailable
@@ -22,11 +23,27 @@ class HandoffNotificationMail extends Mailable
     {
         $url = rescue(fn () => route('filament.dashed.resources.chat-conversations.view', ['record' => $this->conversation->id]), null, false);
 
-        return $this->subject('Een chatgesprek vraagt om een medewerker')
-            ->view('dashed-livechat::mail.handoff', [
-                'conversation' => $this->conversation,
-                'reason' => $this->reason,
-                'url' => $url,
+        $notification = '<p>Een bezoeker vraagt om een medewerker in een chatgesprek.</p>';
+
+        if ($this->reason !== null && $this->reason !== '') {
+            $notification .= '<p>Reden: ' . e($this->reason) . '</p>';
+        }
+
+        $notification .= '<p>Site: ' . e($this->conversation->site_id) . '</p>';
+
+        if ($url !== null) {
+            $notification .= '<p><a href="' . e($url) . '" style="display: inline-block; padding: 10px 20px; background-color: #111827; color: #ffffff; border-radius: 6px; text-decoration: none; font-weight: bold;">Open het gesprek</a></p>';
+        }
+
+        $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.notification')
+            ? config('dashed-core.site_theme', 'dashed') . '.emails.notification'
+            : 'dashed-core::emails.notification';
+
+        return $this->view($view)
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
+            ->subject('Een chatgesprek vraagt om een medewerker')
+            ->with([
+                'notification' => $notification,
             ]);
     }
 }

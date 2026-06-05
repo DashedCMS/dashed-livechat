@@ -8,6 +8,32 @@
         streamUrl: @js($streamUrl ?? null),
         streamBuffer: '',
         _es: null,
+        expanded: false,
+        lastMessageId: @entangle('lastMessageId'),
+        unread: 0,
+        _seenId: 0,
+        _justSent: false,
+        _audioCtx: null,
+        playPing() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (! Ctx) return;
+                this._audioCtx = this._audioCtx || new Ctx();
+                const ctx = this._audioCtx;
+                if (ctx.state === 'suspended') { ctx.resume(); }
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(880, ctx.currentTime);
+                o.frequency.setValueAtTime(1170, ctx.currentTime + 0.12);
+                g.gain.setValueAtTime(0.0001, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+                o.start();
+                o.stop(ctx.currentTime + 0.35);
+            } catch (e) {}
+        },
         fireProactive() {
             if (this.proactiveShown || !this.proactive || !this.proactive.message) return;
             this.proactiveShown = true;
@@ -56,6 +82,20 @@
             if (_saved && !this.publicToken) { this.$wire.resumeConversation(_saved); }
             this.$watch('publicToken', v => { if (v) { localStorage.setItem(_key, v); } });
             this.$watch('streamUrl', url => { if (url) this.startStream(url); });
+
+            // Ongelezen-teller + geluid bij binnenkomende berichten.
+            this._seenId = this.lastMessageId || 0;
+            this.$watch('lastMessageId', (val) => {
+                if (val <= this._seenId) return;
+                this._seenId = val;
+                const wasOwn = this._justSent;
+                this._justSent = false;
+                if (! this.open) { this.unread++; }
+                if (! wasOwn) { this.playPing(); }
+            });
+            this.$watch('open', (isOpen) => {
+                if (isOpen) { this._seenId = this.lastMessageId; this.unread = 0; }
+            });
         }
     }"
     x-init="initWidget()"
@@ -69,24 +109,53 @@
     "
     wire:poll.{{ config('dashed-livechat.poll_interval_ms', 1500) }}ms="pollReply"
 >
-    <style>[x-cloak]{display:none !important;}</style>
+    <style>[x-cloak]{display:none !important;}
+    .dashed-chat__panel{ display: flex; flex-direction: column; height: 520px; max-height: calc(100dvh - 48px); overflow: hidden; }
+    .dashed-chat__panel--expanded{ width: min(960px, calc(100vw - 32px)) !important; height: calc(100dvh - 48px) !important; }
+    .dashed-chat__md > :first-child{ margin-top:0; }
+    .dashed-chat__md > :last-child{ margin-bottom:0; }
+    .dashed-chat__md p{ margin:0 0 .5em; }
+    .dashed-chat__md ul, .dashed-chat__md ol{ margin:.25em 0 .5em; padding-left:1.25em; }
+    .dashed-chat__md li{ margin:.1em 0; }
+    .dashed-chat__md a{ color: var(--chat-primary); text-decoration: underline; }
+    .dashed-chat__md code{ background: rgba(0,0,0,.06); padding:.05em .3em; border-radius:4px; font-size:.9em; }
+    .dashed-chat__md pre{ background: rgba(0,0,0,.06); padding:.5em; border-radius:6px; overflow:auto; }
+    .dashed-chat__md pre code{ background:none; padding:0; }
+    @keyframes dashed-chat-pulse { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,.55); } 70% { box-shadow: 0 0 0 9px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+    .dashed-chat__badge { animation: dashed-chat-pulse 1.6s ease-out infinite; }
+    </style>
     {{-- Launcher --}}
     <button x-show="!open" @click="open = true" type="button"
-        style="background: var(--chat-primary); color: var(--chat-on-primary); border-radius: 9999px; width: 60px; height: 60px; box-shadow: 0 8px 24px rgba(0,0,0,.18); border: 0; cursor: pointer;"
+        style="position: relative; background: var(--chat-primary); color: var(--chat-on-primary); border-radius: 9999px; width: 60px; height: 60px; box-shadow: 0 8px 24px rgba(0,0,0,.18); border: 0; cursor: pointer;"
         aria-label="Open chat">
         @if($cfg['avatar'])
             <img src="{{ $cfg['avatar'] }}" alt="" style="width: 36px; height: 36px; border-radius: 9999px; margin: 0 auto;">
         @else
             <span style="font-size: 24px;">&#128172;</span>
         @endif
+        <span x-show="unread > 0" x-cloak x-text="unread" class="dashed-chat__badge" aria-label="Ongelezen berichten"
+            style="position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; background: #22c55e; color: #fff; border: 2px solid #fff; border-radius: 9999px; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;"></span>
     </button>
 
     {{-- Panel --}}
     <div x-show="open" x-cloak x-transition
-        style="width: 360px; max-width: calc(100vw - 32px); height: 520px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: #fff; border-radius: var(--chat-radius); overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,.22);">
-        <header style="background: var(--chat-primary); color: var(--chat-on-primary); padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
-            @if($cfg['avatar'])<img src="{{ $cfg['avatar'] }}" alt="" style="width: 32px; height: 32px; border-radius: 9999px;">@endif
-            <strong style="flex: 1;">{{ $cfg['title'] }}</strong>
+        class="dashed-chat__panel"
+        :class="{ 'dashed-chat__panel--expanded': expanded }"
+        style="width: 360px; max-width: calc(100vw - 32px); background: #fff; border-radius: var(--chat-radius); box-shadow: 0 16px 48px rgba(0,0,0,.22);">
+        <header style="background: var(--chat-primary); color: var(--chat-on-primary); padding: 14px 16px; display: flex; flex-shrink: 0; align-items: center; gap: 10px;">
+            @if($partnerAvatarUrl)<img src="{{ $partnerAvatarUrl }}" alt="" style="width: 32px; height: 32px; border-radius: 9999px; object-fit: cover;">@endif
+            <div style="flex: 1; min-width: 0;">
+                <strong style="display:block; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $cfg['title'] }}</strong>
+                <span style="font-size: 11px; opacity: .9; display:flex; align-items:center; gap:5px; line-height:1.3;">
+                    <span style="width:7px; height:7px; border-radius:9999px; flex-shrink:0; background: {{ $partnerType === 'human' ? '#22c55e' : ($partnerType === 'waiting' ? '#f59e0b' : '#a3e635') }};"></span>
+                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $partnerName }}{{ $partnerType === 'ai' ? ' · AI' : ($partnerType === 'human' ? ' · medewerker' : '') }}</span>
+                </span>
+            </div>
+            <button @click="expanded = !expanded" type="button"
+                :aria-label="expanded ? 'Verkleinen' : 'Vergroten'" :title="expanded ? 'Verkleinen' : 'Groot scherm'"
+                style="background: transparent; border: 0; color: inherit; cursor: pointer; font-size: 18px; line-height: 1;">
+                <span x-show="!expanded">&#10530;</span><span x-show="expanded" x-cloak>&#10529;</span>
+            </button>
             @if($publicToken)
             <button type="button" title="Nieuw gesprek"
                 wire:click="startNewChat"
@@ -96,8 +165,21 @@
             <button @click="open = false" type="button" aria-label="Sluiten" style="background: transparent; border: 0; color: inherit; font-size: 20px; cursor: pointer;">&times;</button>
         </header>
 
-        <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
-             x-effect="$nextTick(() => $refs.scroll.scrollTop = $refs.scroll.scrollHeight)">
+        @if($canRequestHuman)
+            <div style="padding: 8px 12px; border-bottom: 1px solid #eee; background:#fafafa; display:flex; justify-content:center;">
+                <button type="button" wire:click="requestHuman" wire:loading.attr="disabled"
+                    style="background: transparent; border: 1px solid var(--chat-primary); color: var(--chat-primary); border-radius: 9999px; padding: 5px 14px; font-size: 12px; cursor: pointer; display:inline-flex; align-items:center; gap:6px;">
+                    <span style="font-size:14px; line-height:1;">&#128100;</span> Liever een medewerker spreken?
+                </button>
+            </div>
+        @elseif($chatMode === 'waiting_human')
+            <div style="padding: 8px 12px; border-bottom: 1px solid #eee; background:#fff7ed; color:#9a3412; font-size:12px; text-align:center;">
+                Je vraag staat klaar voor een collega. Je kunt ondertussen gewoon verder typen.
+            </div>
+        @endif
+
+        <div data-chat-scroll style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
+             x-effect="open; lastMessageId; $nextTick(() => { $el.scrollTop = $el.scrollHeight; })">
 
             {{-- Proactief bericht bubble (client-side via Alpine) --}}
             <div x-ref="proactiveWrap" style="display:none; margin-bottom:10px;">
@@ -168,41 +250,54 @@
                 </div>
             @endif
             @foreach($messages as $message)
-                <div class="dashed-chat__msg dashed-chat__msg--{{ $message->role === 'visitor' ? 'visitor' : 'ai' }}"
-                     style="margin-bottom: 10px; max-width: 80%; padding: 10px 12px; border-radius: 12px; line-height: 1.4;
-                        {{ $message->role === 'visitor'
-                            ? 'margin-left: auto; background: var(--chat-primary); color: var(--chat-on-primary);'
-                            : 'background: #fff; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.06);' }}">
-                    {!! nl2br(e($message->content)) !!}
-                </div>
+                @php($senderLabel = $message->role === 'visitor'
+                    ? 'Jij'
+                    : ($message->agent?->name
+                        ? ($message->role === 'human' ? (explode(' ', trim($message->agent->name))[0] ?: $message->agent->name) : $message->agent->name)
+                        : ($message->role === 'human' ? 'Medewerker' : ($agentName ?: 'Assistent'))))
+                @if($message->role === 'visitor')
+                    <div data-chat-msg class="dashed-chat__msg dashed-chat__msg--visitor"
+                         style="margin-bottom: 10px; max-width: 80%; padding: 10px 12px; border-radius: 12px; line-height: 1.4; margin-left: auto; background: var(--chat-primary); color: var(--chat-on-primary);">
+                        <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $senderLabel }}</div>
+                        {!! nl2br(e($message->content)) !!}
+                    </div>
+                @else
+                    @php($msgAvatar = $messageAvatars[$message->id] ?? null)
+                    <div data-chat-msg style="display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; max-width:85%;">
+                        @if($msgAvatar)
+                            <img src="{{ $msgAvatar }}" alt="" style="width:28px; height:28px; border-radius:9999px; object-fit:cover; flex-shrink:0;">
+                        @else
+                            <div style="width:28px; height:28px; border-radius:9999px; flex-shrink:0; background: var(--chat-primary); color: var(--chat-on-primary); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">{{ mb_strtoupper(mb_substr($senderLabel, 0, 1)) }}</div>
+                        @endif
+                        <div class="dashed-chat__msg dashed-chat__msg--ai"
+                             style="min-width:0; padding: 10px 12px; border-radius: 12px; line-height: 1.4; background: #fff; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.06);">
+                            <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $senderLabel }}{{ $message->role === 'human' ? ' · medewerker' : '' }}</div>
+                            <div class="dashed-chat__md">{!! \Illuminate\Support\Str::markdown($message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}</div>
+                        </div>
+                    </div>
+                @endif
             @endforeach
-            <div wire:loading wire:target="sendMessage" class="dashed-chat__typing" style="color:#6b7280; font-size: 13px;">Aan het typen…</div>
+            {{-- Live streaming-buffer (alleen bij streaming; client-side) --}}
+            <div x-show="streamBuffer !== ''" x-cloak class="dashed-chat__msg dashed-chat__msg--ai"
+                 style="background:#fff; color:#1f2937; padding:10px 12px; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.06); margin-bottom:10px; max-width:80%; line-height:1.4;"
+                 x-text="streamBuffer || '…'"></div>
+
+            {{-- Typindicator: server-gestuurd via @if zodat Livewire 'm netjes wegmorpht
+                 zodra het antwoord binnen is (plain div, geen verweesde Alpine-knoop). --}}
             @if($awaitingReply)
-                {{-- Streaming: show live buffer bubble; non-streaming: show typing indicator --}}
-                <template x-if="_es !== null || streamBuffer !== ''">
-                    <div class="dashed-chat__msg dashed-chat__msg--ai"
-                         style="background:#fff; color:#1f2937; padding:10px 12px; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.06); margin-bottom:10px; max-width:80%; line-height:1.4;"
-                         x-text="streamBuffer || '…'"></div>
-                </template>
-                <template x-if="_es === null && streamBuffer === ''">
-                    <div class="dashed-chat__typing" style="color:#6b7280; font-size: 13px;">Aan het typen…</div>
-                </template>
+                <div x-show="streamBuffer === ''" class="dashed-chat__typing" style="color:#6b7280; font-size: 13px;">Aan het typen…</div>
             @endif
         </div>
 
         @error('draft') <div style="color:#b91c1c; font-size:12px; padding:4px 12px 0;">{{ $message }}</div> @enderror
-        @if($contactStep !== null)
-            <div style="padding: 2px 12px 0; text-align: right;">
-                <button wire:click="dismissContact" type="button"
-                    style="background: transparent; border: 0; color: #9ca3af; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0;">Overslaan</button>
-            </div>
-        @endif
-        <form wire:submit.prevent="sendMessage" style="display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
-            <input wire:model="draft" type="text"
-                placeholder="{{ $contactStep === 'email' ? 'Typ je e-mailadres…' : ($contactStep === 'name' ? 'Typ je naam…' : 'Typ je bericht…') }}"
+        <form wire:submit.prevent="sendMessage" x-on:submit="_justSent = true" style="display: flex; flex-shrink: 0; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
+            <input wire:model="draft"
+                type="text"
                 autocomplete="off"
+                placeholder="{{ $contactStep === 'name' ? 'Typ je naam…' : 'Typ je bericht…' }}"
                 style="flex: 1; border: 1px solid #ddd; border-radius: 9999px; padding: 10px 14px; outline: none;">
             <button type="submit" style="background: var(--chat-primary); color: var(--chat-on-primary); border: 0; border-radius: 9999px; padding: 0 16px; cursor: pointer;">&uarr;</button>
         </form>
     </div>
+
 </div>

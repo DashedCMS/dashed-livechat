@@ -25,6 +25,9 @@ class ViewChatConversation extends Page
 
     public string $reply = '';
 
+    /** Id van het laatste bericht; via @entangle reactief in Alpine om bij een nieuw bericht naar onder te scrollen. */
+    public int $lastMessageId = 0;
+
     /** Resolved ChatConversation, stored separately to avoid type conflict with the Filament trait's $record property. */
     public ?ChatConversation $conversation = null;
 
@@ -32,6 +35,7 @@ class ViewChatConversation extends Page
     {
         $this->conversation = ChatConversation::with('messages.agent')->findOrFail($record);
         $this->mode = $this->conversation->mode;
+        $this->lastMessageId = (int) ($this->conversation->messages->max('id') ?? 0);
     }
 
     protected function getHeaderActions(): array
@@ -265,6 +269,7 @@ class ViewChatConversation extends Page
     {
         $this->conversation = ChatConversation::with('messages.agent')->findOrFail($this->conversation->id);
         $this->mode = $this->conversation->mode;
+        $this->lastMessageId = (int) ($this->conversation->messages->max('id') ?? 0);
     }
 
     private function requireAuth(): void

@@ -20,6 +20,7 @@ class ChatWidget extends Component
     public string $draft = '';
     public bool $open = false;
     public bool $awaitingReply = false;
+    public int $lastMessageId = 0;
     public ?int $proactiveTriggerId = null;
     public ?array $trigger = null;
     public ?string $streamUrl = null;
@@ -78,7 +79,7 @@ class ChatWidget extends Component
         $conversation = $this->conversation();
 
         return $conversation
-            ? $conversation->messages()->where('is_internal', false)->whereIn('role', ['visitor', 'ai', 'human'])->get()
+            ? $conversation->messages()->with('agent')->where('is_internal', false)->whereIn('role', ['visitor', 'ai', 'human'])->get()
             : collect();
     }
 
@@ -105,35 +106,36 @@ class ChatWidget extends Component
     {
         // Intercept contact-capture steps before normal flow.
         if ($this->contactStep === 'email') {
-            $email = trim($this->draft);
-            if ($email === '') {
+            $input = trim($this->draft);
+            if ($input === '') {
                 return;
             }
-            $this->draft = '';
 
             $conversation = $this->conversation();
             if (! $conversation) {
                 return;
             }
 
-            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $this->postBotMessage($conversation, 'Dat lijkt geen geldig e-mailadres. Wil je het nog eens proberen? Of klik op Overslaan.');
+            if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
+                $this->draft = '';
+                $conversation->messages()->create([
+                    'role' => 'visitor',
+                    'content' => $input,
+                ]);
+                $conversation->visitor_email = $input;
+                $conversation->save();
+
+                $this->postBotMessage($conversation, 'Dank je! En wat is je naam?');
+                $this->contactStep = 'name';
 
                 return;
             }
 
-            // Persist visitor answer + update conversation.
-            $conversation->messages()->create([
-                'role' => 'visitor',
-                'content' => $email,
-            ]);
-            $conversation->visitor_email = $email;
-            $conversation->save();
-
-            $this->postBotMessage($conversation, 'Dank je! En wat is je naam?');
-            $this->contactStep = 'name';
-
-            return;
+            // Geen e-mailadres? Niet aandringen: iemand wil dat misschien niet
+            // geven. We stoppen met vragen en behandelen de invoer hieronder als
+            // een gewone vraag (valt door naar de normale flow).
+            $this->contactStep = null;
+            $this->contactDismissed = true;
         }
 
         if ($this->contactStep === 'name') {
@@ -206,19 +208,9 @@ class ChatWidget extends Component
             return;
         }
 
-        // Trigger e-mail ask after first visitor message (if not dismissed and no email yet).
-        if (
-            ! $this->contactDismissed
-            && $this->contactStep === null
-            && ! $conversation->visitor_email
-            && $conversation->messages()->where('role', 'visitor')->count() === 1
-        ) {
-            $this->contactStep = 'email';
-            $this->postBotMessage($conversation, 'Mag ik je e-mailadres? Dan kunnen we je ook later nog verder helpen.');
-
-            return;
-        }
-
+        // De e-mailvraag komt niet hier, maar ~12s na het eerste AI-antwoord
+        // (zie maybeAskForEmail via pollReply), zodat de begroeting/het antwoord
+        // eerst komt en de vervolgvraag niet wordt onderbroken.
         if ($conversation->mode !== 'human') {
             $this->awaitingReply = true;
             if (config('dashed-livechat.streaming', false)) {
@@ -232,23 +224,68 @@ class ChatWidget extends Component
     public function pollReply(): void
     {
         $conversation = $this->conversation();
+        $this->recomputeAwaitingReply($conversation);
 
-        if (! $conversation || $conversation->mode === 'human') {
-            // Geen AI-typindicator zonder gesprek of in mensmodus.
-            $this->awaitingReply = false;
+        if ($conversation) {
+            $this->maybeAskForEmail($conversation);
+        }
+    }
 
+    /**
+     * Bepaalt of de AI-typindicator getoond moet worden. Wordt bij elke
+     * roundtrip (poll/verzenden/refresh) opnieuw berekend zodat de indicator
+     * direct verdwijnt zodra het AI-antwoord binnen is. Alleen in AI-modus en
+     * alleen kort na een bezoekersbericht.
+     */
+    protected function recomputeAwaitingReply(?ChatConversation $conversation): void
+    {
+        $last = $conversation?->messages()->latest('id')->first();
+
+        $this->awaitingReply = $conversation
+            && $conversation->mode === 'ai'
+            && $last
+            && $last->role === 'visitor'
+            && $last->created_at
+            && $last->created_at->gt(now()->subSeconds(60));
+    }
+
+    /**
+     * Vraagt ~12s na het eerste AI-antwoord eenmalig om het e-mailadres, zodat
+     * de begroeting/het antwoord eerst komt. Niet verplicht: de bezoeker kan
+     * gewoon doorvragen (zie sendMessage e-mailstap).
+     */
+    protected function maybeAskForEmail(ChatConversation $conversation): void
+    {
+        if (
+            $this->contactDismissed
+            || $this->contactStep !== null
+            || $conversation->visitor_email
+            || $conversation->mode !== 'ai'
+        ) {
             return;
         }
 
         $last = $conversation->messages()->latest('id')->first();
+        if (! $last || $last->role !== 'ai') {
+            return; // alleen als de bot net klaar is met antwoorden
+        }
 
-        // Alleen "aan het typen" tonen als de bezoeker als laatste iets stuurde
-        // en dat recent was. Zo blijft de indicator niet eindeloos hangen als er
-        // (bijv. door een trage/onbeschikbare queue) geen antwoord meer komt.
-        $this->awaitingReply = $last
-            && $last->role === 'visitor'
-            && $last->created_at
-            && $last->created_at->gt(now()->subSeconds(60));
+        $firstAi = $conversation->messages()->where('role', 'ai')->orderBy('id')->first();
+        if ($firstAi && $firstAi->created_at && $firstAi->created_at->lte(now()->subSeconds(12))) {
+            $this->contactStep = 'email';
+            $this->postBotMessage($conversation, 'Mag ik je e-mailadres? Dan kunnen we je ook later nog verder helpen. Liever niet? Stel gerust gewoon je volgende vraag.');
+        }
+    }
+
+    public function requestHuman(): void
+    {
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return;
+        }
+
+        $result = app(\Dashed\DashedLivechat\Services\HandoffService::class)->requestHandoff($conversation);
+        $this->postBotMessage($conversation, $result['message'] ?? 'Ik haal er een collega bij, een moment geduld.');
     }
 
     public function toggle(): void
@@ -324,6 +361,54 @@ class ChatWidget extends Component
             $agentAvatarUrl = $cfg['avatar'];
         }
 
+        // Met wie chat je nu? In AI-modus de AI-agent, anders de mens/collega.
+        $conversation = $this->conversation();
+        $this->recomputeAwaitingReply($conversation);
+
+        // Id van het laatste bericht; via @entangle reactief in Alpine zodat de
+        // widget naar onder scrollt zodra er een bericht bijkomt.
+        $this->lastMessageId = (int) ($this->messages->last()?->id ?? 0);
+
+        $mode = $conversation?->mode ?? 'ai';
+        $partnerType = 'ai';
+        $partnerName = $agentName ?: ($cfg['title'] ?: 'Assistent');
+
+        if ($mode === 'waiting_human') {
+            $partnerType = 'waiting';
+            $partnerName = 'Een collega komt eraan…';
+        } elseif ($mode === 'human') {
+            $partnerType = 'human';
+            $assigned = $conversation?->assigned_agent_id ? ChatAgent::find($conversation->assigned_agent_id) : null;
+            $partnerName = $assigned?->name ? (explode(' ', trim($assigned->name))[0] ?: $assigned->name) : 'Medewerker';
+        }
+
+        $humanAvailable = collect($this->availableAgents)->contains(fn ($a) => ($a['type'] ?? null) === 'human');
+
+        // Foto van degene met wie je nu praat (voor de header): de toegewezen
+        // medewerker in mensmodus, anders de AI-agent.
+        $partnerAvatarUrl = $agentAvatarUrl;
+        if ($partnerType === 'human' && isset($assigned) && $assigned?->avatar) {
+            $partnerAvatarUrl = rescue(fn () => mediaHelper()->getSingleMedia($assigned->avatar, 'medium')?->url, null, false) ?: $agentAvatarUrl;
+        }
+
+        // Foto per bericht (afzender), gededupliceerd per agent zodat we media
+        // niet voor elk bericht opnieuw opvragen. Bezoekersberichten krijgen geen
+        // foto; AI/medewerker-berichten vallen terug op de agent-avatar.
+        $avatarByAgent = [];
+        $messageAvatars = [];
+        foreach ($this->messages as $widgetMessage) {
+            if ($widgetMessage->role === 'visitor') {
+                continue;
+            }
+            $agentId = $widgetMessage->agent_id;
+            if ($agentId && ! array_key_exists($agentId, $avatarByAgent)) {
+                $avatarByAgent[$agentId] = $widgetMessage->agent?->avatar
+                    ? rescue(fn () => mediaHelper()->getSingleMedia($widgetMessage->agent->avatar, 'medium')?->url, null, false)
+                    : null;
+            }
+            $messageAvatars[$widgetMessage->id] = ($agentId ? $avatarByAgent[$agentId] : null) ?: $agentAvatarUrl;
+        }
+
         return view('dashed-livechat::widget.widget', [
             'messages' => $this->messages,
             'siteId' => $this->siteId,
@@ -335,6 +420,12 @@ class ChatWidget extends Component
             'agentAvatarUrl' => $agentAvatarUrl,
             'availableAgents' => $this->availableAgents,
             'contactStep' => $this->contactStep,
+            'partnerName' => $partnerName,
+            'partnerType' => $partnerType,
+            'partnerAvatarUrl' => $partnerAvatarUrl,
+            'messageAvatars' => $messageAvatars,
+            'chatMode' => $mode,
+            'canRequestHuman' => $mode === 'ai' && $humanAvailable,
         ]);
     }
 }

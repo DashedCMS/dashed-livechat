@@ -142,10 +142,14 @@ class ChatAgentRunner
             ? (int) config('dashed-livechat.summary_keep_recent', 10)
             : (int) config('dashed-livechat.history_limit', 20);
 
+        // reorder() overschrijft de default orderBy('id') ASC van de
+        // messages()-relatie; anders blijft de query ASC en draait reverse()
+        // de geschiedenis juist verkeerd om (Claude kreeg het gesprek dan
+        // achterstevoren en reageerde op het eerste bericht).
         return $conversation->messages()
             ->whereIn('role', ['visitor', 'ai'])
             ->where('is_internal', false)
-            ->latest('id')->limit($limit)->get()->reverse()
+            ->reorder('id', 'desc')->limit($limit)->get()->reverse()
             ->map(fn (ChatMessage $m) => [
                 'role' => $m->role === 'visitor' ? 'user' : 'assistant',
                 'content' => $m->content,
