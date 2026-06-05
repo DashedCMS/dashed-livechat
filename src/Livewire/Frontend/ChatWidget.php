@@ -21,6 +21,7 @@ class ChatWidget extends Component
     public bool $open = false;
     public bool $awaitingReply = false;
     public int $lastMessageId = 0;
+    public string $lastMessagePreview = '';
     public ?int $proactiveTriggerId = null;
     public ?array $trigger = null;
     public ?string $streamUrl = null;
@@ -369,6 +370,11 @@ class ChatWidget extends Component
         // widget naar onder scrollt zodra er een bericht bijkomt.
         $this->lastMessageId = (int) ($this->messages->last()?->id ?? 0);
 
+        $lastIncoming = $this->messages->where('role', '!=', 'visitor')->last();
+        $this->lastMessagePreview = $lastIncoming
+            ? \Illuminate\Support\Str::limit(trim(strip_tags((string) $lastIncoming->content)), 90)
+            : '';
+
         $mode = $conversation?->mode ?? 'ai';
         $partnerType = 'ai';
         $partnerName = $agentName ?: ($cfg['title'] ?: 'Assistent');
@@ -420,6 +426,7 @@ class ChatWidget extends Component
             'agentAvatarUrl' => $agentAvatarUrl,
             'availableAgents' => $this->availableAgents,
             'contactStep' => $this->contactStep,
+            'newMessageIndicator' => $cfg['new_message_indicator'] ?? 'badge',
             'partnerName' => $partnerName,
             'partnerType' => $partnerType,
             'partnerAvatarUrl' => $partnerAvatarUrl,

@@ -10,6 +10,8 @@
         _es: null,
         expanded: false,
         lastMessageId: @entangle('lastMessageId'),
+        preview: @entangle('lastMessagePreview'),
+        indicator: @js($newMessageIndicator ?? 'badge'),
         unread: 0,
         _seenId: 0,
         _justSent: false,
@@ -124,6 +126,13 @@
     @keyframes dashed-chat-pulse { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,.55); } 70% { box-shadow: 0 0 0 9px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
     .dashed-chat__badge { animation: dashed-chat-pulse 1.6s ease-out infinite; }
     </style>
+    {{-- Voorbeeld van nieuw bericht boven het icoon (indien zo ingesteld) --}}
+    <div x-show="!open && unread > 0 && indicator === 'preview' && preview" x-cloak x-transition
+        @click="open = true"
+        style="position: absolute; bottom: 74px; {{ $cfg['position'] === 'left' ? 'left' : 'right' }}: 0; max-width: 260px; background:#fff; color:#1f2937; padding:10px 12px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.18); cursor:pointer; font-size:13px; line-height:1.4;">
+        <span x-text="preview"></span>
+    </div>
+
     {{-- Launcher --}}
     <button x-show="!open" @click="open = true" type="button"
         style="position: relative; background: var(--chat-primary); color: var(--chat-on-primary); border-radius: 9999px; width: 60px; height: 60px; box-shadow: 0 8px 24px rgba(0,0,0,.18); border: 0; cursor: pointer;"
@@ -133,7 +142,7 @@
         @else
             <span style="font-size: 24px;">&#128172;</span>
         @endif
-        <span x-show="unread > 0" x-cloak x-text="unread" class="dashed-chat__badge" aria-label="Ongelezen berichten"
+        <span x-show="unread > 0 && indicator !== 'preview'" x-cloak x-text="unread" class="dashed-chat__badge" aria-label="Ongelezen berichten"
             style="position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; background: #22c55e; color: #fff; border: 2px solid #fff; border-radius: 9999px; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;"></span>
     </button>
 

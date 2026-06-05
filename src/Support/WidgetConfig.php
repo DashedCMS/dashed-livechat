@@ -20,6 +20,7 @@ class WidgetConfig
             'avatar' => self::resolveImage(Customsetting::get('chat_avatar_url', $siteId)),
             'phone' => Customsetting::get('chat_contact_phone', $siteId) ?: Customsetting::get('company_phone_number', $siteId),
             'email' => Customsetting::get('chat_contact_email', $siteId) ?: Customsetting::get('site_from_email', $siteId),
+            'new_message_indicator' => Customsetting::get('chat_new_message_indicator', $siteId, 'badge'),
         ];
     }
 
