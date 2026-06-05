@@ -27,6 +27,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             ->hasViews('dashed-livechat')
             ->hasCommands([
                 \Dashed\DashedLivechat\Commands\IndexChatEmbeddings::class,
+                \Dashed\DashedLivechat\Commands\SweepStaleConversationsCommand::class,
             ])
             ->hasMigrations([
                 'create_chat_agents_table',
@@ -55,6 +56,11 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
         $this->app->booted(function () {
             $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
                 ->appendMiddlewareToGroup('web', \Dashed\DashedLivechat\Http\Middleware\InjectChatWidget::class);
+
+            // Markeer gesprekken inactief (15 min) en afgerond (1 uur) zonder reactie.
+            $this->app->make(\Illuminate\Console\Scheduling\Schedule::class)
+                ->command('dashed-livechat:sweep-stale-conversations')
+                ->everyFiveMinutes();
         });
 
         Route::middleware(['web', 'throttle:30,1'])

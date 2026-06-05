@@ -35,22 +35,55 @@ class ChatConversationResource extends Resource
         return false;
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = ChatConversation::query()->where('status', '!=', 'closed')->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'success';
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('site_id')
-                    ->label('Site')
-                    ->searchable(),
                 TextColumn::make('visitor_name')
                     ->label('Bezoeker')
-                    ->default('Anoniem'),
+                    ->state(fn ($record) => $record->visitor_name ?: ($record->visitor_email ?: 'Anoniem'))
+                    ->searchable(['visitor_name', 'visitor_email']),
                 TextColumn::make('mode')
                     ->label('Modus')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'ai' => 'AI',
+                        'waiting_human' => 'Wacht op medewerker',
+                        'human' => 'Medewerker',
+                        default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'waiting_human' => 'warning',
+                        'human' => 'success',
+                        default => 'gray',
+                    }),
                 TextColumn::make('status')
                     ->label('Status')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'active' => 'Actief',
+                        'inactive' => 'Inactief',
+                        'closed' => 'Afgerond',
+                        default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'active' => 'success',
+                        'inactive' => 'warning',
+                        'closed' => 'gray',
+                        default => 'gray',
+                    }),
                 TextColumn::make('messages_count')
                     ->counts('messages')
                     ->label('Berichten'),
@@ -73,14 +106,15 @@ class ChatConversationResource extends Resource
                     ->label('Modus')
                     ->options([
                         'ai' => 'AI',
-                        'waiting_human' => 'Wacht op mens',
-                        'human' => 'Mens',
+                        'waiting_human' => 'Wacht op medewerker',
+                        'human' => 'Medewerker',
                     ]),
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([
                         'active' => 'Actief',
-                        'closed' => 'Gesloten',
+                        'inactive' => 'Inactief',
+                        'closed' => 'Afgerond',
                     ]),
             ]);
     }

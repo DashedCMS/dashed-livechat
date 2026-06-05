@@ -35,7 +35,8 @@ class ConversationManager
             'role' => MessageRole::Visitor->value,
             'content' => $content,
         ]);
-        $c->forceFill(['last_message_at' => now()])->save();
+        // Begint de bezoeker weer te chatten, dan is het gesprek weer actief/open.
+        $c->forceFill(['last_message_at' => now(), 'status' => 'active'])->save();
 
         return $message;
     }
