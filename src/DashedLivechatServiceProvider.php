@@ -94,12 +94,20 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'read-only' => ['chat.read'],
             ]);
 
-            $mobileApi->registerDashboardContributor(function (string $siteId): array {
+            $mobileApi->registerDashboardContributor(function (string $siteId, $period): array {
+                $model = \Dashed\DashedLivechat\Models\ChatConversation::class;
+
                 return [
-                    'chat_waiting_human' => \Dashed\DashedLivechat\Models\ChatConversation::query()
-                        ->where('site_id', $siteId)->where('mode', 'waiting_human')->count(),
-                    'chat_open' => \Dashed\DashedLivechat\Models\ChatConversation::query()
-                        ->where('site_id', $siteId)->where('status', 'active')->count(),
+                    'conversations_waiting_human' => $model::query()
+                        ->where('site_id', $siteId)
+                        ->where('mode', 'waiting_human')
+                        ->whereBetween('created_at', [$period->start, $period->end])
+                        ->count(),
+                    'open_conversations' => $model::query()
+                        ->where('site_id', $siteId)
+                        ->where('status', 'active')
+                        ->whereBetween('created_at', [$period->start, $period->end])
+                        ->count(),
                 ];
             });
 
