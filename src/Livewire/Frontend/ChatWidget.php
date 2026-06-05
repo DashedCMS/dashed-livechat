@@ -239,7 +239,7 @@ class ChatWidget extends Component
      */
     protected function recomputeAwaitingReply(?ChatConversation $conversation): void
     {
-        $last = $conversation?->messages()->latest('id')->first();
+        $last = $conversation?->messages()->reorder()->latest('id')->first();
 
         $this->awaitingReply = $conversation
             && $conversation->mode === 'ai'
@@ -265,7 +265,7 @@ class ChatWidget extends Component
             return;
         }
 
-        $last = $conversation->messages()->latest('id')->first();
+        $last = $conversation->messages()->reorder()->latest('id')->first();
         if (! $last || $last->role !== 'ai') {
             return; // alleen als de bot net klaar is met antwoorden
         }
@@ -301,7 +301,7 @@ class ChatWidget extends Component
         }
         $conversation = ChatConversation::where('site_id', $this->siteId)
             ->where('public_token', $token)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'inactive'])
             ->first();
         if ($conversation) {
             $this->publicToken = $conversation->public_token;
