@@ -44,6 +44,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'create_chat_learnings_table',
                 'create_chat_visitor_sessions_table',
                 'create_app_notifications_table',
+                'create_chat_notes_table',
             ])
             ->runsMigrations();
     }

@@ -91,6 +91,13 @@
             </div>
 
             @if($mode === 'human')
+                <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+                    <x-filament::button size="sm" color="gray" icon="heroicon-m-sparkles"
+                        wire:click="suggestReply" wire:target="suggestReply" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="suggestReply">Stel antwoord voor</span>
+                        <span wire:loading wire:target="suggestReply">Bezig…</span>
+                    </x-filament::button>
+                </div>
                 <form wire:submit.prevent="sendReply" class="dlc__composer">
                     <input
                         wire:model="reply"
@@ -163,6 +170,27 @@
                             <div class="dlc__rel-empty">Geen bestellingen gevonden op basis van e-mail of ordernummer.</div>
                         @endforelse
                     </div>
+                </x-filament::section>
+
+                <x-filament::section class="dlc__notes">
+                    <x-slot name="heading">Interne notities</x-slot>
+                    <p class="dlc__rel-empty" style="margin-bottom:.5rem;">Alleen zichtbaar voor medewerkers.</p>
+
+                    <form wire:submit.prevent="addNote" style="display:flex; flex-direction:column; gap:.5rem; margin-bottom:.75rem;">
+                        <textarea wire:model="noteBody" rows="2" placeholder="Notitie toevoegen…" class="dlc__input fi-input" style="resize:vertical;"></textarea>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <x-filament::button size="sm" type="submit" icon="heroicon-m-plus" wire:loading.attr="disabled">Opslaan</x-filament::button>
+                        </div>
+                    </form>
+
+                    @forelse($this->notes as $note)
+                        <div style="padding:.5rem 0; border-top:1px solid rgba(127,127,127,.15); font-size:.8125rem;">
+                            <div style="opacity:.6; font-size:.6875rem; margin-bottom:2px;">{{ $note->author_name ?: 'Medewerker' }} · {{ $note->created_at?->format('d-m-Y H:i') }}</div>
+                            {!! nl2br(e($note->body)) !!}
+                        </div>
+                    @empty
+                        <div class="dlc__rel-empty">Nog geen notities.</div>
+                    @endforelse
                 </x-filament::section>
             </aside>
         </div>

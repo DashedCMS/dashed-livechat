@@ -8,6 +8,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedLivechat\Ai\LivechatAi;
+use Dashed\DashedLivechat\Models\ChatNote;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatLearning;
 use Dashed\DashedLivechat\Models\ChatConversation;
@@ -24,6 +26,8 @@ class ViewChatConversation extends Page
     public string $mode = 'ai';
 
     public string $reply = '';
+
+    public string $noteBody = '';
 
     /** Id van het laatste bericht; via @entangle reactief in Alpine om bij een nieuw bericht naar onder te scrollen. */
     public int $lastMessageId = 0;
@@ -263,6 +267,82 @@ class ViewChatConversation extends Page
     protected function conversationText(): string
     {
         return (string) ($this->conversation?->messages?->pluck('content')->join("\n") ?? '');
+    }
+
+    public function getNotesProperty()
+    {
+        return ChatNote::where('chat_conversation_id', $this->conversation->id)
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function addNote(): void
+    {
+        $this->requireAuth();
+
+        $body = trim($this->noteBody);
+        if ($body === '') {
+            return;
+        }
+
+        ChatNote::create([
+            'chat_conversation_id' => $this->conversation->id,
+            'user_id' => auth()->id(),
+            'author_name' => auth()->user()?->name,
+            'body' => $body,
+        ]);
+
+        $this->noteBody = '';
+        Notification::make()->title('Notitie opgeslagen')->success()->send();
+    }
+
+    /**
+     * Laat de AI een concept-antwoord voorstellen op basis van het gesprek.
+     * Vult het antwoordveld; verstuurt niets (de medewerker kiest zelf).
+     */
+    public function suggestReply(): void
+    {
+        $this->requireAuth();
+
+        $messages = $this->conversation->messages()
+            ->whereIn('role', ['visitor', 'ai', 'human'])
+            ->where('is_internal', false)
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ChatMessage $m) => [
+                'role' => $m->role === 'visitor' ? 'user' : 'assistant',
+                'content' => (string) $m->content,
+            ])
+            ->values()
+            ->all();
+
+        if (empty($messages)) {
+            return;
+        }
+
+        $agent = $this->conversation->aiAgent;
+        $system = 'Je bent een medewerker van de klantenservice. Stel een kort, vriendelijk en concreet concept-antwoord in het Nederlands voor op het laatste bericht van de klant, dat de medewerker kan versturen. Geef alleen het antwoord zelf, zonder inleiding of uitleg.';
+
+        $draft = rescue(function () use ($messages, $system, $agent) {
+            $response = LivechatAi::requireClaude()->messages($messages, [
+                'system' => $system,
+                'model' => $agent?->model,
+                'temperature' => 0.4,
+                'max_tokens' => 400,
+            ]);
+
+            return collect($response['content'] ?? [])
+                ->where('type', 'text')
+                ->pluck('text')
+                ->implode("\n");
+        }, null, false);
+
+        if ($draft) {
+            $this->reply = trim($draft);
+            Notification::make()->title('Concept-antwoord ingevuld')->success()->send();
+        } else {
+            Notification::make()->title('Kon geen suggestie ophalen')->danger()->send();
+        }
     }
 
     protected function refreshRecord(): void
