@@ -84,6 +84,13 @@ class ChatConversationResource extends Resource
                         'closed' => 'gray',
                         default => 'gray',
                     }),
+                TextColumn::make('rating')
+                    ->label('Beoordeling')
+                    ->state(fn ($record) => match ($record->meta['rating'] ?? null) {
+                        'up' => '👍',
+                        'down' => '👎',
+                        default => '—',
+                    }),
                 TextColumn::make('messages_count')
                     ->counts('messages')
                     ->label('Berichten'),

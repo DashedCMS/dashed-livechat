@@ -311,6 +311,18 @@
             @endif
         </div>
 
+        @if($rating)
+            <div style="flex-shrink:0; padding:8px 12px; border-top:1px solid #eee; font-size:12px; color:#6b7280; text-align:center;">
+                Bedankt voor je feedback!
+            </div>
+        @elseif($canRate)
+            <div style="flex-shrink:0; padding:8px 12px; border-top:1px solid #eee; display:flex; align-items:center; justify-content:center; gap:10px; font-size:12px; color:#6b7280;">
+                <span>Was dit nuttig?</span>
+                <button type="button" wire:click="rate('up')" title="Ja" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128077;</button>
+                <button type="button" wire:click="rate('down')" title="Nee" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128078;</button>
+            </div>
+        @endif
+
         @error('draft') <div style="color:#b91c1c; font-size:12px; padding:4px 12px 0;">{{ $message }}</div> @enderror
         <form wire:submit.prevent="sendMessage" x-on:submit="_justSent = true" style="display: flex; flex-shrink: 0; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
             <input wire:model="draft"

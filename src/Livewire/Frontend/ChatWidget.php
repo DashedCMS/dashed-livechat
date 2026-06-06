@@ -289,6 +289,29 @@ class ChatWidget extends Component
         $this->postBotMessage($conversation, $result['message'] ?? 'Ik haal er een collega bij, een moment geduld.');
     }
 
+    /** Bezoeker beoordeelt het gesprek (CSAT); opgeslagen in conversation->meta. */
+    public function rate(string $value): void
+    {
+        if (! in_array($value, ['up', 'down'], true)) {
+            return;
+        }
+
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return;
+        }
+
+        $meta = $conversation->meta ?? [];
+        if (! empty($meta['rating'])) {
+            return;
+        }
+
+        $meta['rating'] = $value;
+        $meta['rated_at'] = now()->toIso8601String();
+        $conversation->meta = $meta;
+        $conversation->save();
+    }
+
     public function toggle(): void
     {
         $this->open = ! $this->open;
@@ -426,6 +449,8 @@ class ChatWidget extends Component
             'agentAvatarUrl' => $agentAvatarUrl,
             'availableAgents' => $this->availableAgents,
             'contactStep' => $this->contactStep,
+            'rating' => $conversation?->meta['rating'] ?? null,
+            'canRate' => $conversation && empty($conversation->meta['rating']) && $this->messages->where('role', 'ai')->isNotEmpty(),
             'newMessageIndicator' => $cfg['new_message_indicator'] ?? 'badge',
             'partnerName' => $partnerName,
             'partnerType' => $partnerType,
