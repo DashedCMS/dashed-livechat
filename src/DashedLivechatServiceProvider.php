@@ -28,6 +28,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 \Dashed\DashedLivechat\Commands\IndexChatEmbeddings::class,
                 \Dashed\DashedLivechat\Commands\SweepStaleConversationsCommand::class,
+                \Dashed\DashedLivechat\Commands\NotifyVisitorCountCommand::class,
             ])
             ->hasMigrations([
                 'create_chat_agents_table',
@@ -41,6 +42,8 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'create_chat_embeddings_table',
                 'add_feedback_to_chat_messages_table',
                 'create_chat_learnings_table',
+                'create_chat_visitor_sessions_table',
+                'create_app_notifications_table',
             ])
             ->runsMigrations();
     }
@@ -57,15 +60,24 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
                 ->appendMiddlewareToGroup('web', \Dashed\DashedLivechat\Http\Middleware\InjectChatWidget::class);
 
+            // Always-on presence-heartbeat op elke frontend-pagina.
+            $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
+                ->appendMiddlewareToGroup('web', \Dashed\DashedLivechat\Http\Middleware\InjectVisitorPresence::class);
+
+            $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
             // Markeer gesprekken inactief (15 min) en afgerond (1 uur) zonder reactie.
-            $this->app->make(\Illuminate\Console\Scheduling\Schedule::class)
-                ->command('dashed-livechat:sweep-stale-conversations')
-                ->everyFiveMinutes();
+            $schedule->command('dashed-livechat:sweep-stale-conversations')->everyFiveMinutes();
+            // Zet (max 1 per 5 min) een app-notificatie klaar met het aantal live bezoekers.
+            $schedule->command('dashed-livechat:notify-visitor-count')->everyFiveMinutes();
         });
 
         Route::middleware(['web', 'throttle:30,1'])
             ->get('dashed-livechat/stream/{token}', StreamChatReplyController::class)
             ->name('dashed-livechat.stream');
+
+        Route::middleware(['web', 'throttle:120,1'])
+            ->get('dashed-livechat/presence', \Dashed\DashedLivechat\Http\Controllers\RecordVisitorPresenceController::class)
+            ->name('dashed-livechat.presence');
 
         $cms = cms();
 

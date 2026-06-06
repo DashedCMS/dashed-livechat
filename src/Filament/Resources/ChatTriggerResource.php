@@ -124,8 +124,6 @@ class ChatTriggerResource extends Resource
                     ->label('Naam')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('site_id')
-                    ->label('Site'),
                 TextColumn::make('placement')
                     ->label('Plaatsing')
                     ->badge()

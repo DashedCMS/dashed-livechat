@@ -16,6 +16,9 @@ class SweepStaleConversationsCommand extends Command
 
     public function handle(): int
     {
+        // Oude presence-sessies opruimen (ouder dan een dag).
+        \Dashed\DashedLivechat\Models\VisitorSession::where('last_seen_at', '<', now()->subDay())->delete();
+
         // Afgerond na 1 uur geen reactie (vanuit actief of inactief).
         $closed = ChatConversation::query()
             ->whereIn('status', ['active', 'inactive'])

@@ -50,6 +50,8 @@ class ChatSettingsPage extends Page implements HasSchemas
             $formData["chat_contact_email_{$site['id']}"] = Customsetting::get('chat_contact_email', $site['id']);
             $formData["chat_handoff_notifications_{$site['id']}"] = (bool) Customsetting::get('chat_handoff_notifications', $site['id'], true);
             $formData["chat_new_message_indicator_{$site['id']}"] = Customsetting::get('chat_new_message_indicator', $site['id'], 'badge');
+            $formData["chat_visitor_notifications_{$site['id']}"] = (bool) Customsetting::get('chat_visitor_notifications', $site['id'], false);
+            $formData["chat_visitor_notifications_min_{$site['id']}"] = (int) Customsetting::get('chat_visitor_notifications_min', $site['id'], 1);
         }
 
         $this->form->fill($formData);
@@ -116,6 +118,15 @@ class ChatSettingsPage extends Page implements HasSchemas
                             'preview' => 'Voorbeeld van het bericht boven het icoon',
                         ])
                         ->default('badge'),
+                    Toggle::make("chat_visitor_notifications_{$site['id']}")
+                        ->label('App-notificatie bij bezoekers op de site')
+                        ->helperText('Zet (max 1 per 5 minuten) een melding klaar voor de app met het aantal live bezoekers.')
+                        ->default(false),
+                    TextInput::make("chat_visitor_notifications_min_{$site['id']}")
+                        ->label('Vanaf hoeveel live bezoekers melden')
+                        ->numeric()
+                        ->minValue(1)
+                        ->default(1),
                 ])
                 ->columns(['default' => 1, 'lg' => 2]);
         }
@@ -144,6 +155,8 @@ class ChatSettingsPage extends Page implements HasSchemas
             Customsetting::set('chat_contact_email', $state["chat_contact_email_{$site['id']}"] ?? null, $site['id']);
             Customsetting::set('chat_handoff_notifications', $state["chat_handoff_notifications_{$site['id']}"] ? '1' : '0', $site['id']);
             Customsetting::set('chat_new_message_indicator', $state["chat_new_message_indicator_{$site['id']}"] ?? 'badge', $site['id']);
+            Customsetting::set('chat_visitor_notifications', $state["chat_visitor_notifications_{$site['id']}"] ? '1' : '0', $site['id']);
+            Customsetting::set('chat_visitor_notifications_min', (string) ($state["chat_visitor_notifications_min_{$site['id']}"] ?? 1), $site['id']);
         }
 
         Notification::make()

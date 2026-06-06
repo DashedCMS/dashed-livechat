@@ -5,6 +5,7 @@ namespace Dashed\DashedLivechat;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedLivechat\Filament\Pages\ChatDashboard;
+use Dashed\DashedLivechat\Filament\Pages\VisitorsLivePage;
 use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatLearningResource;
@@ -32,6 +33,7 @@ class DashedLivechatPlugin implements Plugin
             ->pages([
                 ChatSettingsPage::class,
                 ChatDashboard::class,
+                VisitorsLivePage::class,
             ]);
     }
 
