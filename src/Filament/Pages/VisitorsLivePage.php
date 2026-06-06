@@ -25,9 +25,13 @@ class VisitorsLivePage extends Page
 
     public float $cartTotal = 0.0;
 
+    public int $activeCarts = 0;
+
     public bool $showCart = false;
 
     public array $countries = [];
+
+    public array $topPages = [];
 
     public array $points = [];
 
@@ -48,6 +52,14 @@ class VisitorsLivePage extends Page
 
         $this->liveCount = $live->count();
         $this->cartTotal = (float) $live->sum('cart_total');
+        $this->activeCarts = $live->filter(fn ($v) => (float) $v->cart_total > 0)->count();
+
+        $this->topPages = $live->groupBy(fn ($v) => parse_url((string) $v->url, PHP_URL_PATH) ?: '/')
+            ->map(fn ($group, $path) => ['path' => $path, 'count' => $group->count()])
+            ->sortByDesc('count')
+            ->take(8)
+            ->values()
+            ->all();
 
         $this->countries = $live->groupBy(fn ($v) => $v->country ?: 'Onbekend')
             ->map(fn ($group, $country) => ['name' => $country, 'count' => $group->count()])
