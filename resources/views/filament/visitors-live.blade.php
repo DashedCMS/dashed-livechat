@@ -19,7 +19,7 @@
         .dlv-list-row span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     </style>
 
-    <div wire:poll.10s="pollData" style="display:flex; flex-direction:column; gap:1rem;">
+    <div wire:poll.5s="pollData" style="display:flex; flex-direction:column; gap:1rem;">
         {{-- Metric-kaarten --}}
         <div class="dlv-grid">
             <div class="dlv-stat">
@@ -47,24 +47,37 @@
             x-data="{
                 map: null,
                 layer: null,
+                userMoved: false,
+                autoFitting: false,
                 init() {
                     if (typeof L === 'undefined') { return; }
                     this.map = L.map($el, { worldCopyJump: true, attributionControl: false }).setView([25, 0], 2);
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18, subdomains: 'abcd' }).addTo(this.map);
                     this.layer = L.layerGroup().addTo(this.map);
+                    this.map.on('zoomstart dragstart', () => { if (! this.autoFitting) { this.userMoved = true; } });
                     this.draw($wire.points);
                     window.addEventListener('resize', () => this.map && this.map.invalidateSize());
                 },
                 draw(points) {
                     if (! this.map || ! this.layer) { return; }
                     this.layer.clearLayers();
+                    const coords = [];
                     (points || []).forEach((p) => {
                         if (! p.lat || ! p.lng) { return; }
+                        coords.push([p.lat, p.lng]);
                         const label = [p.city, p.country].filter(Boolean).join(', ')
                             + (p.cart > 0 ? ' — mandje € ' + p.cart.toFixed(2) : '');
                         const icon = L.divIcon({ className: 'dlv-dot-marker', html: '<span></span>', iconSize: [12, 12] });
                         L.marker([p.lat, p.lng], { icon }).addTo(this.layer).bindPopup(label || 'Bezoeker');
                     });
+                    // Focus op de bezoekers: pas de uitsnede aan zodat iedereen in
+                    // beeld staat (niet de hele wereldkaart). Stopt met auto-zoomen
+                    // zodra de admin zelf de kaart heeft versleept of gezoomd.
+                    if (coords.length && ! this.userMoved) {
+                        this.autoFitting = true;
+                        this.map.fitBounds(coords, { padding: [40, 40], maxZoom: 6 });
+                        this.map.once('moveend', () => { this.autoFitting = false; });
+                    }
                 },
             }"
             x-effect="draw($wire.points)"

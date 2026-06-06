@@ -33,9 +33,11 @@ class RecordVisitorPresenceController
             $geo = VisitorGeo::lookup($request->ip());
         }
 
+        // Subtotaal = waarde van de producten in het mandje (zonder verzending/
+        // korting), zodat "actieve mandjes" alleen mandjes met producten telt.
         $cartTotal = rescue(
             fn () => class_exists(\Dashed\DashedEcommerceCore\Classes\ShoppingCart::class)
-                ? (float) cartHelper()->getTotal()
+                ? (float) cartHelper()->getSubtotal()
                 : null,
             null,
             false
