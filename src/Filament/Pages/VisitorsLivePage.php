@@ -29,6 +29,8 @@ class VisitorsLivePage extends Page
 
     public float $revenueToday = 0.0;
 
+    public int $ordersToday = 0;
+
     public bool $showCart = false;
 
     public array $countries = [];
@@ -57,10 +59,12 @@ class VisitorsLivePage extends Page
         $this->activeCarts = $live->filter(fn ($v) => (float) $v->cart_total > 0)->count();
 
         if ($this->showCart && class_exists(\Dashed\DashedEcommerceCore\Models\Order::class)) {
-            $this->revenueToday = (float) rescue(fn () => \Dashed\DashedEcommerceCore\Models\Order::query()
+            $todayPaid = fn () => \Dashed\DashedEcommerceCore\Models\Order::query()
                 ->whereDate('created_at', today())
-                ->whereIn('status', ['paid', 'partially_paid', 'waiting_for_confirmation'])
-                ->sum('total'), 0.0, false);
+                ->whereIn('status', ['paid', 'partially_paid', 'waiting_for_confirmation']);
+
+            $this->revenueToday = (float) rescue(fn () => (clone $todayPaid())->sum('total'), 0.0, false);
+            $this->ordersToday = (int) rescue(fn () => (clone $todayPaid())->count(), 0, false);
         }
 
         $this->topPages = $live->groupBy(fn ($v) => parse_url((string) $v->url, PHP_URL_PATH) ?: '/')

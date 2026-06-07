@@ -46,6 +46,31 @@
             </div>
         </div>
 
+        @if($showCart)
+            {{-- Funnel: live bezoekers -> met mandje -> bestellingen vandaag --}}
+            <x-filament::section>
+                <x-slot name="heading">Funnel</x-slot>
+                @php($cartPct = $liveCount > 0 ? round($activeCarts / $liveCount * 100) : 0)
+                <div style="display:flex; align-items:stretch; gap:.5rem; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:140px; background:#0f172a; color:#fff; border-radius:12px; padding:14px 16px;">
+                        <div style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.6;">Live bezoekers</div>
+                        <div style="font-size:1.6rem; font-weight:700;">{{ $liveCount }}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; opacity:.4; font-size:1.2rem;">&rarr;</div>
+                    <div style="flex:1; min-width:140px; background:#0f172a; color:#fff; border-radius:12px; padding:14px 16px;">
+                        <div style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.6;">Met mandje</div>
+                        <div style="font-size:1.6rem; font-weight:700;">{{ $activeCarts }} <span style="font-size:.8rem; opacity:.6;">({{ $cartPct }}%)</span></div>
+                    </div>
+                    <div style="display:flex; align-items:center; opacity:.4; font-size:1.2rem;">&rarr;</div>
+                    <div style="flex:1; min-width:140px; background:#16a34a; color:#fff; border-radius:12px; padding:14px 16px;">
+                        <div style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; opacity:.75;">Bestellingen vandaag</div>
+                        <div style="font-size:1.6rem; font-weight:700;">{{ $ordersToday }}</div>
+                    </div>
+                </div>
+                <p style="opacity:.55; font-size:.75rem; margin-top:.5rem;">Live bezoekers en mandjes zijn een momentopname; bestellingen zijn het totaal van vandaag.</p>
+            </x-filament::section>
+        @endif
+
         {{-- Kaart --}}
         <div wire:ignore
             x-data="{
