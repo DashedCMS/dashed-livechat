@@ -52,6 +52,8 @@ class ChatSettingsPage extends Page implements HasSchemas
             $formData["chat_new_message_indicator_{$site['id']}"] = Customsetting::get('chat_new_message_indicator', $site['id'], 'badge');
             $formData["chat_visitor_notifications_{$site['id']}"] = (bool) Customsetting::get('chat_visitor_notifications', $site['id'], false);
             $formData["chat_visitor_notifications_min_{$site['id']}"] = (int) Customsetting::get('chat_visitor_notifications_min', $site['id'], 1);
+            $formData["chat_cart_nudge_{$site['id']}"] = (bool) Customsetting::get('chat_cart_nudge', $site['id'], false);
+            $formData["chat_cart_nudge_message_{$site['id']}"] = Customsetting::get('chat_cart_nudge_message', $site['id']);
         }
 
         $this->form->fill($formData);
@@ -127,6 +129,13 @@ class ChatSettingsPage extends Page implements HasSchemas
                         ->numeric()
                         ->minValue(1)
                         ->default(1),
+                    Toggle::make("chat_cart_nudge_{$site['id']}")
+                        ->label('Proactieve mandje-nudge')
+                        ->helperText('Spreek bezoekers met producten in hun mandje proactief aan (max 1x per uur per bezoeker).')
+                        ->default(false),
+                    TextInput::make("chat_cart_nudge_message_{$site['id']}")
+                        ->label('Tekst van de mandje-nudge')
+                        ->placeholder('Kan ik je ergens mee helpen met je bestelling? 🛒'),
                 ])
                 ->columns(['default' => 1, 'lg' => 2]);
         }
@@ -157,6 +166,8 @@ class ChatSettingsPage extends Page implements HasSchemas
             Customsetting::set('chat_new_message_indicator', $state["chat_new_message_indicator_{$site['id']}"] ?? 'badge', $site['id']);
             Customsetting::set('chat_visitor_notifications', $state["chat_visitor_notifications_{$site['id']}"] ? '1' : '0', $site['id']);
             Customsetting::set('chat_visitor_notifications_min', (string) ($state["chat_visitor_notifications_min_{$site['id']}"] ?? 1), $site['id']);
+            Customsetting::set('chat_cart_nudge', $state["chat_cart_nudge_{$site['id']}"] ? '1' : '0', $site['id']);
+            Customsetting::set('chat_cart_nudge_message', $state["chat_cart_nudge_message_{$site['id']}"] ?? null, $site['id']);
         }
 
         Notification::make()
