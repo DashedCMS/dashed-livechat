@@ -295,6 +295,26 @@
                              style="min-width:0; padding: 10px 12px; border-radius: 12px; line-height: 1.4; background: #fff; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.06);">
                             <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $senderLabel }}{{ $message->role === 'human' ? ' · medewerker' : '' }}</div>
                             <div class="dashed-chat__md">{!! \Illuminate\Support\Str::markdown($message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}</div>
+
+                            @php($cards = collect($message->tool_calls ?? [])->pluck('products')->filter()->flatten(1)->filter(fn ($p) => ! empty($p['name']))->unique('url')->take(6)->values())
+                            @if($cards->isNotEmpty())
+                                <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                                    @foreach($cards as $card)
+                                        <a href="{{ $card['url'] ?? '#' }}" target="_blank" rel="noopener"
+                                           style="display:flex; gap:10px; align-items:center; text-decoration:none; color:#1f2937; border:1px solid #eee; border-radius:10px; padding:8px; background:#fff;">
+                                            @if(! empty($card['image']))
+                                                <img src="{{ $card['image'] }}" alt="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+                                            @endif
+                                            <span style="min-width:0; display:flex; flex-direction:column;">
+                                                <span style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $card['name'] }}</span>
+                                                @if(! empty($card['price']))
+                                                    <span style="font-size:12px; color:#6b7280;">€ {{ number_format((float) $card['price'], 2, ',', '.') }}</span>
+                                                @endif
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif

@@ -63,6 +63,7 @@ class SearchProductsTool implements ChatTool
                     // (100000 is de "gewoon op voorraad"-sentinel).
                     'stock' => ($stock !== null && $stock < 100000) ? $stock : null,
                     'url' => rescue(fn () => $p->getUrl(), null, false),
+                    'image' => rescue(fn () => mediaHelper()->getSingleMedia($p->firstImage, 'small')?->url, null, false),
                 ];
             })->values()->all(),
         ];

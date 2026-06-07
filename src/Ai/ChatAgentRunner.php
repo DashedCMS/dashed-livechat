@@ -114,7 +114,21 @@ class ChatAgentRunner
                     ? $tool->handle($block['input'] ?? [], $conversation)
                     : ['error' => 'unknown_tool'];
 
-                $toolTrace[] = ['name' => $block['name'], 'input' => $this->maskInput($block['input'] ?? [])];
+                $trace = ['name' => $block['name'], 'input' => $this->maskInput($block['input'] ?? [])];
+                // Productresultaten meenemen zodat de widget productkaarten kan tonen.
+                if (in_array($block['name'], ['searchProducts', 'getProduct'], true) && ! empty($result['results']) && is_array($result['results'])) {
+                    $trace['products'] = collect($result['results'])
+                        ->take(6)
+                        ->map(fn ($p) => [
+                            'name' => $p['name'] ?? '',
+                            'price' => $p['price'] ?? null,
+                            'image' => $p['image'] ?? null,
+                            'url' => $p['url'] ?? null,
+                        ])
+                        ->values()
+                        ->all();
+                }
+                $toolTrace[] = $trace;
                 $toolResults[] = [
                     'type' => 'tool_result',
                     'tool_use_id' => $block['id'],
