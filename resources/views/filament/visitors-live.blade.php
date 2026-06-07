@@ -71,6 +71,20 @@
             </x-filament::section>
         @endif
 
+        {{-- Live activiteit --}}
+        <x-filament::section>
+            <x-slot name="heading">Live activiteit</x-slot>
+            @forelse($feed as $item)
+                <div style="display:flex; align-items:center; gap:.6rem; padding:.4rem 0; border-bottom:1px solid rgba(127,127,127,.12); font-size:.875rem;">
+                    <span style="flex-shrink:0;">{{ $item['type'] === 'order' ? '✅' : ($item['type'] === 'cart' ? '🛒' : '🟢') }}</span>
+                    <span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $item['text'] }}</span>
+                    <span style="flex-shrink:0; opacity:.5; font-size:.75rem;">{{ $item['time'] }}</span>
+                </div>
+            @empty
+                <p style="opacity:.6; font-size:.875rem;">Nog geen activiteit.</p>
+            @endforelse
+        </x-filament::section>
+
         {{-- Kaart --}}
         <div wire:ignore
             x-data="{

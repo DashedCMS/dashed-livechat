@@ -39,6 +39,8 @@ class VisitorsLivePage extends Page
 
     public array $points = [];
 
+    public array $feed = [];
+
     public function mount(): void
     {
         $this->showCart = class_exists(\Dashed\DashedEcommerceCore\Classes\ShoppingCart::class);
@@ -91,6 +93,48 @@ class VisitorsLivePage extends Page
             ])
             ->values()
             ->all();
+
+        $this->feed = $this->buildFeed($live);
+    }
+
+    /** Live activiteiten-feed: recente bezoekers + bestellingen van vandaag. */
+    protected function buildFeed($live): array
+    {
+        $items = [];
+
+        foreach ($live->sortByDesc('last_seen_at')->take(15) as $v) {
+            $where = trim(implode(', ', array_filter([$v->city, $v->country])));
+            $path = parse_url((string) $v->url, PHP_URL_PATH) ?: '/';
+            $cart = (float) $v->cart_total > 0 ? ' · mandje € ' . number_format((float) $v->cart_total, 2, ',', '.') : '';
+            $items[] = [
+                'ts' => $v->last_seen_at?->getTimestamp() ?? 0,
+                'time' => $v->last_seen_at?->format('H:i'),
+                'type' => (float) $v->cart_total > 0 ? 'cart' : 'visitor',
+                'text' => ($where ?: 'Bezoeker') . ' · ' . $path . $cart,
+            ];
+        }
+
+        if ($this->showCart && class_exists(\Dashed\DashedEcommerceCore\Models\Order::class)) {
+            $orders = rescue(fn () => \Dashed\DashedEcommerceCore\Models\Order::query()
+                ->whereDate('created_at', today())
+                ->whereIn('status', ['paid', 'partially_paid', 'waiting_for_confirmation'])
+                ->latest('id')
+                ->limit(10)
+                ->get(['id', 'total', 'first_name', 'created_at']), collect(), false);
+
+            foreach ($orders as $o) {
+                $items[] = [
+                    'ts' => $o->created_at?->getTimestamp() ?? 0,
+                    'time' => $o->created_at?->format('H:i'),
+                    'type' => 'order',
+                    'text' => 'Bestelling € ' . number_format((float) $o->total, 2, ',', '.') . ($o->first_name ? ' · ' . $o->first_name : ''),
+                ];
+            }
+        }
+
+        usort($items, fn ($a, $b) => $b['ts'] <=> $a['ts']);
+
+        return array_slice($items, 0, 15);
     }
 
     public static function getNavigationBadge(): ?string
