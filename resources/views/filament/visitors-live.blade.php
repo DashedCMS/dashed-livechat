@@ -35,6 +35,10 @@
                     <div class="dlv-stat__label">Waarde in mandjes</div>
                     <div class="dlv-stat__value">€ {{ number_format($cartTotal, 2, ',', '.') }}</div>
                 </div>
+                <div class="dlv-stat">
+                    <div class="dlv-stat__label">Omzet vandaag</div>
+                    <div class="dlv-stat__value">€ {{ number_format($revenueToday, 2, ',', '.') }}</div>
+                </div>
             @endif
             <div class="dlv-stat">
                 <div class="dlv-stat__label">Landen</div>
