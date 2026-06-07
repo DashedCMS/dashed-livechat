@@ -86,6 +86,13 @@
             this.$watch('publicToken', v => { if (v) { localStorage.setItem(_key, v); } });
             this.$watch('streamUrl', url => { if (url) this.startStream(url); });
 
+            // Proactieve cart-nudge vanuit de presence-heartbeat.
+            window.addEventListener('dashed-livechat-nudge', (e) => {
+                if (this.open || this.proactiveShown) { return; }
+                this.proactive = { message: (e.detail && e.detail.message) || '', type: 'immediate' };
+                this.fireProactive();
+            });
+
             // Ongelezen-teller + geluid bij binnenkomende berichten.
             this._seenId = this.lastMessageId || 0;
             this.$watch('lastMessageId', (val) => {

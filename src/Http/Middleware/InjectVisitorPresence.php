@@ -58,7 +58,14 @@ class InjectVisitorPresence
             var qs = 'token=' + encodeURIComponent(token)
                 + '&url=' + encodeURIComponent(location.href)
                 + '&referrer=' + encodeURIComponent(document.referrer || '');
-            fetch('{$url}?' + qs, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } }).catch(function () {});
+            fetch('{$url}?' + qs, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (d && d.nudge) {
+                        window.dispatchEvent(new CustomEvent('dashed-livechat-nudge', { detail: { message: d.nudge } }));
+                    }
+                })
+                .catch(function () {});
         }
         beat();
         setInterval(beat, 25000);
