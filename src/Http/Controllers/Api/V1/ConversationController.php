@@ -12,8 +12,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedLivechat\Services\HandoffService;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\ConversationManager;
+use Dashed\DashedLivechat\Services\ConversationContextService;
 use Dashed\DashedLivechat\Http\Resources\Api\Mobile\MessageResource;
 use Dashed\DashedLivechat\Http\Resources\Api\Mobile\ConversationResource;
+use Dashed\DashedLivechat\Http\Resources\Api\Mobile\ConversationDetailResource;
 
 class ConversationController extends Controller
 {
@@ -25,8 +27,15 @@ class ConversationController extends Controller
             $query->where('mode', (string) $mode);
         }
 
-        if ($status = $request->query('status')) {
+        if (($status = $request->query('status')) && $status !== 'all') {
             $query->where('status', (string) $status);
+        }
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('visitor_name', 'like', '%' . (string) $search . '%')
+                    ->orWhere('visitor_email', 'like', '%' . (string) $search . '%');
+            });
         }
 
         $perPage = (int) config('dashed-mobile-api.default_page_size', 25);
@@ -36,11 +45,20 @@ class ConversationController extends Controller
         );
     }
 
+    public function show(int $conversation, ConversationContextService $context): ConversationDetailResource
+    {
+        $model = $this->resolve($conversation);
+        $model->load(['aiAgent', 'assignedAgent']);
+        $model->related_context = $context->relatedFor($model);
+
+        return new ConversationDetailResource($model);
+    }
+
     public function messages(Request $request, int $conversation): AnonymousResourceCollection
     {
         $model = $this->resolve($conversation);
 
-        $query = $model->messages()->where('is_internal', false);
+        $query = $model->messages()->where('is_internal', false)->with('agent');
 
         if ($afterId = $request->query('after_id')) {
             $query->where('id', '>', (int) $afterId);

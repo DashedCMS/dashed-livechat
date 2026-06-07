@@ -4,7 +4,9 @@ namespace Dashed\DashedLivechat\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedLivechat\Support\VisitorGeo;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\VisitorSession;
 
 class RecordVisitorPresenceController
@@ -43,7 +45,7 @@ class RecordVisitorPresenceController
             false
         );
 
-        VisitorSession::updateOrCreate(
+        $session = VisitorSession::updateOrCreate(
             ['site_id' => $siteId, 'token' => $token],
             [
                 'last_seen_at' => now(),
@@ -59,6 +61,35 @@ class RecordVisitorPresenceController
             ],
         );
 
-        return response()->json(['ok' => true]);
+        return response()->json([
+            'ok' => true,
+            'nudge' => $this->cartNudge($siteId, $token, (float) $cartTotal, $session),
+        ]);
+    }
+
+    /**
+     * Proactieve nudge voor een bezoeker met producten in het mandje die al
+     * even op de site is. Maximaal eenmaal per uur per bezoeker (cache).
+     */
+    protected function cartNudge(string $siteId, string $token, float $cartTotal, VisitorSession $session): ?string
+    {
+        if ($cartTotal <= 0 || ! Customsetting::get('chat_cart_nudge', $siteId, false)) {
+            return null;
+        }
+
+        // Niet meteen bij binnenkomst; pas als iemand al even rondkijkt.
+        if (! $session->created_at || $session->created_at->gt(now()->subSeconds(90))) {
+            return null;
+        }
+
+        $cacheKey = 'livechat_cart_nudged:' . $siteId . ':' . $token;
+        if (Cache::has($cacheKey)) {
+            return null;
+        }
+
+        Cache::put($cacheKey, true, now()->addHour());
+
+        return Customsetting::get('chat_cart_nudge_message', $siteId)
+            ?: 'Kan ik je ergens mee helpen met je bestelling? 🛒';
     }
 }

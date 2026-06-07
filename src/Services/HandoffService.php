@@ -38,6 +38,18 @@ class HandoffService
         $c->events()->create(['type' => 'handoff_requested', 'payload' => ['reason' => $reason]]);
         $this->notifyAgents($c, $reason);
 
+        // Push-notificatie naar de app (alleen als de mobile-api geïnstalleerd is).
+        if (class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
+            app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
+                ->title('Nieuwe chat')
+                ->body(($c->visitor_name ?: 'Een bezoeker') . ' wacht op een medewerker')
+                ->sound('chat')
+                ->route("/conversation/{$c->id}")
+                ->data(['type' => 'conversation', 'id' => $c->id])
+                ->toAbility('chat.read')
+                ->send();
+        }
+
         return ['status' => 'requested', 'message' => 'Ik haal er een collega bij, een moment geduld.'];
     }
 

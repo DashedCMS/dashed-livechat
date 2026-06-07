@@ -19,6 +19,13 @@ class MessageResource extends JsonResource
             'role' => $this->role,
             'content' => $this->content,
             'created_at' => optional($this->created_at)->toIso8601String(),
+            'agent' => $this->agent ? [
+                'id' => $this->agent->id,
+                'name' => $this->agent->name,
+                'type' => $this->agent->type,
+            ] : null,
+            'tool_calls' => $this->tool_calls,
+            'feedback' => $this->feedback,
         ];
     }
 }

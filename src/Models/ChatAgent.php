@@ -14,6 +14,7 @@ class ChatAgent extends Model
         'is_active' => 'boolean',
         'languages' => 'array',
         'enabled_tools' => 'array',
+        'abilities' => 'array',
         'temperature' => 'float',
     ];
 

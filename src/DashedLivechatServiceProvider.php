@@ -45,6 +45,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'create_chat_visitor_sessions_table',
                 'create_app_notifications_table',
                 'create_chat_notes_table',
+                'add_abilities_to_chat_agents_table',
             ])
             ->runsMigrations();
     }
@@ -99,28 +100,44 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 : null;
             $mobileApi->registerCapability('livechat', ['version' => $version]);
 
-            $mobileApi->registerAbilities(['chat.read', 'chat.reply', 'chat.takeover']);
-            $mobileApi->registerRoleAbilities([
-                'eigenaar' => ['chat.read', 'chat.reply', 'chat.takeover'],
-                'admin' => ['chat.read', 'chat.reply', 'chat.takeover'],
-                'support-agent' => ['chat.read', 'chat.reply', 'chat.takeover'],
-                'read-only' => ['chat.read'],
-            ]);
+            $mobileApi->registerAbilities(['chat.read', 'chat.reply', 'chat.takeover', 'chat.manage']);
+
+            // Middleware die livechat-toegang per site + per medewerker afdwingt.
+            app('router')->aliasMiddleware('chat.ability', \Dashed\DashedLivechat\Http\Middleware\EnsureChatAgentAbility::class);
+
+            // De app krijgt via /capabilities de effectieve livechat-rechten van
+            // de ingelogde user voor de actieve site. Alleen geregistreerde
+            // medewerkers (of superadmin) hebben toegang.
+            $mobileApi->registerCapabilityContextContributor(function ($user, string $siteId): array {
+                return [
+                    'chat' => [
+                        'is_agent' => \Dashed\DashedLivechat\Support\ChatAccess::isAgent($user, $siteId),
+                        'abilities' => \Dashed\DashedLivechat\Support\ChatAccess::abilitiesForUser($user, $siteId),
+                    ],
+                ];
+            });
 
             $mobileApi->registerDashboardContributor(function (string $siteId, $period): array {
                 $model = \Dashed\DashedLivechat\Models\ChatConversation::class;
+                $inPeriod = fn () => $model::query()
+                    ->where('site_id', $siteId)
+                    ->whereBetween('created_at', [$period->start, $period->end]);
+
+                $escalations = \Dashed\DashedLivechat\Models\ChatEvent::query()
+                    ->where('type', 'handoff_requested')
+                    ->whereBetween('created_at', [$period->start, $period->end])
+                    ->whereIn('chat_conversation_id', $model::query()->where('site_id', $siteId)->select('id'))
+                    ->count();
 
                 return [
-                    'conversations_waiting_human' => $model::query()
-                        ->where('site_id', $siteId)
-                        ->where('mode', 'waiting_human')
-                        ->whereBetween('created_at', [$period->start, $period->end])
-                        ->count(),
-                    'open_conversations' => $model::query()
-                        ->where('site_id', $siteId)
-                        ->where('status', 'active')
-                        ->whereBetween('created_at', [$period->start, $period->end])
-                        ->count(),
+                    'conversations_waiting_human' => (clone $inPeriod())->where('mode', 'waiting_human')->count(),
+                    'open_conversations' => (clone $inPeriod())->where('status', 'active')->count(),
+                    'chat_modes' => [
+                        'ai' => (clone $inPeriod())->where('mode', 'ai')->count(),
+                        'waiting_human' => (clone $inPeriod())->where('mode', 'waiting_human')->count(),
+                        'human' => (clone $inPeriod())->where('mode', 'human')->count(),
+                    ],
+                    'chat_escalations' => $escalations,
                 ];
             });
 
