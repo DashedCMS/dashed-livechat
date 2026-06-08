@@ -71,6 +71,9 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             $schedule->command('dashed-livechat:sweep-stale-conversations')->everyFiveMinutes();
             // Zet (max 1 per 5 min) een app-notificatie klaar met het aantal live bezoekers.
             $schedule->command('dashed-livechat:notify-visitor-count')->everyFiveMinutes();
+            // Houd de semantische kennis-index (embeddings) dagelijks vers; de
+            // command slaat zichzelf over op sites zonder embedding-zoekstrategie.
+            $schedule->command('chat:index-embeddings')->dailyAt('04:00');
         });
 
         Route::middleware(['web', 'throttle:30,1'])
