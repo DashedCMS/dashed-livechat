@@ -108,6 +108,10 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             // Middleware die livechat-toegang per site + per medewerker afdwingt.
             app('router')->aliasMiddleware('chat.ability', \Dashed\DashedLivechat\Http\Middleware\EnsureChatAgentAbility::class);
 
+            $mobileApi->registerNotificationTypes([
+                ['key' => 'chat.handoff', 'label' => 'Nieuwe chat', 'description' => 'Een bezoeker vraagt om een medewerker.', 'group' => 'Livechat', 'sound' => 'chat', 'ability' => 'chat.read', 'default' => true],
+            ]);
+
             // De app krijgt via /capabilities de effectieve livechat-rechten van
             // de ingelogde user voor de actieve site. Alleen geregistreerde
             // medewerkers (of superadmin) hebben toegang.
@@ -122,23 +126,23 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
             $mobileApi->registerDashboardContributor(function (string $siteId, $period): array {
                 $model = \Dashed\DashedLivechat\Models\ChatConversation::class;
-                $inPeriod = fn () => $model::query()
-                    ->where('site_id', $siteId)
-                    ->whereBetween('created_at', [$period->start, $period->end]);
 
-                $escalations = \Dashed\DashedLivechat\Models\ChatEvent::query()
-                    ->where('type', 'handoff_requested')
-                    ->whereBetween('created_at', [$period->start, $period->end])
-                    ->whereIn('chat_conversation_id', $model::query()->where('site_id', $siteId)->select('id'))
-                    ->count();
+                // Livechat-cijfers tonen bewust de HUIDIGE live-stand en zijn
+                // niet afhankelijk van de geselecteerde dashboard-periode.
+                $active = fn () => $model::query()
+                    ->where('site_id', $siteId)
+                    ->where('status', 'active');
+
+                // Escalaties = nu openstaande gesprekken die op een medewerker wachten.
+                $escalations = (clone $active())->where('mode', 'waiting_human')->count();
 
                 return [
-                    'conversations_waiting_human' => (clone $inPeriod())->where('mode', 'waiting_human')->count(),
-                    'open_conversations' => (clone $inPeriod())->where('status', 'active')->count(),
+                    'conversations_waiting_human' => (clone $active())->where('mode', 'waiting_human')->count(),
+                    'open_conversations' => (clone $active())->count(),
                     'chat_modes' => [
-                        'ai' => (clone $inPeriod())->where('mode', 'ai')->count(),
-                        'waiting_human' => (clone $inPeriod())->where('mode', 'waiting_human')->count(),
-                        'human' => (clone $inPeriod())->where('mode', 'human')->count(),
+                        'ai' => (clone $active())->where('mode', 'ai')->count(),
+                        'waiting_human' => (clone $active())->where('mode', 'waiting_human')->count(),
+                        'human' => (clone $active())->where('mode', 'human')->count(),
                     ],
                     'chat_escalations' => $escalations,
                 ];

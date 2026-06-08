@@ -41,12 +41,11 @@ class HandoffService
         // Push-notificatie naar de app (alleen als de mobile-api geïnstalleerd is).
         if (class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
             app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
+                ->type('chat.handoff')
                 ->title('Nieuwe chat')
                 ->body(($c->visitor_name ?: 'Een bezoeker') . ' wacht op een medewerker')
-                ->sound('chat')
                 ->route("/conversation/{$c->id}")
                 ->data(['type' => 'conversation', 'id' => $c->id])
-                ->toAbility('chat.read')
                 ->send();
         }
 
