@@ -19,6 +19,7 @@ return new class () extends Migration {
             $table->string('placement')->default('all_pages'); // all_pages|include_urls|url_pattern
             $table->json('url_rules')->nullable();
             $table->json('exclude_urls')->nullable();
+            $table->json('model_links')->nullable();
             $table->string('trigger_type')->default('none');   // none|immediate|time_on_page|scroll_depth|exit_intent
             $table->integer('trigger_value')->nullable();
             $table->text('proactive_message')->nullable();

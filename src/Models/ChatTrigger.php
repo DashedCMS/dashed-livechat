@@ -10,5 +10,5 @@ class ChatTrigger extends Model
 {
     protected $table = 'dashed__chat_triggers';
     protected $guarded = [];
-    protected $casts = ['is_active' => 'boolean', 'url_rules' => 'array', 'exclude_urls' => 'array'];
+    protected $casts = ['is_active' => 'boolean', 'url_rules' => 'array', 'exclude_urls' => 'array', 'model_links' => 'array'];
 }
