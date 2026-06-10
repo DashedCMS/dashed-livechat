@@ -5,6 +5,8 @@
 namespace Dashed\DashedLivechat\Services;
 
 use Dashed\DashedLivechat\Models\ChatTrigger;
+use Dashed\DashedLivechat\Services\VisitableLineage;
+use Dashed\DashedLivechat\Services\CurrentVisitableResolver;
 
 class TriggerMatcher
 {
@@ -24,6 +26,14 @@ class TriggerMatcher
     {
         $path = '/' . ltrim($path, '/');
         $triggers = ChatTrigger::where('site_id', $siteId)->where('is_active', true)->orderByDesc('sort_order')->get();
+
+        $lineage = [];
+        if ($triggers->contains(fn ($t) => $t->placement === 'models')) {
+            $model = app(CurrentVisitableResolver::class)->resolve();
+            if ($model) {
+                $lineage = app(VisitableLineage::class)->for($model);
+            }
+        }
 
         foreach ($triggers as $trigger) {
             // Check exclude_urls first — if path is excluded, skip this trigger.
@@ -53,6 +63,17 @@ class TriggerMatcher
                 foreach (($trigger->url_rules ?? []) as $rule) {
                     if (@preg_match('#' . $rule . '#', $path)) {
                         return $trigger;
+                    }
+                }
+            }
+            if ($trigger->placement === 'models') {
+                foreach (($trigger->model_links ?? []) as $link) {
+                    $type = $link['type'] ?? null;
+                    $id = (int) ($link['id'] ?? 0);
+                    foreach ($lineage as $entry) {
+                        if ($entry['type'] === $type && $entry['id'] === $id) {
+                            return $trigger;
+                        }
                     }
                 }
             }
