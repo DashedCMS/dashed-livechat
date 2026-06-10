@@ -110,6 +110,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
             $mobileApi->registerNotificationTypes([
                 ['key' => 'chat.handoff', 'label' => 'Nieuwe chat', 'description' => 'Een bezoeker vraagt om een medewerker.', 'group' => 'Livechat', 'sound' => 'chat', 'ability' => 'chat.read', 'default' => true],
+                ['key' => 'visitors.live', 'label' => 'Live bezoekers', 'description' => 'Krijg met tussenpozen een melding hoeveel bezoekers er nu op de website zijn.', 'group' => 'Livechat', 'sound' => 'default', 'ability' => 'chat.read', 'default' => false],
             ]);
 
             // De app krijgt via /capabilities de effectieve livechat-rechten van
