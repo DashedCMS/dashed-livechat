@@ -57,6 +57,7 @@ class NotifyVisitorCountCommand extends Command
                 try {
                     app($center)->push()
                         ->type('visitors.live')
+                        ->site((string) $siteId)
                         ->title($title)
                         ->body($body)
                         ->route('/visitors')
