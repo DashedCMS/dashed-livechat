@@ -22,6 +22,7 @@ class TriggerResource extends JsonResource
             'placement' => $this->placement,
             'url_rules' => $this->url_rules ?? [],
             'exclude_urls' => $this->exclude_urls ?? [],
+            'model_links' => $this->model_links ?? [],
             'trigger_type' => $this->trigger_type,
             'trigger_value' => $this->trigger_value !== null ? (int) $this->trigger_value : null,
             'proactive_message' => $this->proactive_message,
