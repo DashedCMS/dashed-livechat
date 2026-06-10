@@ -5,8 +5,6 @@
 namespace Dashed\DashedLivechat\Services;
 
 use Dashed\DashedLivechat\Models\ChatTrigger;
-use Dashed\DashedLivechat\Services\VisitableLineage;
-use Dashed\DashedLivechat\Services\CurrentVisitableResolver;
 
 class TriggerMatcher
 {

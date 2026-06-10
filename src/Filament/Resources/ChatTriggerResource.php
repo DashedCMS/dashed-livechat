@@ -18,8 +18,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Models\ChatTrigger;
-use Illuminate\Support\Facades\Schema as DbSchema;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Support\Facades\Schema as DbSchema;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource\Pages;
 
 class ChatTriggerResource extends Resource

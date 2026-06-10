@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Dashed\DashedLivechat\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Models\ChatTrigger;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
