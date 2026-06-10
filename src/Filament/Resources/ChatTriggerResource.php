@@ -9,6 +9,7 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Models\ChatTrigger;
+use Illuminate\Support\Facades\Schema as DbSchema;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource\Pages;
 
@@ -65,6 +67,7 @@ class ChatTriggerResource extends Resource
                             'all_pages' => 'Alle pagina\'s',
                             'include_urls' => 'Specifieke URL\'s',
                             'url_pattern' => 'URL-patroon',
+                            'models' => 'Specifieke modellen',
                         ])
                         ->default('all_pages')
                         ->live()
@@ -72,7 +75,54 @@ class ChatTriggerResource extends Resource
                     TagsInput::make('url_rules')
                         ->label('URL-regels')
                         ->helperText('Voer de URL\'s of patronen in die van toepassing zijn.')
-                        ->visible(fn (Get $get) => $get('placement') !== 'all_pages'),
+                        ->visible(fn (Get $get) => in_array($get('placement'), ['include_urls', 'url_pattern'], true)),
+                    Repeater::make('model_links')
+                        ->label('Gekoppelde modellen')
+                        ->helperText('Selecteer de specifieke modellen waarop deze trigger actief is.')
+                        ->schema([
+                            Select::make('type')
+                                ->label('Type')
+                                ->options(self::routeModelOptions())
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(fn (callable $set) => $set('id', null)),
+                            Select::make('id')
+                                ->label('Model')
+                                ->searchable()
+                                ->required()
+                                ->getSearchResultsUsing(function (string $search, callable $get) {
+                                    $class = $get('type');
+                                    if (! $class || ! class_exists($class)) {
+                                        return [];
+                                    }
+                                    $model = new $class();
+
+                                    return $class::query()
+                                        ->where(function ($q) use ($search, $model) {
+                                            foreach (['name', 'title'] as $col) {
+                                                if (DbSchema::hasColumn($model->getTable(), $col)) {
+                                                    $q->orWhere($col, 'like', "%{$search}%");
+                                                }
+                                            }
+                                        })
+                                        ->limit(50)
+                                        ->get()
+                                        ->mapWithKeys(fn ($m) => [$m->getKey() => $m->name ?? $m->title ?? "#{$m->getKey()}"])
+                                        ->toArray();
+                                })
+                                ->getOptionLabelUsing(function ($value, callable $get) {
+                                    $class = $get('type');
+                                    if (! $value || ! $class || ! class_exists($class)) {
+                                        return null;
+                                    }
+                                    $item = $class::find($value);
+
+                                    return $item ? ($item->name ?? $item->title ?? "#{$item->getKey()}") : null;
+                                }),
+                        ])
+                        ->columns(2)
+                        ->columnSpanFull()
+                        ->visible(fn (Get $get) => $get('placement') === 'models'),
                     TagsInput::make('exclude_urls')
                         ->label('Uitgesloten URL\'s')
                         ->helperText('URL\'s waarop deze trigger niet actief is.'),
@@ -149,6 +199,22 @@ class ChatTriggerResource extends Resource
                     ->boolean(),
             ])
             ->defaultSort('sort_order');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function routeModelOptions(): array
+    {
+        $options = [];
+        foreach (cms()->builder('routeModels') ?? [] as $modelConfig) {
+            $class = $modelConfig['class'] ?? null;
+            if ($class && class_exists($class)) {
+                $options[$class] = $modelConfig['name'] ?? class_basename($class);
+            }
+        }
+
+        return $options;
     }
 
     public static function getPages(): array
