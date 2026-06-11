@@ -6,9 +6,13 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
@@ -198,7 +202,16 @@ class ChatTriggerResource extends Resource
                     ->label('Actief')
                     ->boolean(),
             ])
-            ->defaultSort('sort_order');
+            ->defaultSort('sort_order')
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     /**
