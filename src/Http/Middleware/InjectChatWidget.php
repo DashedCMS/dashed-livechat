@@ -44,10 +44,10 @@ class InjectChatWidget
         if (! WidgetConfig::for($siteId)['enabled']) {
             return $response;
         }
-        if (! $this->matcher->matches($siteId, $request->path())) {
-            return $response;
-        }
 
+        // De chat-widget staat altijd op de frontend (zolang globaal ingeschakeld).
+        // Triggers bepalen NIET of de widget verschijnt, alleen of er op deze
+        // pagina een proactief bericht wordt meegegeven (zie matchingTrigger).
         $content = $response->getContent();
         if (! is_string($content) || ! str_contains($content, '</body>')) {
             return $response;
