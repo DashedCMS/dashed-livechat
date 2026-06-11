@@ -210,13 +210,23 @@
         <div data-chat-scroll style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
              x-effect="open; lastMessageId; $nextTick(() => { $el.scrollTop = $el.scrollHeight; })">
 
-            {{-- Proactief bericht bubble (client-side via Alpine).
-                 wire:ignore zodat Livewire-polls de tekst niet wegmorphen; tonen
-                 en de inhoud gaan reactief via x-show/x-text. --}}
+            {{-- Proactief bericht: ziet eruit als een gewoon AI-bericht (avatar +
+                 naam + tekst). wire:ignore zodat Livewire-polls de bubble niet
+                 wegmorphen; tonen/inhoud reactief via x-show/x-text. --}}
+            @php($proName = $agentName ?: ($cfg['title'] ?: 'Assistent'))
             <div wire:ignore x-show="proactiveShown" x-cloak style="margin-bottom:10px;">
-                <div class="dashed-chat__msg dashed-chat__msg--ai"
-                     style="background:#fff; color:#1f2937; padding:10px 12px; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.06);"
-                     x-text="proactive && proactive.message ? proactive.message : ''"></div>
+                <div style="display:flex; gap:8px; align-items:flex-start; max-width:85%;">
+                    @if($agentAvatarUrl)
+                        <img src="{{ $agentAvatarUrl }}" alt="" style="width:28px; height:28px; border-radius:9999px; object-fit:cover; flex-shrink:0;">
+                    @else
+                        <div style="width:28px; height:28px; border-radius:9999px; flex-shrink:0; background: var(--chat-primary); color: var(--chat-on-primary); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">{{ mb_strtoupper(mb_substr($proName, 0, 1)) }}</div>
+                    @endif
+                    <div class="dashed-chat__msg dashed-chat__msg--ai"
+                         style="min-width:0; padding: 10px 12px; border-radius: 12px; line-height: 1.4; background: #fff; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.06);">
+                        <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $proName }}</div>
+                        <div x-text="proactive && proactive.message ? proactive.message : ''"></div>
+                    </div>
+                </div>
             </div>
 
             {{-- Serverside fallback voor tests en SEO --}}
@@ -225,8 +235,10 @@
             @endif
 
             @if($messages->isEmpty())
-                {{-- Persoonlijke welkomststaat (alleen als chat nog niet gestart) --}}
-                <div style="text-align: center; padding: 24px 16px 16px;">
+                {{-- Persoonlijke welkomststaat (alleen als chat nog niet gestart).
+                     Verbergt zodra een proactief bericht verschijnt, zodat het lijkt
+                     alsof de bot dat bericht stuurde in plaats van het welkomstscherm. --}}
+                <div x-show="!proactiveShown" style="text-align: center; padding: 24px 16px 16px;">
                     @php($welcomeAvatar = $agentAvatarUrl ?? $cfg['avatar'])
                     @if($welcomeAvatar)
                         <img src="{{ $welcomeAvatar }}" alt="{{ $agentName ?? $cfg['title'] }}"
