@@ -160,7 +160,7 @@ class ChatAgentRunner
         // messages()-relatie; anders blijft de query ASC en draait reverse()
         // de geschiedenis juist verkeerd om (Claude kreeg het gesprek dan
         // achterstevoren en reageerde op het eerste bericht).
-        return $conversation->messages()
+        $history = $conversation->messages()
             ->whereIn('role', ['visitor', 'ai'])
             ->where('is_internal', false)
             ->reorder('id', 'desc')->limit($limit)->get()->reverse()
@@ -168,6 +168,45 @@ class ChatAgentRunner
                 'role' => $m->role === 'visitor' ? 'user' : 'assistant',
                 'content' => $m->content,
             ])->values()->all();
+
+        return $this->normalizeForClaude($history);
+    }
+
+    /**
+     * Anthropic eist dat de reeks met een user-bericht begint en dat rollen
+     * alterneren. Door het schuivende history-venster (of een AI-begroeting
+     * vooraan) kan de reeks met een assistant-bericht beginnen of twee
+     * same-role berichten achter elkaar bevatten; beide leveren een 400 op.
+     * Hier laten we leidende non-user berichten vallen en voegen we
+     * opeenvolgende same-role berichten samen.
+     *
+     * @param  array<int, array{role:string, content:string}>  $messages
+     * @return array<int, array{role:string, content:string}>
+     */
+    protected function normalizeForClaude(array $messages): array
+    {
+        while (! empty($messages) && ($messages[0]['role'] ?? null) !== 'user') {
+            array_shift($messages);
+        }
+
+        $normalized = [];
+        foreach ($messages as $message) {
+            $content = trim((string) ($message['content'] ?? ''));
+            if ($content === '') {
+                continue;
+            }
+
+            $lastIndex = count($normalized) - 1;
+            if ($lastIndex >= 0 && $normalized[$lastIndex]['role'] === $message['role']) {
+                $normalized[$lastIndex]['content'] .= "\n\n" . $content;
+
+                continue;
+            }
+
+            $normalized[] = ['role' => $message['role'], 'content' => $content];
+        }
+
+        return $normalized;
     }
 
     protected function extractText(array $content): string

@@ -28,6 +28,19 @@
                  x-data="{ lastId: @entangle('lastMessageId') }"
                  x-effect="lastId; $nextTick(() => { $el.scrollTop = $el.scrollHeight; })">
                 @forelse($conversation->messages as $message)
+                    @if($message->role === 'system')
+                        <div class="dlc__sysrow">
+                            <div class="dlc__syserror">
+                                <div class="dlc__syserror-head">
+                                    <x-filament::icon icon="heroicon-m-exclamation-triangle" class="dlc__syserror-icon" />
+                                    <span>Foutmelding · alleen zichtbaar voor medewerkers</span>
+                                    <span class="dlc__time">{{ $message->created_at?->format('d-m H:i') }}</span>
+                                </div>
+                                <pre class="dlc__syserror-body">{{ $message->content }}</pre>
+                            </div>
+                        </div>
+                        @continue
+                    @endif
                     @php($isVisitor = $message->role === 'visitor')
                     <div @class([
                         'dlc__row',
@@ -248,6 +261,23 @@
         .dlc__tools-icon { width: 0.875rem; height: 0.875rem; }
 
         .dlc__empty { text-align: center; color: rgb(113 113 122); font-size: 0.875rem; padding: 2rem 0; }
+
+        .dlc__sysrow { display: flex; justify-content: center; }
+        .dlc__syserror {
+            width: 100%;
+            max-width: min(90%, 44rem);
+            border: 1px solid rgb(248 113 113);
+            background: rgb(254 242 242);
+            color: rgb(127 29 29);
+            border-radius: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+        .dark .dlc__syserror { background: rgb(69 10 10 / 0.4); border-color: rgb(153 27 27); color: rgb(252 165 165); }
+        .dlc__syserror-head { display: flex; align-items: center; gap: 0.375rem; font-weight: 600; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.375rem; }
+        .dlc__syserror-head .dlc__time { margin-left: auto; font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.75; }
+        .dlc__syserror-icon { width: 0.875rem; height: 0.875rem; flex-shrink: 0; }
+        .dlc__syserror-body { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; line-height: 1.45; }
 
         .dlc__composer { display: flex; gap: 0.5rem; margin-top: 1rem; }
         .dlc__input {

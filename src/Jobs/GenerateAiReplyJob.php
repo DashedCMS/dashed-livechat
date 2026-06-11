@@ -36,6 +36,22 @@ class GenerateAiReplyJob implements ShouldQueue
             $runner->run($conversation);
         } catch (\Throwable $e) {
             Log::warning('chat: AI-antwoord mislukt', ['conversation' => $this->conversationId, 'error' => $e->getMessage()]);
+
+            // Echte foutmelding bewaren als intern systeembericht, zodat een
+            // medewerker in het CMS kan zien wat er misging. is_internal => true
+            // houdt dit verborgen voor de bezoeker (widget en API filteren hierop).
+            $conversation->messages()->create([
+                'role' => MessageRole::System->value,
+                'is_internal' => true,
+                'content' => sprintf(
+                    "AI-antwoord mislukt: %s\n\n%s\nin %s:%d",
+                    $e->getMessage(),
+                    $e::class,
+                    $e->getFile(),
+                    $e->getLine(),
+                ),
+            ]);
+
             $conversation->messages()->create([
                 'role' => MessageRole::Ai->value,
                 'agent_id' => $conversation->ai_agent_id,
