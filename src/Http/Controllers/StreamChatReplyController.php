@@ -16,6 +16,14 @@ class StreamChatReplyController
         $conversation = ChatConversation::where('public_token', $token)->firstOrFail();
 
         return response()->stream(function () use ($conversation, $runner) {
+            // Dit is een langlevende SSE-respons die synchroon naar Claude streamt
+            // (inclusief een tool-loop). De standaard max_execution_time van 30s
+            // breekt zo'n verzoek af midden in de curl-wait met een FatalError in
+            // Guzzle's CurlMultiHandler. Voor een stream-endpoint heffen we de
+            // PHP-tijdslimiet op; elke uitgaande call blijft begrensd door de
+            // Guzzle-timeout (120s) in de provider.
+            set_time_limit(0);
+
             // C1: mode guard — no AI call when a human agent is handling the conversation.
             if (in_array($conversation->mode, ['human', 'waiting_human'], true) || ! $conversation->aiAgent) {
                 echo "event: done\ndata: {}\n\n";
