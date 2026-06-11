@@ -22,7 +22,7 @@ return new class () extends Migration {
             $table->unsignedBigInteger('ai_agent_id')->nullable();
             $table->unsignedBigInteger('assigned_agent_id')->nullable();
             $table->timestamp('last_message_at')->nullable();
-            $table->string('started_url')->nullable();
+            $table->text('started_url')->nullable();
             $table->integer('order_lookup_attempts')->default(0);
             $table->string('ip_hash')->nullable();
             $table->json('meta')->nullable();
