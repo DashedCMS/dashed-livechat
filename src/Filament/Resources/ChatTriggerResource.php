@@ -47,9 +47,6 @@ class ChatTriggerResource extends Resource
         return $schema->schema([
             Section::make('Algemeen')->columnSpanFull()
                 ->schema([
-                    TextInput::make('site_id')
-                        ->label('Site')
-                        ->required(),
                     TextInput::make('name')
                         ->label('Naam')
                         ->required(),
