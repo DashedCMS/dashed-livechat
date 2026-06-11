@@ -6,13 +6,13 @@ use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Filament\Notifications\Notification;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Ai\LivechatAi;
-use Dashed\DashedLivechat\Support\ChatAccess;
+use Filament\Notifications\Notification;
 use Dashed\DashedLivechat\Models\ChatNote;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedLivechat\Models\ChatMessage;
+use Dashed\DashedLivechat\Support\ChatAccess;
 use Dashed\DashedLivechat\Models\ChatLearning;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
@@ -318,6 +318,10 @@ class ViewChatConversation extends Page
             ->values()
             ->all();
 
+        // Anthropic eist dat de reeks met een user-bericht begint en rollen
+        // alterneren; een admin-conversatie start vaak met een AI-bericht.
+        $messages = $this->normalizeForClaude($messages);
+
         if (empty($messages)) {
             return;
         }
@@ -325,26 +329,73 @@ class ViewChatConversation extends Page
         $agent = $this->conversation->aiAgent;
         $system = 'Je bent een medewerker van de klantenservice. Stel een kort, vriendelijk en concreet concept-antwoord in het Nederlands voor op het laatste bericht van de klant, dat de medewerker kan versturen. Geef alleen het antwoord zelf, zonder inleiding of uitleg.';
 
-        $draft = rescue(function () use ($messages, $system, $agent) {
+        try {
             $response = LivechatAi::requireClaude()->messages($messages, [
                 'system' => $system,
                 'model' => $agent?->model,
                 'temperature' => 0.4,
                 'max_tokens' => 400,
             ]);
+        } catch (\Throwable $e) {
+            report($e);
+            Notification::make()
+                ->title('Kon geen suggestie ophalen')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
 
-            return collect($response['content'] ?? [])
-                ->where('type', 'text')
-                ->pluck('text')
-                ->implode("\n");
-        }, null, false);
-
-        if ($draft) {
-            $this->reply = trim($draft);
-            Notification::make()->title('Concept-antwoord ingevuld')->success()->send();
-        } else {
-            Notification::make()->title('Kon geen suggestie ophalen')->danger()->send();
+            return;
         }
+
+        $draft = collect($response['content'] ?? [])
+            ->where('type', 'text')
+            ->pluck('text')
+            ->implode("\n");
+
+        if (trim((string) $draft) === '') {
+            Notification::make()->title('Geen suggestie ontvangen')->warning()->send();
+
+            return;
+        }
+
+        $this->reply = trim($draft);
+        Notification::make()->title('Concept-antwoord ingevuld')->success()->send();
+    }
+
+    /**
+     * Normaliseert een berichtenreeks zodat de Anthropic Messages API hem
+     * accepteert: de reeks moet met een user-bericht beginnen en mag geen
+     * opeenvolgende berichten met dezelfde rol bevatten. Leidende assistant-
+     * berichten (zoals een AI-begroeting) worden weggelaten en opeenvolgende
+     * same-role berichten worden samengevoegd.
+     *
+     * @param  array<int, array{role: string, content: string}>  $messages
+     * @return array<int, array{role: string, content: string}>
+     */
+    private function normalizeForClaude(array $messages): array
+    {
+        while (! empty($messages) && ($messages[0]['role'] ?? null) !== 'user') {
+            array_shift($messages);
+        }
+
+        $normalized = [];
+        foreach ($messages as $message) {
+            $content = trim((string) ($message['content'] ?? ''));
+            if ($content === '') {
+                continue;
+            }
+
+            $lastIndex = count($normalized) - 1;
+            if ($lastIndex >= 0 && $normalized[$lastIndex]['role'] === $message['role']) {
+                $normalized[$lastIndex]['content'] .= "\n\n" . $content;
+
+                continue;
+            }
+
+            $normalized[] = ['role' => $message['role'], 'content' => $content];
+        }
+
+        return $normalized;
     }
 
     protected function refreshRecord(): void
