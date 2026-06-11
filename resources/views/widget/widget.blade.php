@@ -41,8 +41,8 @@
             if (this.proactiveShown || !this.proactive || !this.proactive.message) return;
             this.proactiveShown = true;
             this.open = true;
-            this.$refs.proactiveBubble && (this.$refs.proactiveBubble.textContent = this.proactive.message);
-            this.$refs.proactiveWrap && (this.$refs.proactiveWrap.style.display = 'block');
+            // Bubble wordt reactief getoond via x-show/x-text (zie proactiveWrap),
+            // binnen wire:ignore zodat Livewire-polls de tekst niet wegmorphen.
         },
         initProactive() {
             if (!this.proactive || !this.proactive.type || this.proactive.type === 'none') return;
@@ -210,10 +210,13 @@
         <div data-chat-scroll style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px; background: #f7f7f8;" x-ref="scroll"
              x-effect="open; lastMessageId; $nextTick(() => { $el.scrollTop = $el.scrollHeight; })">
 
-            {{-- Proactief bericht bubble (client-side via Alpine) --}}
-            <div x-ref="proactiveWrap" style="display:none; margin-bottom:10px;">
-                <div x-ref="proactiveBubble" class="dashed-chat__msg dashed-chat__msg--ai"
-                     style="background:#fff; color:#1f2937; padding:10px 12px; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.06);"></div>
+            {{-- Proactief bericht bubble (client-side via Alpine).
+                 wire:ignore zodat Livewire-polls de tekst niet wegmorphen; tonen
+                 en de inhoud gaan reactief via x-show/x-text. --}}
+            <div wire:ignore x-show="proactiveShown" x-cloak style="margin-bottom:10px;">
+                <div class="dashed-chat__msg dashed-chat__msg--ai"
+                     style="background:#fff; color:#1f2937; padding:10px 12px; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.06);"
+                     x-text="proactive && proactive.message ? proactive.message : ''"></div>
             </div>
 
             {{-- Serverside fallback voor tests en SEO --}}
