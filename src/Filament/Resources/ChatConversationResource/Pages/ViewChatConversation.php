@@ -8,7 +8,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Ai\LivechatAi;
+use Dashed\DashedLivechat\Support\ChatAccess;
 use Dashed\DashedLivechat\Models\ChatNote;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatLearning;
@@ -355,5 +357,12 @@ class ViewChatConversation extends Page
     private function requireAuth(): void
     {
         abort_unless(auth()->check(), 403);
+
+        // Alleen chat-agents (of superadmins) van de actieve site mogen chat-acties uitvoeren,
+        // niet zomaar elke ingelogde beheerder.
+        abort_unless(
+            ChatAccess::isAgent(auth()->user(), (string) Sites::getActive()),
+            403
+        );
     }
 }

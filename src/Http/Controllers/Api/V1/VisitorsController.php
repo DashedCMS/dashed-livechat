@@ -40,6 +40,17 @@ class VisitorsController extends Controller
             'active_carts' => $visitors->filter(fn ($v): bool => (float) $v->cart_total > 0)->count(),
             'top_pages' => $topPages,
             'countries' => $countries,
+            'points' => $visitors
+                ->filter(fn ($v): bool => $v->latitude !== null && $v->longitude !== null)
+                ->map(fn ($v): array => [
+                    'lat' => (float) $v->latitude,
+                    'lng' => (float) $v->longitude,
+                    'country' => $v->country ?: null,
+                    'city' => $v->city ?? null,
+                ])
+                ->values()
+                ->take(500)
+                ->all(),
         ]);
     }
 }
