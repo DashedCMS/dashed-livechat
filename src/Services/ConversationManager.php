@@ -38,7 +38,35 @@ class ConversationManager
         // Begint de bezoeker weer te chatten, dan is het gesprek weer actief/open.
         $c->forceFill(['last_message_at' => now(), 'status' => 'active'])->save();
 
+        $this->notifyNewVisitorMessage($c, $content);
+
         return $message;
+    }
+
+    /**
+     * Push naar app-medewerkers bij elk nieuw bezoekersbericht — zowel in AI- als
+     * mens-gesprekken. Per gebruiker te toggelen via het type 'chat.message'.
+     */
+    private function notifyNewVisitorMessage(ChatConversation $c, string $content): void
+    {
+        $center = '\Dashed\DashedMobileApi\Support\NotificationCenter';
+        if (! class_exists($center)) {
+            return;
+        }
+
+        try {
+            $body = Str::limit(trim($content), 120);
+            app($center)->push()
+                ->type('chat.message')
+                ->site((string) $c->site_id)
+                ->title($c->visitor_name ?: 'Nieuw chatbericht')
+                ->body($body !== '' ? $body : 'Nieuw bericht in de chat')
+                ->route("/conversation/{$c->id}")
+                ->data(['type' => 'conversation', 'id' => $c->id])
+                ->send();
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     public function addAiMessage(ChatConversation $c, ChatAgent $agent, string $content, array $toolCalls = [], ?int $tokensIn = null, ?int $tokensOut = null): ChatMessage
