@@ -74,11 +74,18 @@ class ConversationController extends Controller
         $model = $this->resolve($conversation);
 
         $data = $request->validate([
-            'content' => ['required', 'string'],
+            'content' => ['required_without:attachments', 'nullable', 'string'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif,application/pdf', 'max:10240'],
         ]);
 
         $agent = app(HandoffService::class)->humanAgentForUser($request->user(), Sites::getActive());
-        $message = $manager->addHumanMessage($model, $agent, $data['content']);
+        $message = $manager->addHumanMessage(
+            $model,
+            $agent,
+            (string) ($data['content'] ?? ''),
+            $request->file('attachments', [])
+        );
 
         return (new MessageResource($message))
             ->response()
