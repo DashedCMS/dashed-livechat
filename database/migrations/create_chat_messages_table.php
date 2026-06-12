@@ -16,6 +16,7 @@ return new class () extends Migration {
             $table->string('role');                 // visitor|ai|human|system
             $table->unsignedBigInteger('agent_id')->nullable();
             $table->text('content');
+            $table->json('attachments')->nullable();
             $table->json('tool_calls')->nullable();
             $table->boolean('is_internal')->default(false);
             $table->string('feedback')->nullable();
