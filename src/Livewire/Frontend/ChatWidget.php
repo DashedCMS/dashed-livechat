@@ -5,6 +5,7 @@
 namespace Dashed\DashedLivechat\Livewire\Frontend;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,9 +16,13 @@ use Dashed\DashedLivechat\Services\ConversationManager;
 
 class ChatWidget extends Component
 {
+    use WithFileUploads;
+
     public string $siteId = '';
     public ?string $publicToken = null;
     public string $draft = '';
+    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    public array $newAttachments = [];
     public bool $open = false;
     public bool $awaitingReply = false;
     public int $lastMessageId = 0;
@@ -103,6 +108,20 @@ class ChatWidget extends Component
         ]);
     }
 
+    protected function rules(): array
+    {
+        return [
+            'newAttachments' => ['array', 'max:5'],
+            'newAttachments.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif,application/pdf', 'max:10240'],
+        ];
+    }
+
+    public function removeAttachment(int $index): void
+    {
+        unset($this->newAttachments[$index]);
+        $this->newAttachments = array_values($this->newAttachments);
+    }
+
     public function sendMessage(ConversationManager $manager, InputGuard $guard): void
     {
         // Intercept contact-capture steps before normal flow.
@@ -166,8 +185,12 @@ class ChatWidget extends Component
 
         // Normal flow.
         $text = trim($this->draft);
-        if ($text === '') {
+        $hasFiles = ! empty($this->newAttachments);
+        if ($text === '' && ! $hasFiles) {
             return;
+        }
+        if ($hasFiles) {
+            $this->validate();
         }
 
         // Rate-limit per conversatie/sessie.
@@ -196,8 +219,9 @@ class ChatWidget extends Component
 
         // Guardrail laag 1.
         $check = $guard->check($text);
-        $manager->addVisitorMessage($conversation, $text);
+        $manager->addVisitorMessage($conversation, $text, $this->newAttachments);
         $this->draft = '';
+        $this->newAttachments = [];
 
         if ($check->blocked) {
             $conversation->events()->create(['type' => 'guardrail_block', 'payload' => ['reason' => $check->reason]]);

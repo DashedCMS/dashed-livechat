@@ -304,6 +304,13 @@
                          style="margin-bottom: 10px; max-width: 80%; padding: 10px 12px; border-radius: 12px; line-height: 1.4; margin-left: auto; background: var(--chat-primary); color: var(--chat-on-primary);">
                         <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $senderLabel }}</div>
                         {!! nl2br(e($message->content)) !!}
+                        @foreach($message->attachmentsData() as $att)
+                            @if($att['is_image'])
+                                <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:block; margin-top:6px;"><img src="{{ $att['thumb_url'] }}" alt="" style="max-width:180px; border-radius:8px;"></a>
+                            @else
+                                <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:inline-flex; gap:6px; align-items:center; margin-top:6px; font-size:12px; color:inherit; text-decoration:underline;">📎 {{ $att['name'] }}</a>
+                            @endif
+                        @endforeach
                     </div>
                 @else
                     @php($msgAvatar = $messageAvatars[$message->id] ?? null)
@@ -317,6 +324,13 @@
                              style="min-width:0; padding: 10px 12px; border-radius: 12px; line-height: 1.4; background: #fff; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.06);">
                             <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $senderLabel }}{{ $message->role === 'human' ? ' · medewerker' : '' }}</div>
                             <div class="dashed-chat__md">{!! \Illuminate\Support\Str::markdown($message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}</div>
+                            @foreach($message->attachmentsData() as $att)
+                                @if($att['is_image'])
+                                    <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:block; margin-top:6px;"><img src="{{ $att['thumb_url'] }}" alt="" style="max-width:180px; border-radius:8px;"></a>
+                                @else
+                                    <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:inline-flex; gap:6px; align-items:center; margin-top:6px; font-size:12px; color:#1f2937; text-decoration:underline;">📎 {{ $att['name'] }}</a>
+                                @endif
+                            @endforeach
 
                             @php($cards = collect($message->tool_calls ?? [])->pluck('products')->filter()->flatten(1)->filter(fn ($p) => ! empty($p['name']))->unique('url')->take(6)->values())
                             @if($cards->isNotEmpty())
@@ -366,7 +380,27 @@
         @endif
 
         @error('draft') <div style="color:#b91c1c; font-size:12px; padding:4px 12px 0;">{{ $message }}</div> @enderror
+        @error('newAttachments.*') <div style="color:#b91c1c; font-size:12px; padding:4px 12px 0;">{{ $message }}</div> @enderror
+        @if(! empty($newAttachments))
+            <div style="display:flex; gap:6px; flex-wrap:wrap; padding:8px 12px 0;">
+                @foreach($newAttachments as $i => $att)
+                    <div style="position:relative; display:flex; align-items:center; gap:6px; border:1px solid #eee; border-radius:8px; padding:4px 8px; font-size:12px; background:#fafafa;">
+                        @if(str_starts_with((string) $att->getMimeType(), 'image/'))
+                            <img src="{{ $att->temporaryUrl() }}" alt="" style="width:28px; height:28px; object-fit:cover; border-radius:6px;">
+                        @else
+                            <span>📎</span>
+                        @endif
+                        <span style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $att->getClientOriginalName() }}</span>
+                        <button type="button" wire:click="removeAttachment({{ $i }})" aria-label="Verwijder" style="border:0; background:transparent; cursor:pointer; color:#6b7280;">&times;</button>
+                    </div>
+                @endforeach
+            </div>
+        @endif
         <form wire:submit.prevent="sendMessage" x-on:submit="_justSent = true" style="display: flex; flex-shrink: 0; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
+            <label style="display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0 6px; color:#6b7280;" title="Voeg afbeelding of PDF toe">
+                <span style="font-size:18px;">📎</span>
+                <input type="file" wire:model="newAttachments" multiple accept="image/*,application/pdf" style="display:none;">
+            </label>
             <input wire:model="draft"
                 type="text"
                 autocomplete="off"
