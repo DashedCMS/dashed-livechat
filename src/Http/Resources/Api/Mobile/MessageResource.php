@@ -26,6 +26,7 @@ class MessageResource extends JsonResource
             ] : null,
             'tool_calls' => $this->tool_calls,
             'feedback' => $this->feedback,
+            'attachments' => $this->resource->attachmentsData(),
         ];
     }
 }
