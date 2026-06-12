@@ -18,9 +18,12 @@ use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
 use Dashed\DashedLivechat\Services\ConversationManager;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource;
+use Livewire\WithFileUploads;
 
 class ViewChatConversation extends Page
 {
+    use WithFileUploads;
+
     protected static string $resource = ChatConversationResource::class;
 
     protected string $view = 'dashed-livechat::filament.conversation-timeline';
@@ -28,6 +31,9 @@ class ViewChatConversation extends Page
     public string $mode = 'ai';
 
     public string $reply = '';
+
+    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    public array $replyAttachments = [];
 
     public string $noteBody = '';
 
@@ -80,15 +86,23 @@ class ViewChatConversation extends Page
     {
         $this->requireAuth();
         $text = trim($this->reply);
-        if ($text === '') {
+        $hasFiles = ! empty($this->replyAttachments);
+        if ($text === '' && ! $hasFiles) {
             return;
+        }
+        if ($hasFiles) {
+            $this->validate([
+                'replyAttachments' => ['array', 'max:5'],
+                'replyAttachments.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif,application/pdf', 'max:10240'],
+            ]);
         }
 
         $handoff = app(HandoffService::class);
         $manager = app(ConversationManager::class);
         $agent = $handoff->humanAgentForUser(auth()->user(), $this->conversation->site_id);
-        $manager->addHumanMessage($this->conversation, $agent, $text);
+        $manager->addHumanMessage($this->conversation, $agent, $text, $this->replyAttachments);
         $this->reply = '';
+        $this->replyAttachments = [];
         $this->refreshRecord();
     }
 

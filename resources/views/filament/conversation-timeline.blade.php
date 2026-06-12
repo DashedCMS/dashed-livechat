@@ -66,6 +66,19 @@
                                 @endif
                             </div>
 
+                            @php($atts = $message->attachmentsData())
+                            @if(! empty($atts))
+                                <div style="display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem;">
+                                    @foreach($atts as $att)
+                                        @if($att['is_image'])
+                                            <a href="{{ $att['url'] }}" target="_blank" rel="noopener"><img src="{{ $att['thumb_url'] }}" alt="" style="max-width:160px; border-radius:.5rem;"></a>
+                                        @else
+                                            <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:.375rem; font-size:.8125rem; text-decoration:underline; color:inherit;">📎 {{ $att['name'] }}</a>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
+
                             @if($message->tool_calls)
                                 <div class="dlc__tools">
                                     <x-filament::icon icon="heroicon-m-wrench-screwdriver" class="dlc__tools-icon" />
@@ -111,7 +124,19 @@
                         <span wire:loading wire:target="suggestReply">Bezig…</span>
                     </x-filament::button>
                 </div>
+                @error('replyAttachments.*') <div style="color:#b91c1c; font-size:12px; margin-top:.5rem;">{{ $message }}</div> @enderror
+                @if(! empty($replyAttachments))
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:.5rem;">
+                        @foreach($replyAttachments as $att)
+                            <span style="display:inline-flex; align-items:center; gap:6px; border:1px solid rgb(228 228 231); border-radius:8px; padding:2px 8px; font-size:12px;">📎 {{ $att->getClientOriginalName() }}</span>
+                        @endforeach
+                    </div>
+                @endif
                 <form wire:submit.prevent="sendReply" class="dlc__composer">
+                    <label style="display:flex; align-items:center; cursor:pointer; padding:0 .25rem;" title="Voeg afbeelding of PDF toe">
+                        <x-filament::icon icon="heroicon-m-paper-clip" style="width:1.25rem; height:1.25rem;" />
+                        <input type="file" wire:model="replyAttachments" multiple accept="image/*,application/pdf" style="display:none;">
+                    </label>
                     <input
                         wire:model="reply"
                         type="text"
