@@ -121,6 +121,45 @@ class ConversationController extends Controller
         return new ConversationResource($model->fresh());
     }
 
+    public function translate(Request $request, int $conversation): JsonResponse
+    {
+        // Bevestigt dat het gesprek tot de actieve site hoort (en bestaat).
+        $this->resolve($conversation);
+
+        $data = $request->validate([
+            'text' => ['required', 'string'],
+            'target' => ['nullable', 'string', 'max:16'],
+        ]);
+
+        $target = (string) ($data['target'] ?? '') !== ''
+            ? (string) $data['target']
+            : (app()->getLocale() ?: 'nl');
+
+        $system = "Je bent een vertaler. Vertaal het bericht naar taal-code '{$target}'. Geef ALLEEN de vertaling terug, zonder uitleg of aanhalingstekens.";
+
+        try {
+            $response = \Dashed\DashedLivechat\Ai\LivechatAi::requireClaude()->messages(
+                [['role' => 'user', 'content' => (string) $data['text']]],
+                ['system' => $system, 'temperature' => 0.2, 'max_tokens' => 800]
+            );
+
+            $translated = collect($response['content'] ?? [])
+                ->where('type', 'text')
+                ->pluck('text')
+                ->implode("\n");
+
+            $translated = trim($translated);
+
+            if ($translated === '') {
+                return response()->json(['message' => 'Vertaling mislukt: geen tekst ontvangen.'], 422);
+            }
+
+            return response()->json(['translation' => $translated, 'target' => $target]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Vertaling mislukt: ' . $e->getMessage()], 422);
+        }
+    }
+
     private function resolve(int $conversation): ChatConversation
     {
         return ChatConversation::query()

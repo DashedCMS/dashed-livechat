@@ -27,6 +27,8 @@ Route::prefix('api/v1')
             ->middleware(['chat.ability:chat.read', 'throttle:60,1']);
         Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])
             ->middleware('chat.ability:chat.reply');
+        Route::post('conversations/{conversation}/translate', [ConversationController::class, 'translate'])
+            ->middleware(['chat.ability:chat.reply', 'throttle:30,1']);
         Route::post('conversations/{conversation}/take-over', [ConversationController::class, 'takeOver'])
             ->middleware('chat.ability:chat.takeover');
         Route::post('conversations/{conversation}/release', [ConversationController::class, 'release'])
