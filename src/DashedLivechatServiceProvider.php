@@ -49,6 +49,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 '2026_06_10_120000_add_model_links_to_chat_triggers_table',
                 '2026_06_11_193000_widen_started_url_on_chat_conversations_table',
                 'add_attachments_to_chat_messages_table',
+                'create_chat_quick_replies_table',
             ])
             ->runsMigrations();
     }

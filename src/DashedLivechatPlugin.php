@@ -9,6 +9,7 @@ use Dashed\DashedLivechat\Filament\Pages\VisitorsLivePage;
 use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatLearningResource;
+use Dashed\DashedLivechat\Filament\Resources\ChatQuickReplyResource;
 use Dashed\DashedLivechat\Filament\Pages\Settings\ChatSettingsPage;
 use Dashed\DashedLivechat\Filament\Resources\ChatOpeningHourResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource;
@@ -27,6 +28,7 @@ class DashedLivechatPlugin implements Plugin
                 ChatAgentResource::class,
                 ChatConversationResource::class,
                 ChatLearningResource::class,
+                ChatQuickReplyResource::class,
                 ChatOpeningHourResource::class,
                 ChatTriggerResource::class,
             ])

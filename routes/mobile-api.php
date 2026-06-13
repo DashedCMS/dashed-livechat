@@ -8,6 +8,7 @@ use Dashed\DashedLivechat\Http\Controllers\Api\V1\TriggerController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\LearningController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\VisitorsController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\OpeningHourController;
+use Dashed\DashedLivechat\Http\Controllers\Api\V1\QuickReplyController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\ChatSettingsController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\ConversationController;
 
@@ -52,6 +53,8 @@ Route::prefix('api/v1')
         Route::post('learnings', [LearningController::class, 'store'])->middleware('chat.ability:chat.manage');
         Route::put('learnings/{learning}', [LearningController::class, 'update'])->middleware('chat.ability:chat.manage');
         Route::delete('learnings/{learning}', [LearningController::class, 'destroy'])->middleware('chat.ability:chat.manage');
+
+        Route::get('quick-replies', [QuickReplyController::class, 'index'])->middleware('chat.ability:chat.read');
 
         Route::get('chat-settings', [ChatSettingsController::class, 'show'])->middleware('chat.ability:chat.manage');
         Route::put('chat-settings', [ChatSettingsController::class, 'update'])->middleware('chat.ability:chat.manage');
