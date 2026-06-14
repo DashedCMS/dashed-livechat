@@ -24,10 +24,13 @@ use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Models\ChatTrigger;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Schema as DbSchema;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource\Pages;
 
 class ChatTriggerResource extends Resource
 {
+    use HiddenWhenChatDisabled;
+
     protected static ?string $model = ChatTrigger::class;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bolt';

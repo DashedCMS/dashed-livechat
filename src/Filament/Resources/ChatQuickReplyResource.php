@@ -11,16 +11,19 @@ use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\BulkActionGroup;
-use Filament\Forms\Components\Textarea;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedLivechat\Models\ChatQuickReply;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatQuickReplyResource\Pages;
 
 class ChatQuickReplyResource extends Resource
 {
+    use HiddenWhenChatDisabled;
+
     protected static ?string $model = ChatQuickReply::class;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';

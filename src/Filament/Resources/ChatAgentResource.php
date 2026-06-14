@@ -20,10 +20,13 @@ use Dashed\DashedLivechat\Ai\ToolRegistry;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource\Pages;
 
 class ChatAgentResource extends Resource
 {
+    use HiddenWhenChatDisabled;
+
     protected static ?string $model = ChatAgent::class;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-user-group';

@@ -9,7 +9,7 @@ class WidgetConfig
     public static function for(string $siteId): array
     {
         return [
-            'enabled' => (bool) Customsetting::get('chat_enabled', $siteId, false),
+            'enabled' => (bool) Customsetting::get('chat_enabled', $siteId),
             'primary' => Customsetting::get('chat_primary_color', $siteId, '#111827'),
             'on_primary' => Customsetting::get('chat_on_primary_color', $siteId, '#ffffff'),
             'radius' => (int) Customsetting::get('chat_radius', $siteId, 16),

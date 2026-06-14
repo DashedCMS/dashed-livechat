@@ -12,10 +12,13 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Dashed\DashedLivechat\Models\ChatConversation;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource\Pages;
 
 class ChatConversationResource extends Resource
 {
+    use HiddenWhenChatDisabled;
+
     protected static ?string $model = ChatConversation::class;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-chat-bubble-left-right';

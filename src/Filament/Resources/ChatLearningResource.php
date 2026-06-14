@@ -13,10 +13,13 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Dashed\DashedLivechat\Models\ChatLearning;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatLearningResource\Pages;
 
 class ChatLearningResource extends Resource
 {
+    use HiddenWhenChatDisabled;
+
     protected static ?string $model = ChatLearning::class;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';

@@ -6,9 +6,12 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
 use Dashed\DashedLivechat\Models\VisitorSession;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 
 class VisitorsLivePage extends Page
 {
+    use HiddenWhenChatDisabled;
+
     protected static string|UnitEnum|null $navigationGroup = 'Chat';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-globe-europe-africa';

@@ -8,9 +8,12 @@ use UnitEnum;
 use Filament\Pages\Page;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Services\ChatAnalyticsService;
+use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 
 class ChatDashboard extends Page
 {
+    use HiddenWhenChatDisabled;
+
     protected static string|UnitEnum|null $navigationGroup = 'Chat';
 
     protected static ?string $navigationLabel = 'Dashboard';
