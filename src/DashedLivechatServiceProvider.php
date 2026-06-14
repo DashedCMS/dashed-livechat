@@ -154,6 +154,34 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 ];
             });
 
+            // Globaal zoeken: gesprekken. Zelfde zoekvelden als ConversationController@index
+            // (?search over visitor_name/visitor_email), gescope't op de actieve site.
+            if (method_exists($mobileApi, 'registerSearchProvider')) {
+                $mobileApi->registerSearchProvider(function (string $siteId, string $query): array {
+                    $conversations = \Dashed\DashedLivechat\Models\ChatConversation::query()
+                        ->where('site_id', $siteId)
+                        ->where(function ($q) use ($query): void {
+                            $q->where('visitor_name', 'like', '%' . $query . '%')
+                                ->orWhere('visitor_email', 'like', '%' . $query . '%');
+                        })
+                        ->orderByDesc('last_message_at')
+                        ->limit(5)
+                        ->get(['id', 'visitor_name', 'visitor_email']);
+
+                    return $conversations->map(function ($conversation): array {
+                        $name = trim((string) ($conversation->visitor_name ?? '')) ?: 'Bezoeker';
+
+                        return [
+                            'type' => 'conversation',
+                            'id' => $conversation->id,
+                            'title' => $name,
+                            'subtitle' => $conversation->visitor_email ? (string) $conversation->visitor_email : null,
+                            'route' => "/conversation/{$conversation->id}",
+                        ];
+                    })->all();
+                });
+            }
+
             $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
         }
     }
