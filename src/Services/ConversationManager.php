@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Enums\MessageRole;
 use Dashed\DashedLivechat\Models\ChatMessage;
+use Dashed\DashedLivechat\Models\ChatLearning;
 use Dashed\DashedLivechat\Models\ChatConversation;
 
 class ConversationManager
@@ -103,7 +104,67 @@ class ConversationManager
         ]);
         $c->forceFill(['last_message_at' => now()])->save();
 
+        $this->learnFromHumanReply($c, $message);
+
         return $message;
+    }
+
+    /** Triviale antwoorden die geen leerwaarde hebben. */
+    private const LEARN_STOP_WORDS = ['momentje', 'moment', 'hoi', 'hallo', 'hey', 'ok', 'oke', 'oké', 'dank', 'dankje', 'bedankt', 'ja', 'nee', '1 sec', 'sec', 'even kijken'];
+
+    /**
+     * Leer van ELK inhoudelijk mens-antwoord: maak een actieve ChatLearning met
+     * de voorafgaande bezoekersvraag → het mens-antwoord. Slaat triviale/interne
+     * berichten over en dedupliceert op (vraag, antwoord).
+     */
+    private function learnFromHumanReply(ChatConversation $c, ChatMessage $message): void
+    {
+        if ($message->is_internal) {
+            return;
+        }
+        $answer = trim((string) $message->content);
+        $normalized = mb_strtolower($answer);
+        if (mb_strlen($answer) < 15 || in_array($normalized, self::LEARN_STOP_WORDS, true)) {
+            return;
+        }
+
+        $prior = $c->messages()
+            ->where('id', '<', $message->id)
+            ->where('is_internal', false)
+            ->orderByDesc('id')
+            ->get();
+        $questionParts = [];
+        foreach ($prior as $m) {
+            if ($m->role === MessageRole::Visitor->value) {
+                $questionParts[] = trim((string) $m->content);
+            } else {
+                break;
+            }
+        }
+        if (empty($questionParts)) {
+            return;
+        }
+        $question = trim(implode("\n", array_reverse($questionParts)));
+        if ($question === '') {
+            return;
+        }
+
+        $exists = ChatLearning::where('site_id', $c->site_id)
+            ->where('question', $question)
+            ->where('answer', $answer)
+            ->exists();
+        if ($exists) {
+            return;
+        }
+
+        ChatLearning::create([
+            'site_id' => $c->site_id,
+            'question' => $question,
+            'answer' => $answer,
+            'source' => 'human',
+            'source_message_id' => $message->id,
+            'is_active' => true,
+        ]);
     }
 
     /**
