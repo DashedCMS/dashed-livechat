@@ -219,7 +219,7 @@ class ChatWidget extends Component
 
         // Guardrail laag 1.
         $check = $guard->check($text);
-        $manager->addVisitorMessage($conversation, $text, $this->newAttachments);
+        $visitorMessage = $manager->addVisitorMessage($conversation, $text, $this->newAttachments);
         $this->draft = '';
         $this->newAttachments = [];
 
@@ -237,11 +237,14 @@ class ChatWidget extends Component
         // (zie maybeAskForEmail via pollReply), zodat de begroeting/het antwoord
         // eerst komt en de vervolgvraag niet wordt onderbroken.
         if ($conversation->mode !== 'human') {
-            $this->awaitingReply = true;
+            $delay = (int) ($this->activeAgent?->ai_reply_delay_seconds ?? 0);
             if (config('dashed-livechat.streaming', false)) {
                 $this->streamUrl = route('dashed-livechat.stream', $this->publicToken);
+                $this->awaitingReply = $delay === 0;
             } else {
-                GenerateAiReplyJob::dispatch($conversation->id);
+                GenerateAiReplyJob::dispatch($conversation->id, $visitorMessage->id)
+                    ->delay(now()->addSeconds($delay));
+                $this->awaitingReply = $delay === 0;
             }
         }
     }

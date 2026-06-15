@@ -21,7 +21,7 @@ class GenerateAiReplyJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public int $conversationId)
+    public function __construct(public int $conversationId, public ?int $triggerMessageId = null)
     {
     }
 
@@ -30,6 +30,17 @@ class GenerateAiReplyJob implements ShouldQueue
         $conversation = ChatConversation::find($this->conversationId);
         if (! $conversation || in_array($conversation->mode, ['human', 'waiting_human'], true) || ! $conversation->aiAgent) {
             return;
+        }
+
+        // Debounce + mens-voorrang: alleen antwoorden als het bericht waarvoor deze
+        // job is gepland nog steeds het laatste (niet-interne) bericht is. Is er
+        // sindsdien een nieuwer bezoekersbericht (debounce) of een mens/AI-antwoord,
+        // dan stopt deze job — de job van het laatste bezoekersbericht handelt af.
+        if ($this->triggerMessageId !== null) {
+            $last = $conversation->messages()->where('is_internal', false)->reorder()->latest('id')->first();
+            if (! $last || $last->id !== $this->triggerMessageId || $last->role !== MessageRole::Visitor->value) {
+                return;
+            }
         }
 
         try {
