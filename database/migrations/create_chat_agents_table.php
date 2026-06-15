@@ -29,6 +29,8 @@ return new class () extends Migration {
             $table->text('greeting')->nullable();
             $table->string('model')->default('claude-sonnet-4-6');
             $table->decimal('temperature', 3, 2)->default(0.50);
+            $table->unsignedSmallInteger('ai_reply_delay_seconds')->default(8);
+            $table->unsignedSmallInteger('max_tokens')->default(1536);
             $table->string('guardrail_mode')->default('standard'); // standard|strict
             $table->json('enabled_tools')->nullable();
             $table->timestamps();

@@ -108,10 +108,10 @@ class ChatAgentResource extends Resource
                         ->helperText('Onderwerpen die de bot moet weigeren of doorverwijzen.'),
                     Textarea::make('escalation_rules')
                         ->label('Escalatieregels')
-                        ->helperText('Wanneer moet de bot doorverbinden naar een mens?'),
+                        ->helperText('Wanneer moet de bot doorverbinden naar een mens? Bv. "bij klachten, retouren, of als de bezoeker boos is". Wordt nu echt toegepast.'),
                     Textarea::make('greeting')
                         ->label('Begroeting')
-                        ->helperText('Eerste begroeting die de bot toont in de chat.'),
+                        ->helperText('Openingsbericht dat de bot als eerste bericht plaatst bij een nieuw gesprek.'),
                     Select::make('model')
                         ->label('Model')
                         ->options([
@@ -126,6 +126,18 @@ class ChatAgentResource extends Resource
                         ->numeric()
                         ->default(0.5)
                         ->helperText('Creativiteit: 0 = feitelijk en consistent, 1 = creatiever.'),
+                    TextInput::make('ai_reply_delay_seconds')
+                        ->label('Reactievertraging (seconden)')
+                        ->numeric()
+                        ->default(8)
+                        ->minValue(0)
+                        ->helperText('Seconden wachten voordat de AI reageert. Binnen dit venster kan een medewerker het overnemen of kan de bezoeker nog typen (de AI antwoordt dan op het hele blok). 0 = direct.'),
+                    TextInput::make('max_tokens')
+                        ->label('Max. antwoordlengte (tokens)')
+                        ->numeric()
+                        ->default(1536)
+                        ->minValue(256)
+                        ->helperText('Maximale lengte van een AI-antwoord per beurt. Hoger = langere antwoorden mogelijk.'),
                     Select::make('guardrail_mode')
                         ->label('Guardrail-modus')
                         ->options(['standard' => 'Standaard', 'strict' => 'Streng'])

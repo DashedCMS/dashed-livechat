@@ -16,6 +16,8 @@ class ChatAgent extends Model
         'enabled_tools' => 'array',
         'abilities' => 'array',
         'temperature' => 'float',
+        'ai_reply_delay_seconds' => 'integer',
+        'max_tokens' => 'integer',
     ];
 
     protected static function booted(): void
