@@ -268,13 +268,17 @@ class ChatWidget extends Component
     protected function recomputeAwaitingReply(?ChatConversation $conversation): void
     {
         $last = $conversation?->messages()->reorder()->latest('id')->first();
+        $delay = (int) ($this->activeAgent?->ai_reply_delay_seconds ?? 0);
 
+        // Toon "aan het typen" pas NA het wachtvenster (de AI begint dan te
+        // genereren), en niet langer dan delay+60s — stil tijdens de delay.
         $this->awaitingReply = $conversation
             && $conversation->mode === 'ai'
             && $last
             && $last->role === 'visitor'
             && $last->created_at
-            && $last->created_at->gt(now()->subSeconds(60));
+            && $last->created_at->lte(now()->subSeconds($delay))
+            && $last->created_at->gt(now()->subSeconds($delay + 60));
     }
 
     /**
