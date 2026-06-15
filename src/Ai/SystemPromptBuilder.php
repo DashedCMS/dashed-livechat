@@ -56,12 +56,26 @@ class SystemPromptBuilder
             . "Zeg eerlijk dat je het niet zeker weet en gebruik de tool requestHumanHandoff om een medewerker erbij te halen. "
             . "Buiten openingstijden: vraag om contactgegevens met saveContactDetails zodat een collega kan terugmailen.";
 
-        // Geleerde voorbeelden en correcties.
-        $learnings = ChatLearning::where('site_id', $conversation->site_id)
-            ->where('is_active', true)
-            ->latest('id')
-            ->limit(20)
-            ->get();
+        // Geleerde voorbeelden: bij actieve embeddings de meest relevante bij de
+        // laatste bezoekersvraag; anders de laatste 20 als algemene stijl-correcties.
+        $driver = Customsetting::get('chat_search_driver', $conversation->site_id, 'embedding');
+        $lastVisitor = $conversation->messages()->where('role', 'visitor')->where('is_internal', false)->latest('id')->value('content');
+        $learnings = collect();
+        if ($driver === 'embedding' && $lastVisitor) {
+            $learnings = rescue(
+                fn () => app(\Dashed\DashedLivechat\Ai\Knowledge\EmbeddingService::class)
+                    ->searchModels(ChatLearning::class, $conversation->site_id, (string) $lastVisitor, 8),
+                collect(),
+                false
+            );
+        }
+        if ($learnings->isEmpty()) {
+            $learnings = ChatLearning::where('site_id', $conversation->site_id)
+                ->where('is_active', true)
+                ->latest('id')
+                ->limit(20)
+                ->get();
+        }
 
         if ($learnings->isNotEmpty()) {
             $lines = ["GELEERDE VOORBEELDEN EN CORRECTIES (pas deze toe waar relevant):"];

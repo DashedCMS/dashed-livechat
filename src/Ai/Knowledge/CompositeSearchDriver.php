@@ -16,7 +16,7 @@ class CompositeSearchDriver implements KnowledgeSearchDriver
 
     public function search(string $modelClass, array $columns, string $siteId, string $term, int $limit): Collection
     {
-        $driver = Customsetting::get('chat_search_driver', $siteId, 'fulltext');
+        $driver = Customsetting::get('chat_search_driver', $siteId, 'embedding');
 
         if ($driver === 'embedding') {
             $results = rescue(

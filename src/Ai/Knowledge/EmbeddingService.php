@@ -5,6 +5,7 @@ namespace Dashed\DashedLivechat\Ai\Knowledge;
 use Dashed\DashedAi\Facades\Ai;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatEmbedding;
 
 class EmbeddingService
@@ -65,11 +66,14 @@ class EmbeddingService
             ->where('embeddable_type', $modelClass)
             ->get();
 
+        $threshold = (float) Customsetting::get('chat_embedding_threshold', $siteId, 0.75);
+
         $ranked = $rows
             ->map(fn ($row) => [
                 'id' => $row->embeddable_id,
                 'score' => $this->cosine($queryVec, $row->vector ?? []),
             ])
+            ->filter(fn ($row) => $row['score'] >= $threshold)
             ->sortByDesc('score')
             ->take($limit)
             ->pluck('id');

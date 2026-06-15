@@ -63,6 +63,16 @@ class IndexChatEmbeddings extends Command
                 );
             }
 
+            // Geleerde antwoorden van medewerkers meenemen, zodat de bot bij
+            // vergelijkbare vragen het echte collega-antwoord ophaalt.
+            \Dashed\DashedLivechat\Models\ChatLearning::where('site_id', $siteId)->where('is_active', true)
+                ->each(function ($l) use ($embeddings, $siteId) {
+                    $text = trim(($l->question ?? '') . ' ' . ($l->answer ?? ''));
+                    if ($text !== '') {
+                        $embeddings->upsertFor($l, $text, $siteId);
+                    }
+                });
+
             $this->line("Site {$siteId}: klaar.");
         }
 
