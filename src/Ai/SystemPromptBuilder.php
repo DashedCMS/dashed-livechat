@@ -49,6 +49,13 @@ class SystemPromptBuilder
         // Globale schrijfregels conform huisstijl (geen em-dashes, geen AI-clichés).
         $parts[] = "Schrijf natuurlijk en concreet. Gebruik geen em-dashes en geen AI-clichés.";
 
+        if ($agent->escalation_rules) {
+            $parts[] = "ESCALATIE: verbind door naar een medewerker — gebruik de tool requestHumanHandoff — in deze gevallen: {$agent->escalation_rules}.";
+        }
+        $parts[] = "Als je het antwoord niet betrouwbaar uit de tools/kennis kunt halen of je twijfelt: VERZIN NIETS. "
+            . "Zeg eerlijk dat je het niet zeker weet en gebruik de tool requestHumanHandoff om een medewerker erbij te halen. "
+            . "Buiten openingstijden: vraag om contactgegevens met saveContactDetails zodat een collega kan terugmailen.";
+
         // Geleerde voorbeelden en correcties.
         $learnings = ChatLearning::where('site_id', $conversation->site_id)
             ->where('is_active', true)
