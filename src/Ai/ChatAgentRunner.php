@@ -66,7 +66,7 @@ class ChatAgentRunner
                     'tools' => $toolSchema,
                     'model' => $agent->model,
                     'temperature' => $agent->temperature,
-                    'max_tokens' => 1024,
+                    'max_tokens' => (int) ($agent->max_tokens ?: 1536),
                 ], $onText);
             } else {
                 $response = LivechatAi::requireClaude()->messages($messages, [
@@ -74,7 +74,7 @@ class ChatAgentRunner
                     'tools' => $toolSchema,
                     'model' => $agent->model,
                     'temperature' => $agent->temperature,
-                    'max_tokens' => 1024,
+                    'max_tokens' => (int) ($agent->max_tokens ?: 1536),
                 ]);
             }
 
