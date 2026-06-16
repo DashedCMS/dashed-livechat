@@ -30,6 +30,9 @@ class ViewChatConversation extends Page
 
     public string $mode = 'ai';
 
+    /** Gesprekstatus, reactief via de Status-keuzelijst in de toolbar. */
+    public string $status = 'active';
+
     public string $reply = '';
 
     /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
@@ -47,33 +50,28 @@ class ViewChatConversation extends Page
     {
         $this->conversation = ChatConversation::with('messages.agent')->findOrFail($record);
         $this->mode = $this->conversation->mode;
+        $this->status = $this->conversation->status;
         $this->lastMessageId = (int) ($this->conversation->messages->max('id') ?? 0);
+    }
+
+    /** Status wisselen via de keuzelijst in de toolbar. */
+    public function updatedStatus(string $value): void
+    {
+        $this->requireAuth();
+        if (! in_array($value, ['active', 'closed'], true)) {
+            return;
+        }
+        $this->conversation->forceFill(['status' => $value])->save();
+        Notification::make()
+            ->success()
+            ->title($value === 'closed' ? 'Gesprek afgerond' : 'Gesprek heractiveerd')
+            ->send();
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('markClosed')
-                ->label('Markeer als afgerond')
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->visible(fn (): bool => $this->conversation->status !== 'closed')
-                ->action(function (): void {
-                    $this->conversation->markClosed();
-                    $this->refreshRecord();
-
-                    Notification::make()->success()->title('Gesprek afgerond')->send();
-                }),
-            Action::make('reopen')
-                ->label('Heropenen')
-                ->icon('heroicon-o-arrow-uturn-left')
-                ->visible(fn (): bool => $this->conversation->status === 'closed')
-                ->action(function (): void {
-                    $this->conversation->reopen();
-                    $this->refreshRecord();
-
-                    Notification::make()->success()->title('Gesprek heropend')->send();
-                }),
+            // Afronden/heropenen gebeurt nu via de Status-keuzelijst in de toolbar.
             Action::make('delete')
                 ->label('Verwijderen')
                 ->icon('heroicon-o-trash')
@@ -444,6 +442,7 @@ class ViewChatConversation extends Page
     {
         $this->conversation = ChatConversation::with('messages.agent')->findOrFail($this->conversation->id);
         $this->mode = $this->conversation->mode;
+        $this->status = $this->conversation->status;
         $this->lastMessageId = (int) ($this->conversation->messages->max('id') ?? 0);
     }
 

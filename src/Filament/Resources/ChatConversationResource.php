@@ -12,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Notifications\Notification;
 use Dashed\DashedLivechat\Models\ChatConversation;
@@ -75,21 +76,13 @@ class ChatConversationResource extends Resource
                         'human' => 'success',
                         default => 'gray',
                     }),
-                TextColumn::make('status')
+                SelectColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->options([
                         'active' => 'Actief',
-                        'inactive' => 'Inactief',
                         'closed' => 'Afgerond',
-                        default => $state,
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'inactive' => 'warning',
-                        'closed' => 'gray',
-                        default => 'gray',
-                    }),
+                    ])
+                    ->selectablePlaceholder(false),
                 TextColumn::make('rating')
                     ->label('Beoordeling')
                     ->state(fn ($record) => match ($record->meta['rating'] ?? null) {
@@ -107,25 +100,7 @@ class ChatConversationResource extends Resource
             ])
             ->defaultSort('last_message_at', 'desc')
             ->recordActions([
-                Action::make('markClosed')
-                    ->label('Afronden')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (ChatConversation $record): bool => $record->status !== 'closed')
-                    ->action(function (ChatConversation $record): void {
-                        $record->markClosed();
-
-                        Notification::make()->success()->title('Gesprek afgerond')->send();
-                    }),
-                Action::make('reopen')
-                    ->label('Heropenen')
-                    ->icon('heroicon-o-arrow-uturn-left')
-                    ->visible(fn (ChatConversation $record): bool => $record->status === 'closed')
-                    ->action(function (ChatConversation $record): void {
-                        $record->reopen();
-
-                        Notification::make()->success()->title('Gesprek heropend')->send();
-                    }),
+                // Status wisselen gebeurt nu inline via de Status-keuzelijst hierboven.
                 DeleteAction::make(),
             ])
             ->toolbarActions([

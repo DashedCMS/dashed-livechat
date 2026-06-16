@@ -8,6 +8,16 @@
                 </x-filament::badge>
             </span>
 
+            <span class="dlc__mode">
+                <span class="dlc__mode-label">Status</span>
+                <x-filament::input.wrapper>
+                    <x-filament::input.select wire:model.live="status">
+                        <option value="active">Actief</option>
+                        <option value="closed">Afgerond</option>
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+            </span>
+
             <div class="dlc__actions">
                 @if($mode !== 'human')
                     <x-filament::button icon="heroicon-m-hand-raised" wire:click="takeOver" wire:loading.attr="disabled">
