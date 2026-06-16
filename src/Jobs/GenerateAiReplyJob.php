@@ -66,8 +66,12 @@ class GenerateAiReplyJob implements ShouldQueue
             $conversation->messages()->create([
                 'role' => MessageRole::Ai->value,
                 'agent_id' => $conversation->ai_agent_id,
-                'content' => 'Sorry, er ging iets mis aan onze kant. Probeer het zo nog eens of laat je vraag achter.',
+                'content' => 'Sorry, ik kan je vraag op dit moment niet goed beantwoorden. Ik haal er een collega bij die je verder helpt.',
             ]);
+
+            app(\Dashed\DashedLivechat\Services\HandoffService::class)
+                ->escalateForFailure($conversation, 'AI-antwoord mislukt');
+
             $conversation->forceFill(['last_message_at' => now()])->save();
         }
     }

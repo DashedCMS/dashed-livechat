@@ -34,6 +34,27 @@ class HandoffService
             ];
         }
 
+        $this->performHandoff($c, $reason);
+
+        return ['status' => 'requested', 'message' => 'Ik haal er een collega bij, een moment geduld.'];
+    }
+
+    /**
+     * Schuift een gesprek altijd door naar een medewerker (zonder
+     * openingstijden-check). Bedoeld voor het geval de AI niet kan antwoorden:
+     * de bot kan het zelf niet afhandelen, dus er moet hoe dan ook een mens bij.
+     */
+    public function escalateForFailure(ChatConversation $c, ?string $reason = 'AI niet beschikbaar'): void
+    {
+        $this->performHandoff($c, $reason);
+    }
+
+    /**
+     * Voert de daadwerkelijke doorschuif uit: mode op wacht-op-medewerker,
+     * event loggen, medewerkers + app notificeren.
+     */
+    private function performHandoff(ChatConversation $c, ?string $reason): void
+    {
         $c->forceFill(['mode' => ConversationMode::WaitingHuman->value])->save();
         $c->events()->create(['type' => 'handoff_requested', 'payload' => ['reason' => $reason]]);
         $this->notifyAgents($c, $reason);
@@ -48,8 +69,6 @@ class HandoffService
                 ->data(['type' => 'conversation', 'id' => $c->id])
                 ->send();
         }
-
-        return ['status' => 'requested', 'message' => 'Ik haal er een collega bij, een moment geduld.'];
     }
 
     public function takeOver(ChatConversation $c, ChatAgent $humanAgent): void
