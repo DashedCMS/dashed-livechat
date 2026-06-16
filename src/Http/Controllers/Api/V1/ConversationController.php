@@ -76,7 +76,10 @@ class ConversationController extends Controller
         $data = $request->validate([
             'content' => ['required_without:attachments', 'nullable', 'string'],
             'attachments' => ['nullable', 'array', 'max:5'],
-            'attachments.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif,application/pdf', 'max:10240'],
+            // Valideer op de CLIENT-aangeleverde mime/extensie i.p.v. server-side
+            // inhoud-sniffing (mimetypes/mimes): libmagic herkent HEIC van iPhone-
+            // foto's vaak niet → octet-stream → onterechte 422.
+            'attachments.*' => ['file', 'max:10240', \Dashed\DashedLivechat\Support\AttachmentRules::clientImageOrPdf()],
         ]);
 
         $agent = app(HandoffService::class)->humanAgentForUser($request->user(), Sites::getActive());

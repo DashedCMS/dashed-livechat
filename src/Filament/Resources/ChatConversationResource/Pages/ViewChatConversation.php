@@ -93,14 +93,21 @@ class ViewChatConversation extends Page
         if ($hasFiles) {
             $this->validate([
                 'replyAttachments' => ['array', 'max:5'],
-                'replyAttachments.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif,application/pdf', 'max:10240'],
+                'replyAttachments.*' => ['file', 'max:10240', \Dashed\DashedLivechat\Support\AttachmentRules::clientImageOrPdf()],
             ]);
         }
 
         $handoff = app(HandoffService::class);
         $manager = app(ConversationManager::class);
         $agent = $handoff->humanAgentForUser(auth()->user(), $this->conversation->site_id);
-        $manager->addHumanMessage($this->conversation, $agent, $text, $this->replyAttachments);
+        try {
+            $manager->addHumanMessage($this->conversation, $agent, $text, $this->replyAttachments);
+        } catch (\Throwable $e) {
+            report($e);
+            Notification::make()->title('Versturen mislukt')->body($e->getMessage())->danger()->send();
+
+            return;
+        }
         $this->reply = '';
         $this->replyAttachments = [];
         $this->refreshRecord();

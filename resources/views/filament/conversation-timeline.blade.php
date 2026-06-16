@@ -132,7 +132,13 @@
                         @endforeach
                     </div>
                 @endif
-                <form wire:submit.prevent="sendReply" class="dlc__composer">
+                <form wire:submit.prevent="sendReply" class="dlc__composer"
+                    x-data="{ dragging: false }"
+                    x-on:dragover.prevent="dragging = true"
+                    x-on:dragleave.prevent="dragging = false"
+                    x-on:drop.prevent="dragging = false; if ($event.dataTransfer.files.length) { $wire.uploadMultiple('replyAttachments', $event.dataTransfer.files) }"
+                    :style="dragging ? 'outline:2px dashed var(--primary-500); outline-offset:4px; border-radius:10px;' : ''"
+                    title="Sleep een afbeelding of PDF hierheen om te versturen">
                     <label style="display:flex; align-items:center; cursor:pointer; padding:0 .25rem;" title="Voeg afbeelding of PDF toe">
                         <x-filament::icon icon="heroicon-m-paper-clip" style="width:1.25rem; height:1.25rem;" />
                         <input type="file" wire:model="replyAttachments" multiple accept="image/*,application/pdf" style="display:none;">

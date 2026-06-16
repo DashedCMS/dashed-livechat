@@ -6,6 +6,7 @@ namespace Dashed\DashedLivechat\Services;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Enums\MessageRole;
@@ -178,17 +179,21 @@ class ConversationManager
         $ids = [];
         foreach ($files as $file) {
             if (! $file instanceof UploadedFile) {
+                Log::warning('livechat: bijlage overgeslagen (geen UploadedFile)', ['type' => get_debug_type($file)]);
                 continue;
             }
             // Move onto the 'dashed' disk so MediaHelper can addMediaFromDisk it.
             $path = $file->store('chat-tmp', 'dashed');
             if (! $path) {
+                Log::warning('livechat: bijlage opslaan op disk mislukt', ['name' => $file->getClientOriginalName()]);
                 continue;
             }
             $id = mediaHelper()->uploadFromPath($path, 'chat');
             Storage::disk('dashed')->delete($path);
             if ($id) {
                 $ids[] = (int) $id;
+            } else {
+                Log::warning('livechat: media-upload gaf geen id terug', ['path' => $path]);
             }
         }
 

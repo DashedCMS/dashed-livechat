@@ -112,7 +112,7 @@ class ChatWidget extends Component
     {
         return [
             'newAttachments' => ['array', 'max:5'],
-            'newAttachments.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif,application/pdf', 'max:10240'],
+            'newAttachments.*' => ['file', 'max:10240', \Dashed\DashedLivechat\Support\AttachmentRules::clientImageOrPdf()],
         ];
     }
 
