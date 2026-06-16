@@ -71,7 +71,7 @@
                                 <div style="display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem;">
                                     @foreach($atts as $att)
                                         @if($att['is_image'])
-                                            <a href="{{ $att['url'] }}" target="_blank" rel="noopener"><img src="{{ $att['thumb_url'] }}" alt="" style="max-width:160px; border-radius:.5rem;"></a>
+                                            <button type="button" x-on:click="$dispatch('open-lightbox', { src: @js($att['url']) })" style="border:0; padding:0; background:none; cursor:zoom-in; line-height:0;"><img src="{{ $att['thumb_url'] }}" alt="" style="max-width:160px; border-radius:.5rem;"></button>
                                         @else
                                             <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:.375rem; font-size:.8125rem; text-decoration:underline; color:inherit;">📎 {{ $att['name'] }}</a>
                                         @endif
@@ -240,7 +240,21 @@
         </div>
     </div>
 
+    {{-- Foto-lightbox: opent een popup over de pagina i.p.v. een nieuw tabblad --}}
+    <div
+        x-data="{ src: null }"
+        x-on:open-lightbox.window="src = $event.detail.src"
+        x-on:keydown.escape.window="src = null"
+        x-show="src"
+        x-cloak
+        x-on:click="src = null"
+        style="position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:2rem; background:rgba(0,0,0,.85); cursor:zoom-out;"
+    >
+        <img :src="src" alt="" style="max-width:92vw; max-height:92vh; border-radius:.5rem; box-shadow:0 10px 40px rgba(0,0,0,.5);">
+    </div>
+
     <style>
+        [x-cloak] { display: none !important; }
         .dlc { display: flex; flex-direction: column; gap: 1rem; }
         .dlc__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
         .dlc__mode { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: rgb(113 113 122); }
