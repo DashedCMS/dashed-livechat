@@ -41,4 +41,14 @@ class ChatConversation extends Model
     {
         return $this->belongsTo(ChatAgent::class, 'assigned_agent_id');
     }
+
+    public function markClosed(): void
+    {
+        $this->forceFill(['status' => 'closed'])->save();
+    }
+
+    public function reopen(): void
+    {
+        $this->forceFill(['status' => 'active'])->save();
+    }
 }

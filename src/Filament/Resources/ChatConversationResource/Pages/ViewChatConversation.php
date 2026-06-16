@@ -53,6 +53,27 @@ class ViewChatConversation extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('markClosed')
+                ->label('Markeer als afgerond')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->visible(fn (): bool => $this->conversation->status !== 'closed')
+                ->action(function (): void {
+                    $this->conversation->markClosed();
+                    $this->refreshRecord();
+
+                    Notification::make()->success()->title('Gesprek afgerond')->send();
+                }),
+            Action::make('reopen')
+                ->label('Heropenen')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->visible(fn (): bool => $this->conversation->status === 'closed')
+                ->action(function (): void {
+                    $this->conversation->reopen();
+                    $this->refreshRecord();
+
+                    Notification::make()->success()->title('Gesprek heropend')->send();
+                }),
             Action::make('delete')
                 ->label('Verwijderen')
                 ->icon('heroicon-o-trash')

@@ -5,12 +5,15 @@ namespace Dashed\DashedLivechat\Filament\Resources;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Notifications\Notification;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource\Pages;
@@ -104,10 +107,39 @@ class ChatConversationResource extends Resource
             ])
             ->defaultSort('last_message_at', 'desc')
             ->recordActions([
+                Action::make('markClosed')
+                    ->label('Afronden')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (ChatConversation $record): bool => $record->status !== 'closed')
+                    ->action(function (ChatConversation $record): void {
+                        $record->markClosed();
+
+                        Notification::make()->success()->title('Gesprek afgerond')->send();
+                    }),
+                Action::make('reopen')
+                    ->label('Heropenen')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->visible(fn (ChatConversation $record): bool => $record->status === 'closed')
+                    ->action(function (ChatConversation $record): void {
+                        $record->reopen();
+
+                        Notification::make()->success()->title('Gesprek heropend')->send();
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('markClosed')
+                        ->label('Afronden')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function ($records): void {
+                            $records->each(fn ($record) => $record->markClosed());
+
+                            Notification::make()->success()->title('Geselecteerde gesprekken afgerond')->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),
                 ]),
             ])
