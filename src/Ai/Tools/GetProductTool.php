@@ -48,10 +48,27 @@ class GetProductTool implements ChatTool
 
         return [
             'found' => true,
-            'name' => $product->name,
-            'description' => strip_tags((string) $product->description),
+            'name' => $this->toText($product->getTranslation('name', $locale)),
+            'description' => strip_tags($this->toText($product->getTranslation('description', $locale))),
             'price' => $product->current_price ?? $product->price ?? null,
             'url' => rescue(fn () => $product->getUrl(), null, false),
         ];
+    }
+
+    /**
+     * Een translatable veld kan per locale een array bevatten (block-/builder-
+     * content of slechte import-data). Cast dat veilig naar een platte string,
+     * zodat de tool niet crasht op "Array to string conversion".
+     */
+    private function toText(mixed $value): string
+    {
+        if (is_array($value)) {
+            return trim(implode(' ', array_filter(array_map(
+                fn ($v) => is_scalar($v) ? (string) $v : '',
+                $value,
+            ))));
+        }
+
+        return is_scalar($value) ? (string) $value : '';
     }
 }
