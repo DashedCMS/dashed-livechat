@@ -67,6 +67,7 @@ class HandoffService
                 ->body(($c->visitor_name ?: 'Een bezoeker') . ' wacht op een medewerker')
                 ->route("/conversation/{$c->id}")
                 ->data(['type' => 'conversation', 'id' => $c->id])
+                ->category('chat_handoff')
                 ->send();
         }
     }
