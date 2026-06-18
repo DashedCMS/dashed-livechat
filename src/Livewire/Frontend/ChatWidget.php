@@ -348,6 +348,28 @@ class ChatWidget extends Component
         $this->open = ! $this->open;
     }
 
+    /**
+     * Registreert dat de bezoeker de chat zojuist heeft gezien (leesbevestiging).
+     * Throttled: schrijf alleen als er nog geen leestijd is of de laatste >2s
+     * geleden was, zodat een poll niet elke ~1.5s een DB-write veroorzaakt.
+     */
+    public function markVisitorRead(): void
+    {
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return;
+        }
+
+        if (
+            $conversation->visitor_read_at
+            && $conversation->visitor_read_at->gt(now()->subSeconds(2))
+        ) {
+            return;
+        }
+
+        $conversation->forceFill(['visitor_read_at' => now()])->save();
+    }
+
     // Feature B: restore conversation from localStorage token
     public function resumeConversation(?string $token): void
     {

@@ -96,6 +96,17 @@
                                 </div>
                             @endif
 
+                            @if(! $isVisitor && in_array($message->role, ['human', 'ai'], true) && ! $message->is_internal)
+                                @php($read = $conversation->visitor_read_at && $message->created_at && $message->created_at->lte($conversation->visitor_read_at))
+                                <div class="dlc__receipt" style="font-size:.6875rem; opacity:.6; margin-top:.25rem;">
+                                    @if($read)
+                                        ✓✓ Gelezen
+                                    @else
+                                        ✓ Verzonden
+                                    @endif
+                                </div>
+                            @endif
+
                             @if($message->role === 'ai')
                                 <div class="dlc__actions-row">
                                     <button type="button"

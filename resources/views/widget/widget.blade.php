@@ -108,11 +108,19 @@
                             if (this.previews.length > 4) { this.previews.shift(); }
                         }
                     });
+                } else {
+                    // Bezoeker kijkt naar de chat en er komt een bericht binnen:
+                    // leesbevestiging bijwerken (server-side gethrottled).
+                    this.$wire.markVisitorRead();
                 }
                 if (! wasOwn) { this.playPing(); }
             });
             this.$watch('open', (isOpen) => {
-                if (isOpen) { this._seenId = this.lastMessageId; this.unread = 0; this.previews = []; }
+                if (isOpen) {
+                    this._seenId = this.lastMessageId; this.unread = 0; this.previews = [];
+                    // Openen = bezoeker ziet de chat: leesbevestiging bijwerken.
+                    this.$wire.markVisitorRead();
+                }
             });
         }
     }"

@@ -54,7 +54,7 @@ class ConversationController extends Controller
         return new ConversationDetailResource($model);
     }
 
-    public function messages(Request $request, int $conversation): AnonymousResourceCollection
+    public function messages(Request $request, int $conversation): JsonResponse
     {
         $model = $this->resolve($conversation);
 
@@ -66,7 +66,14 @@ class ConversationController extends Controller
 
         $perPage = (int) config('dashed-mobile-api.default_page_size', 25);
 
-        return MessageResource::collection($query->limit($perPage)->get());
+        $messages = $query->limit($perPage)->get();
+
+        // Houd de `data`-sleutel met de berichten zodat bestaande parsing blijft
+        // werken; voeg de huidige leesbevestiging van de bezoeker ernaast toe.
+        return response()->json([
+            'data' => MessageResource::collection($messages),
+            'visitor_read_at' => optional($model->visitor_read_at)->toIso8601String(),
+        ]);
     }
 
     public function sendMessage(Request $request, ConversationManager $manager, int $conversation): JsonResponse
