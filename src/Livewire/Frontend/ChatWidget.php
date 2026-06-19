@@ -216,6 +216,8 @@ class ChatWidget extends Component
             'locale' => app()->getLocale(),
         ]);
         $this->publicToken = $conversation->public_token;
+        // Bezoeker is net actief (stuurde een bericht) → presence verversen.
+        $this->touchVisitorActivity($conversation);
 
         // Guardrail laag 1.
         $check = $guard->check($text);
@@ -233,9 +235,9 @@ class ChatWidget extends Component
             return;
         }
 
-        // De e-mailvraag komt niet hier, maar ~12s na het eerste AI-antwoord
-        // (zie maybeAskForEmail via pollReply), zodat de begroeting/het antwoord
-        // eerst komt en de vervolgvraag niet wordt onderbroken.
+        // De e-mailvraag komt niet hier, maar na ~15s inactiviteit (zie
+        // maybeAskForEmail via pollReply), zodat het antwoord eerst komt en de
+        // vervolgvraag niet wordt onderbroken.
         if ($conversation->mode !== 'human') {
             $delay = (int) ($this->activeAgent?->ai_reply_delay_seconds ?? 0);
             if (config('dashed-livechat.streaming', false)) {
@@ -255,6 +257,7 @@ class ChatWidget extends Component
         $this->recomputeAwaitingReply($conversation);
 
         if ($conversation) {
+            $this->touchVisitorActivity($conversation);
             $this->maybeAskForEmail($conversation);
         }
     }
@@ -282,9 +285,11 @@ class ChatWidget extends Component
     }
 
     /**
-     * Vraagt ~12s na het eerste AI-antwoord eenmalig om het e-mailadres, zodat
-     * de begroeting/het antwoord eerst komt. Niet verplicht: de bezoeker kan
-     * gewoon doorvragen (zie sendMessage e-mailstap).
+     * Vraagt eenmalig om het e-mailadres zodra het gesprek ~15s stil ligt (geen
+     * nieuw bericht). Zo kunnen we de bezoeker later per e-mail verder helpen als
+     * die wegklikt. Niet verplicht: de bezoeker kan gewoon doorvragen (zie
+     * sendMessage e-mailstap). De timer 'reset' vanzelf omdat elk nieuw bericht
+     * de created_at van het laatste bericht verschuift.
      */
     protected function maybeAskForEmail(ChatConversation $conversation): void
     {
@@ -292,21 +297,41 @@ class ChatWidget extends Component
             $this->contactDismissed
             || $this->contactStep !== null
             || $conversation->visitor_email
-            || $conversation->mode !== 'ai'
         ) {
             return;
         }
 
         $last = $conversation->messages()->reorder()->latest('id')->first();
-        if (! $last || $last->role !== 'ai') {
-            return; // alleen als de bot net klaar is met antwoorden
+        if (! $last || ! $last->created_at) {
+            return;
         }
 
-        $firstAi = $conversation->messages()->where('role', 'ai')->orderBy('id')->first();
-        if ($firstAi && $firstAi->created_at && $firstAi->created_at->lte(now()->subSeconds(12))) {
-            $this->contactStep = 'email';
-            $this->postBotMessage($conversation, 'Mag ik je e-mailadres? Dan kunnen we je ook later nog verder helpen. Liever niet? Stel gerust gewoon je volgende vraag.');
+        // Pas vragen na X seconden inactiviteit (geen nieuw bericht meer binnengekomen).
+        $idle = (int) config('dashed-livechat.ask_email_after_seconds', 15);
+        if ($last->created_at->gt(now()->subSeconds($idle))) {
+            return;
         }
+
+        $this->contactStep = 'email';
+        $this->postBotMessage($conversation, 'Mag ik je e-mailadres? Dan kunnen we je ook later (per e-mail) verder helpen. Liever niet? Stel gerust gewoon je volgende vraag.');
+    }
+
+    /**
+     * Stempelt dat de bezoeker zojuist actief was (de Livewire-poll fungeert als
+     * heartbeat). Throttled tot ~1×/10s om bij elke poll geen DB-write te doen.
+     * Sluit de tab/navigeert de bezoeker weg, dan stopt de poll en veroudert deze
+     * tijd → agent-/AI-antwoorden gaan dan als e-mail (zie ConversationManager).
+     */
+    protected function touchVisitorActivity(?ChatConversation $conversation): void
+    {
+        if (! $conversation) {
+            return;
+        }
+        $last = $conversation->visitor_last_active_at;
+        if ($last && $last->gt(now()->subSeconds(10))) {
+            return;
+        }
+        $conversation->forceFill(['visitor_last_active_at' => now()])->save();
     }
 
     public function requestHuman(): void

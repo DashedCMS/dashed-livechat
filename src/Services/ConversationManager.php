@@ -92,6 +92,8 @@ class ConversationManager
         ]);
         $c->forceFill(['last_message_at' => now()])->save();
 
+        $this->maybeEmailOfflineReply($c, $message);
+
         return $message;
     }
 
@@ -106,8 +108,45 @@ class ConversationManager
         $c->forceFill(['last_message_at' => now()])->save();
 
         $this->learnFromHumanReply($c, $message);
+        $this->maybeEmailOfflineReply($c, $message);
 
         return $message;
+    }
+
+    /**
+     * Stuurt een agent-/AI-antwoord als e-mail naar de bezoeker wanneer die niet
+     * meer actief is (tab dicht/weg). Online bezoekers zien het antwoord live, dus
+     * dan mailen we niet. Vereist een vastgelegd e-mailadres; interne berichten en
+     * lege antwoorden worden overgeslagen. Queued, zodat het antwoord niet wacht.
+     */
+    private function maybeEmailOfflineReply(ChatConversation $c, ChatMessage $message): void
+    {
+        if ($message->is_internal) {
+            return;
+        }
+
+        $email = trim((string) $c->visitor_email);
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        if (trim((string) $message->content) === '') {
+            return;
+        }
+
+        // Online? Dan ziet de bezoeker het antwoord live → niet mailen.
+        $window = (int) config('dashed-livechat.offline_reply_after_seconds', 30);
+        $active = $c->visitor_last_active_at;
+        if ($active && $active->gt(now()->subSeconds($window))) {
+            return;
+        }
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($email)
+                ->queue(new \Dashed\DashedLivechat\Mail\OfflineReplyMail($c, $message));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /** Triviale antwoorden die geen leerwaarde hebben. */

@@ -81,8 +81,12 @@
         initWidget() {
             this.initProactive();
             const _key = 'dashed_livechat_token_' + @js($siteId);
-            const _saved = localStorage.getItem(_key);
+            // Hervat-link uit een e-mail (?dashed_chat=<token>) heeft voorrang op de
+            // lokaal opgeslagen token, zodat de bezoeker op elk apparaat verder kan.
+            const _fromUrl = new URLSearchParams(window.location.search).get('dashed_chat');
+            const _saved = _fromUrl || localStorage.getItem(_key);
             if (_saved && !this.publicToken) { this.$wire.resumeConversation(_saved); }
+            if (_fromUrl) { this.open = true; }
             this.$watch('publicToken', v => { if (v) { localStorage.setItem(_key, v); } });
             this.$watch('streamUrl', url => { if (url) this.startStream(url); });
 

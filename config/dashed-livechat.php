@@ -6,6 +6,12 @@ return [
     'poll_interval_ms' => 1500,
     'rate_limit_per_minute' => 15,
 
+    // Vraag de bezoeker om e-mail na zoveel seconden zonder nieuw bericht (inactiviteit).
+    'ask_email_after_seconds' => 15,
+    // Beschouw de bezoeker als 'offline' als de laatste activiteit ouder is dan dit;
+    // agent-/AI-antwoorden gaan dan als e-mail (met hervat-knop) naar de bezoeker.
+    'offline_reply_after_seconds' => 30,
+
     // Max verificatiepogingen voor orderstatus per conversatie.
     'order_lookup_max_attempts' => 5,
 

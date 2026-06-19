@@ -52,6 +52,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'create_chat_quick_replies_table',
                 'add_ai_settings_to_chat_agents_table',
                 'add_visitor_read_at_to_chat_conversations_table',
+                'add_visitor_last_active_at_to_chat_conversations_table',
             ])
             ->runsMigrations();
     }
