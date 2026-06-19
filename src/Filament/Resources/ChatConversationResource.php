@@ -12,6 +12,8 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Notifications\Notification;
@@ -76,6 +78,12 @@ class ChatConversationResource extends Resource
                         'human' => 'success',
                         default => 'gray',
                     }),
+                TextColumn::make('awaiting')
+                    ->label('Beurt')
+                    ->badge()
+                    ->state(fn ($record): string => $record->awaiting)
+                    ->formatStateUsing(fn (string $state): string => $state === 'agent' ? 'Jij' : 'Wachten op bezoeker')
+                    ->color(fn (string $state): string => $state === 'agent' ? 'danger' : 'gray'),
                 SelectColumn::make('status')
                     ->label('Status')
                     ->options([
@@ -98,7 +106,9 @@ class ChatConversationResource extends Resource
                     ->dateTime()
                     ->sortable(),
             ])
-            ->defaultSort('last_message_at', 'desc')
+            ->defaultSort(fn (Builder $query): Builder => $query
+                ->orderByRaw("CASE WHEN last_message_role = 'visitor' THEN 0 ELSE 1 END")
+                ->orderByDesc('last_message_at'))
             ->recordActions([
                 // Status wisselen gebeurt nu inline via de Status-keuzelijst hierboven.
                 DeleteAction::make(),
@@ -119,6 +129,9 @@ class ChatConversationResource extends Resource
                 ]),
             ])
             ->filters([
+                Filter::make('awaiting_agent')
+                    ->label('Wacht op mijn antwoord')
+                    ->query(fn (Builder $query): Builder => $query->awaitingAgent()->where('status', '!=', 'closed')),
                 SelectFilter::make('mode')
                     ->label('Modus')
                     ->options([

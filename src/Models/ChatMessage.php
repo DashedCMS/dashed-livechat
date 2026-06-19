@@ -18,6 +18,21 @@ class ChatMessage extends Model
         'attachments' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        // Houd de gedenormaliseerde 'beurt'-indicator op de conversatie bij: het
+        // laatste niet-interne bericht bepaalt wie aan zet is (bezoeker vs agent).
+        // Een directe query-update voorkomt dat updated_at van de conversatie
+        // verschuift en werkt ongeacht via welk pad het bericht is aangemaakt.
+        static::created(function (self $message): void {
+            if ($message->is_internal || ! in_array($message->role, ['visitor', 'ai', 'human'], true)) {
+                return;
+            }
+            ChatConversation::whereKey($message->chat_conversation_id)
+                ->update(['last_message_role' => $message->role]);
+        });
+    }
+
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(ChatConversation::class, 'chat_conversation_id');

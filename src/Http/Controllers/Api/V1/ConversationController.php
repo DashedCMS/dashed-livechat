@@ -38,10 +38,20 @@ class ConversationController extends Controller
             });
         }
 
+        // Filter 'wacht op mijn antwoord': alleen gesprekken waar de bezoeker als
+        // laatste iets stuurde. Gesloten gesprekken vallen weg (niks te doen).
+        if ($request->query('awaiting') === 'agent') {
+            $query->awaitingAgent()->where('status', '!=', 'closed');
+        }
+
         $perPage = (int) config('dashed-mobile-api.default_page_size', 25);
 
+        // Gesprekken die op jou wachten bovenaan, daarna nieuwste eerst.
         return ConversationResource::collection(
-            $query->orderByDesc('last_message_at')->paginate($perPage),
+            $query
+                ->orderByRaw("CASE WHEN last_message_role = 'visitor' THEN 0 ELSE 1 END")
+                ->orderByDesc('last_message_at')
+                ->paginate($perPage),
         );
     }
 

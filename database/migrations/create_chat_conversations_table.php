@@ -22,6 +22,7 @@ return new class () extends Migration {
             $table->unsignedBigInteger('ai_agent_id')->nullable();
             $table->unsignedBigInteger('assigned_agent_id')->nullable();
             $table->timestamp('last_message_at')->nullable();
+            $table->string('last_message_role')->nullable();
             $table->timestamp('visitor_read_at')->nullable();
             $table->timestamp('visitor_last_active_at')->nullable();
             $table->text('started_url')->nullable();

@@ -23,6 +23,8 @@ class ConversationResource extends JsonResource
             'locale' => $this->locale,
             'assigned_agent_id' => $this->assigned_agent_id,
             'last_message_at' => optional($this->last_message_at)->toIso8601String(),
+            // 'agent' = jij moet antwoorden, 'visitor' = wachten op de bezoeker.
+            'awaiting' => $this->awaiting,
         ];
     }
 }

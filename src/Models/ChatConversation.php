@@ -22,6 +22,21 @@ class ChatConversation extends Model
         });
     }
 
+    /**
+     * Wie is aan de beurt: 'agent' wanneer de bezoeker als laatste iets stuurde
+     * (jij moet antwoorden), anders 'visitor' (wachten op de bezoeker).
+     */
+    public function getAwaitingAttribute(): string
+    {
+        return $this->last_message_role === 'visitor' ? 'agent' : 'visitor';
+    }
+
+    /** Gesprekken die op een antwoord van de medewerker wachten. */
+    public function scopeAwaitingAgent($query)
+    {
+        return $query->where('last_message_role', 'visitor');
+    }
+
     public function messages(): HasMany
     {
         return $this->hasMany(ChatMessage::class)->orderBy('id');
