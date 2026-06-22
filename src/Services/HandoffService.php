@@ -21,7 +21,10 @@ class HandoffService
 
     public function requestHandoff(ChatConversation $c, ?string $reason = null): array
     {
-        if (! $this->hours->isOpen($c->site_id)) {
+        // Buiten openingstijden schuiven we alleen door als er minstens één
+        // actieve agent is die ook buiten werktijden berichten mag ontvangen.
+        // Zo niet, dan blijft het oude "gesloten"-gedrag gelden.
+        if (! $this->hours->isOpen($c->site_id) && ! $this->hasOutsideHoursAgents($c->site_id)) {
             $behavior = \Dashed\DashedCore\Models\Customsetting::get('chat_out_of_hours_behavior', $c->site_id, 'ai_only');
             $next = $this->hours->nextOpening($c->site_id);
 
@@ -102,14 +105,34 @@ class HandoffService
             return;
         }
 
-        $emails = ChatAgent::where('site_id', $c->site_id)
+        $query = ChatAgent::where('site_id', $c->site_id)
             ->where('type', AgentType::Human->value)
             ->where('is_active', true)
-            ->whereNotNull('email')
-            ->pluck('email')->filter()->unique()->all();
+            ->whereNotNull('email');
+
+        // Buiten openingstijden notificeren we enkel agents die dat expliciet
+        // mogen ontvangen.
+        if (! $this->hours->isOpen($c->site_id)) {
+            $query->where('receive_outside_hours', true);
+        }
+
+        $emails = $query->pluck('email')->filter()->unique()->all();
 
         foreach ($emails as $email) {
             Mail::to($email)->send(new HandoffNotificationMail($c, $reason));
         }
+    }
+
+    /**
+     * Is er minstens één actieve (human) agent die buiten openingstijden
+     * berichten/handoffs mag ontvangen?
+     */
+    protected function hasOutsideHoursAgents(string $siteId): bool
+    {
+        return ChatAgent::where('site_id', $siteId)
+            ->where('type', AgentType::Human->value)
+            ->where('is_active', true)
+            ->where('receive_outside_hours', true)
+            ->exists();
     }
 }

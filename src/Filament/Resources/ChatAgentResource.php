@@ -81,6 +81,11 @@ class ChatAgentResource extends Resource
                         ->label('Actief')
                         ->default(true)
                         ->helperText('Alleen actieve medewerkers worden ingezet.'),
+                    Toggle::make('receive_outside_hours')
+                        ->label('Ook buiten openingstijden ontvangen')
+                        ->default(false)
+                        ->visible(fn (Get $get) => $get('type') === 'human')
+                        ->helperText('Wanneer aan: deze medewerker krijgt ook buiten de openingstijden chats/handoffs (en notificaties).'),
                     mediaHelper()->field('avatar', 'Profielfoto', isImage: true)
                         ->helperText('Profielfoto die in de chat wordt getoond.'),
                 ])

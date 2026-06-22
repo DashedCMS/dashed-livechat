@@ -17,6 +17,7 @@ return new class () extends Migration {
             $table->string('name');
             $table->string('avatar')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('receive_outside_hours')->default(false); // human: ook buiten openingstijden ontvangen
             $table->integer('sort_order')->default(0);
             $table->string('email')->nullable();              // human
             $table->unsignedBigInteger('user_id')->nullable(); // human -> users.id

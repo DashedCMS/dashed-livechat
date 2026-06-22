@@ -12,6 +12,7 @@ class ChatAgent extends Model
     protected $guarded = [];
     protected $casts = [
         'is_active' => 'boolean',
+        'receive_outside_hours' => 'boolean',
         'languages' => 'array',
         'enabled_tools' => 'array',
         'abilities' => 'array',
