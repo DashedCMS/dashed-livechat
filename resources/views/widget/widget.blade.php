@@ -5,6 +5,7 @@
         publicToken: @entangle('publicToken'),
         proactive: @js($trigger ?? null),
         proactiveShown: false,
+        proactiveTeaser: false,
         streamUrl: @js($streamUrl ?? null),
         streamBuffer: '',
         _es: null,
@@ -40,6 +41,13 @@
         fireProactive() {
             if (this.proactiveShown || !this.proactive || !this.proactive.message) return;
             this.proactiveShown = true;
+            // Op mobiel het volledige paneel niet automatisch openen: dat bedekt de
+            // hele pagina (paneel is daar bijna fullscreen). Toon in plaats daarvan een
+            // kleine teaser-bubble boven het icoon; tikken opent alsnog de chat.
+            if (window.matchMedia('(max-width: 640px)').matches) {
+                this.proactiveTeaser = true;
+                return;
+            }
             this.open = true;
             // Bubble wordt reactief getoond via x-show/x-text (zie proactiveWrap),
             // binnen wire:ignore zodat Livewire-polls de tekst niet wegmorphen.
@@ -163,6 +171,18 @@
                 <span x-text="p"></span>
             </div>
         </template>
+    </div>
+
+    {{-- Proactieve teaser-bubble (mobiel): toont de trigger-boodschap boven het icoon
+         zonder het hele paneel te openen, zodat de onderliggende pagina zichtbaar blijft. --}}
+    <div x-show="proactiveTeaser && !open" x-cloak x-transition
+        style="position: absolute; bottom: 74px; {{ $cfg['position'] === 'left' ? 'left' : 'right' }}: 0; width: 280px; max-width: calc(100vw - 48px);">
+        <div @click="open = true; proactiveTeaser = false"
+            style="position: relative; background:#fff; color:#1f2937; padding:12px 34px 12px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.18); cursor:pointer; font-size:13px; line-height:1.45;">
+            <span x-text="proactive && proactive.message ? proactive.message : ''"></span>
+            <button type="button" @click.stop="proactiveTeaser = false" aria-label="Sluiten"
+                style="position:absolute; top:5px; right:7px; background:transparent; border:0; color:#9ca3af; font-size:17px; line-height:1; cursor:pointer;">&times;</button>
+        </div>
     </div>
 
     {{-- Launcher --}}
@@ -388,6 +408,14 @@
                 <span>Was dit nuttig?</span>
                 <button type="button" wire:click="rate('up')" title="Ja" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128077;</button>
                 <button type="button" wire:click="rate('down')" title="Nee" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128078;</button>
+            </div>
+        @endif
+
+        {{-- Buiten openingstijden, maar de chat is bemand: melding dat een reactie
+             langer kan duren (zie ChatAvailability::shouldShowDelayNotice). --}}
+        @if(!empty($showDelayNotice) && !empty($delayNotice))
+            <div style="flex-shrink:0; padding:8px 12px; border-top:1px solid #fde68a; background:#fffbeb; color:#92400e; font-size:12px; line-height:1.4;">
+                {{ $delayNotice }}
             </div>
         @endif
 

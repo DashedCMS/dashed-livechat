@@ -5,8 +5,8 @@ namespace Dashed\DashedLivechat\Http\Controllers;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Cache;
-use Dashed\DashedLivechat\Support\VisitorGeo;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedLivechat\Support\VisitorGeo;
 use Dashed\DashedLivechat\Models\VisitorSession;
 
 class RecordVisitorPresenceController

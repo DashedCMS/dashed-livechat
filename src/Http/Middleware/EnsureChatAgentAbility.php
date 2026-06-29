@@ -6,9 +6,9 @@ namespace Dashed\DashedLivechat\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Support\ChatAccess;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Beschermt livechat-routes: de user moet een livechat-medewerker zijn voor de

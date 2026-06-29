@@ -5,8 +5,8 @@ namespace Dashed\DashedLivechat\Commands;
 use Throwable;
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedLivechat\Models\AppNotification;
 use Dashed\DashedLivechat\Models\VisitorSession;
+use Dashed\DashedLivechat\Models\AppNotification;
 
 class NotifyVisitorCountCommand extends Command
 {

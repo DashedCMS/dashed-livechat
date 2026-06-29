@@ -3,6 +3,7 @@
 namespace Dashed\DashedLivechat\Filament\Resources\ChatConversationResource\Pages;
 
 use Filament\Actions\Action;
+use Livewire\WithFileUploads;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,6 @@ use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
 use Dashed\DashedLivechat\Services\ConversationManager;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource;
-use Livewire\WithFileUploads;
 
 class ViewChatConversation extends Page
 {
@@ -119,6 +119,7 @@ class ViewChatConversation extends Page
         $handoff = app(HandoffService::class);
         $manager = app(ConversationManager::class);
         $agent = $handoff->humanAgentForUser(auth()->user(), $this->conversation->site_id);
+
         try {
             $manager->addHumanMessage($this->conversation, $agent, $text, $this->replyAttachments);
         } catch (\Throwable $e) {

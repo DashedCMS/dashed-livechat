@@ -53,6 +53,17 @@ class HandoffService
     }
 
     /**
+     * Start een mensen-bemand gesprek (er is geen AI-agent): zet op
+     * wacht-op-medewerker en notificeer de medewerkers die nu "aan staan".
+     * Binnen openingstijden alle actieve agents, daarbuiten enkel agents met
+     * `receive_outside_hours` (zie notifyAgents).
+     */
+    public function startHumanChat(ChatConversation $c): void
+    {
+        $this->performHandoff($c, 'Mensen-bemande chat');
+    }
+
+    /**
      * Voert de daadwerkelijke doorschuif uit: mode op wacht-op-medewerker,
      * event loggen, medewerkers + app notificeren.
      */

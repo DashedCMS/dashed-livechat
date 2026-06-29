@@ -21,6 +21,7 @@ class WidgetConfig
             'phone' => Customsetting::get('chat_contact_phone', $siteId) ?: Customsetting::get('company_phone_number', $siteId),
             'email' => Customsetting::get('chat_contact_email', $siteId) ?: Customsetting::get('site_from_email', $siteId),
             'new_message_indicator' => Customsetting::get('chat_new_message_indicator', $siteId, 'badge'),
+            'delay_notice' => Customsetting::get('chat_delay_notice', $siteId, 'We zijn nu buiten openingstijden. Je kunt gerust je bericht achterlaten — een reactie kan iets langer duren.'),
         ];
     }
 

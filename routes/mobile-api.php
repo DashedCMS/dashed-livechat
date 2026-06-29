@@ -7,8 +7,8 @@ use Dashed\DashedLivechat\Http\Controllers\Api\V1\AgentController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\TriggerController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\LearningController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\VisitorsController;
-use Dashed\DashedLivechat\Http\Controllers\Api\V1\OpeningHourController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\QuickReplyController;
+use Dashed\DashedLivechat\Http\Controllers\Api\V1\OpeningHourController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\ChatSettingsController;
 use Dashed\DashedLivechat\Http\Controllers\Api\V1\ConversationController;
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedLivechat\Guardrails\InputGuard;
 use Dashed\DashedLivechat\Jobs\GenerateAiReplyJob;
 use Dashed\DashedLivechat\Models\ChatConversation;
+use Dashed\DashedLivechat\Services\ChatAvailability;
 use Dashed\DashedLivechat\Services\ConversationManager;
 
 class ChatWidget extends Component
@@ -203,18 +204,25 @@ class ChatWidget extends Component
         RateLimiter::hit($key, 60);
 
         $agent = ChatAgent::where('site_id', $this->siteId)->where('type', 'ai')->where('is_active', true)->orderBy('sort_order')->first();
-        if (! $agent) {
+
+        // Geen actieve AI-agent? Dan is dit een mensen-bemande chat. Het gesprek
+        // start alleen als er nu medewerkers "aan staan" (binnen openingstijden,
+        // of buiten openingstijden indien zo ingesteld).
+        $humanOnly = ! $agent;
+        if ($humanOnly && ! app(ChatAvailability::class)->isStaffed($this->siteId)) {
             $this->addError('draft', 'Chat is momenteel niet beschikbaar.');
 
             return;
         }
 
         $conversation = $manager->findOrCreate($this->siteId, $this->publicToken, [
-            'ai_agent_id' => $agent->id,
+            'ai_agent_id' => $agent?->id,
+            'mode' => $humanOnly ? 'waiting_human' : 'ai',
             'started_url' => url()->previous(),
             'ip_hash' => hash('sha256', request()->ip() . config('app.key')),
             'locale' => app()->getLocale(),
         ]);
+        $isNewConversation = $conversation->wasRecentlyCreated;
         $this->publicToken = $conversation->public_token;
         // Bezoeker is net actief (stuurde een bericht) → presence verversen.
         $this->touchVisitorActivity($conversation);
@@ -227,10 +235,23 @@ class ChatWidget extends Component
 
         if ($check->blocked) {
             $conversation->events()->create(['type' => 'guardrail_block', 'payload' => ['reason' => $check->reason]]);
-            $conversation->messages()->create([
-                'role' => 'ai', 'agent_id' => $agent->id,
-                'content' => 'Daar kan ik je niet mee helpen. Ik beantwoord alleen vragen over deze website. Waar kan ik je wel mee van dienst zijn?',
-            ]);
+            if ($agent) {
+                $conversation->messages()->create([
+                    'role' => 'ai', 'agent_id' => $agent->id,
+                    'content' => 'Daar kan ik je niet mee helpen. Ik beantwoord alleen vragen over deze website. Waar kan ik je wel mee van dienst zijn?',
+                ]);
+            }
+
+            return;
+        }
+
+        // Mensen-bemande chat (geen AI): de medewerkers handelen af. Notificeer
+        // eenmalig bij een nieuw gesprek; vervolgberichten pushen al via
+        // ConversationManager::addVisitorMessage.
+        if ($humanOnly) {
+            if ($isNewConversation) {
+                app(\Dashed\DashedLivechat\Services\HandoffService::class)->startHumanChat($conversation);
+            }
 
             return;
         }
@@ -452,6 +473,7 @@ class ChatWidget extends Component
     public function render()
     {
         $cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($this->siteId);
+        $showDelayNotice = app(ChatAvailability::class)->shouldShowDelayNotice($this->siteId);
         $agent = $this->activeAgent;
 
         $agentName = $agent?->name ?: null;
@@ -538,6 +560,10 @@ class ChatWidget extends Component
             // Pas tonen zodra het gesprek echt loopt (minstens één bericht),
             // dus niet al in het welkomstscherm.
             'canRequestHuman' => $mode === 'ai' && $humanAvailable && $this->messages->isNotEmpty(),
+            // Buiten openingstijden, maar de chat is bemand: melding dat een
+            // reactie langer kan duren.
+            'showDelayNotice' => $showDelayNotice,
+            'delayNotice' => $cfg['delay_notice'] ?? null,
         ]);
     }
 }
