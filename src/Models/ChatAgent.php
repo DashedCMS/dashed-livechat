@@ -19,6 +19,10 @@ class ChatAgent extends Model
         'temperature' => 'float',
         'ai_reply_delay_seconds' => 'integer',
         'max_tokens' => 'integer',
+        'escalate_on_request' => 'boolean',
+        'escalate_on_negative' => 'boolean',
+        'escalate_on_tool_failure' => 'boolean',
+        'escalate_off_topic' => 'boolean',
     ];
 
     protected static function booted(): void

@@ -49,8 +49,24 @@ class SystemPromptBuilder
         // Globale schrijfregels conform huisstijl (geen em-dashes, geen AI-clichés).
         $parts[] = "Schrijf natuurlijk en concreet. Gebruik geen em-dashes en geen AI-clichés.";
 
+        $reasons = [];
+        if ($agent->escalate_on_request) {
+            $reasons[] = 'de bezoeker expliciet om een medewerker vraagt';
+        }
+        if ($agent->escalate_on_negative) {
+            $reasons[] = 'de bezoeker duidelijk boos of ontevreden is';
+        }
+        if ($agent->escalate_on_tool_failure) {
+            $reasons[] = 'je na herhaald proberen geen betrouwbaar antwoord uit de tools of kennis krijgt';
+        }
+        if ($agent->escalate_off_topic) {
+            $reasons[] = 'de vraag buiten de toegestane onderwerpen valt';
+        }
         if ($agent->escalation_rules) {
-            $parts[] = "ESCALATIE: verbind door naar een medewerker — gebruik de tool requestHumanHandoff — in deze gevallen: {$agent->escalation_rules}.";
+            $reasons[] = (string) $agent->escalation_rules;
+        }
+        if ($reasons !== []) {
+            $parts[] = 'ESCALATIE: verbind door naar een medewerker — gebruik de tool requestHumanHandoff — in deze gevallen: ' . implode('; ', $reasons) . '.';
         }
         $parts[] = "Als je het antwoord niet betrouwbaar uit de tools/kennis kunt halen of je twijfelt: VERZIN NIETS. "
             . "Zeg eerlijk dat je het niet zeker weet en gebruik de tool requestHumanHandoff om een medewerker erbij te halen. "

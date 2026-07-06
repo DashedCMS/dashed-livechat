@@ -111,9 +111,21 @@ class ChatAgentResource extends Resource
                     Textarea::make('disallowed_topics')
                         ->label('Verboden onderwerpen')
                         ->helperText('Onderwerpen die de bot moet weigeren of doorverwijzen.'),
+                    Toggle::make('escalate_on_request')
+                        ->label('Escaleer als de bezoeker om een mens vraagt')
+                        ->default(true),
+                    Toggle::make('escalate_on_negative')
+                        ->label('Escaleer bij een boze/ontevreden bezoeker')
+                        ->default(true),
+                    Toggle::make('escalate_on_tool_failure')
+                        ->label('Escaleer als tools herhaald geen antwoord geven')
+                        ->default(true),
+                    Toggle::make('escalate_off_topic')
+                        ->label('Escaleer bij vragen buiten de onderwerpen')
+                        ->default(false),
                     Textarea::make('escalation_rules')
-                        ->label('Escalatieregels')
-                        ->helperText('Wanneer moet de bot doorverbinden naar een mens? Bv. "bij klachten, retouren, of als de bezoeker boos is". Wordt nu echt toegepast.'),
+                        ->label('Extra escalatieregels (optioneel)')
+                        ->helperText('Aanvullende gevallen die niet door de knoppen hierboven worden gedekt.'),
                     Textarea::make('greeting')
                         ->label('Begroeting')
                         ->helperText('Openingsbericht dat de bot als eerste bericht plaatst bij een nieuw gesprek.'),
