@@ -19,6 +19,7 @@ final class Factories
             'site_id' => 'main',
             'locale' => 'nl',
             'order_lookup_attempts' => 0,
+            'public_token' => (string) Str::uuid(),
         ], $overrides));
     }
 
