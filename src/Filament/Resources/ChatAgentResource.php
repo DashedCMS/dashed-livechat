@@ -120,6 +120,7 @@ class ChatAgentResource extends Resource
                     Select::make('model')
                         ->label('Model')
                         ->options([
+                            'claude-sonnet-5' => 'Claude Sonnet 5 (aanbevolen)',
                             'claude-sonnet-4-6' => 'Claude Sonnet 4.6 (standaard, gebalanceerd)',
                             'claude-opus-4-8' => 'Claude Opus 4.8 (krachtigst)',
                             'claude-haiku-4-5-20251001' => 'Claude Haiku 4.5 (snel, goedkoop)',

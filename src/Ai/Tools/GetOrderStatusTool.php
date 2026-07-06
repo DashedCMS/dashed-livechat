@@ -22,7 +22,7 @@ class GetOrderStatusTool implements ChatTool
 
     public function description(): string
     {
-        return 'Geef de status van EEN specifieke bestelling. Vereist zowel het ordernummer als het e-mailadres dat bij die bestelling hoort; beide moeten kloppen. Dit is geen zoekfunctie over klanten of bestellingen.';
+        return 'Geef de status van EEN specifieke bestelling. Vereist zowel het ordernummer als het e-mailadres dat bij die bestelling hoort; beide moeten kloppen. Dit is geen zoekfunctie over klanten of bestellingen. Geeft ook de track & trace mee als die er is.';
     }
 
     public function inputSchema(): array

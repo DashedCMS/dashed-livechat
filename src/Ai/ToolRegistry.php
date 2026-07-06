@@ -8,11 +8,13 @@ use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Ai\Tools\GetPageTool;
 use Dashed\DashedLivechat\Ai\Contracts\ChatTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchFaqTool;
+use Dashed\DashedLivechat\Ai\Tools\StartReturnTool;
 use Dashed\DashedLivechat\Ai\Tools\GetProductTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchContentTool;
 use Dashed\DashedLivechat\Ai\Tools\GetOrderStatusTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchProductsTool;
 use Dashed\DashedLivechat\Ai\Tools\GetOpeningHoursTool;
+use Dashed\DashedLivechat\Ai\Tools\GetStockAndDeliveryTool;
 use Dashed\DashedLivechat\Ai\Tools\SaveContactDetailsTool;
 use Dashed\DashedLivechat\Ai\Tools\RequestHumanHandoffTool;
 
@@ -31,6 +33,8 @@ class ToolRegistry
             'getOpeningHours' => GetOpeningHoursTool::class,
             'saveContactDetails' => SaveContactDetailsTool::class,
             'requestHumanHandoff' => RequestHumanHandoffTool::class,
+            'getStockAndDelivery' => GetStockAndDeliveryTool::class,
+            'startReturn' => StartReturnTool::class,
         ];
     }
 
@@ -72,6 +76,8 @@ class ToolRegistry
             'getOpeningHours' => 'Openingstijden opvragen',
             'saveContactDetails' => 'Naam/e-mail van bezoeker opslaan',
             'requestHumanHandoff' => 'Doorverbinden met een medewerker',
+            'getStockAndDelivery' => 'Voorraad & levertijd opvragen',
+            'startReturn' => 'Retour starten',
         ];
     }
 
