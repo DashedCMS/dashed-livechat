@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedLivechat\Tests\Support\Factories;
 use Dashed\DashedLivechat\Ai\Tools\StartReturnTool;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 
 it('start een retour voor een geverifieerde order', function () {
     // Order::registerReturn() -> restockOrderProduct() slaat het Product op,
@@ -29,6 +30,12 @@ it('start een retour voor een geverifieerde order', function () {
     expect($out['ok'])->toBeTrue();
     expect($d['orderProduct']->fresh()->returned_quantity)->toBe(1);
     expect($d['order']->fresh()->retour_status)->toBe('partially_returned');
+
+    $log = OrderLog::where('order_id', $d['order']->id)
+        ->where('tag', 'order.return.reason')
+        ->first();
+    expect($log)->not->toBeNull();
+    expect($log->note)->toBe('Retourreden (via chat): Te klein');
 });
 
 it('weigert bij niet-kloppende order/e-mail (geen retour)', function () {
@@ -57,4 +64,19 @@ it('vangt te-groot-aantal netjes af', function () {
 
     expect($out['ok'])->toBeFalse()
         ->and($out['message'])->toContain('retourneren');
+});
+
+it('weigert een garbage-regel (order_product_id/quantity 0) zonder mutatie', function () {
+    $c = Factories::makeConversation();
+    $d = Factories::makeOrderWithProduct(['email' => 'klant@example.com', 'invoice_id' => '3004'], [], qty: 1);
+
+    $out = app(StartReturnTool::class)->handle([
+        'orderNumber' => '3004',
+        'email' => 'klant@example.com',
+        'lines' => [['order_product_id' => 0, 'quantity' => 1]],
+    ], $c);
+
+    expect($out['ok'])->toBeFalse()
+        ->and($out['message'])->toContain('Geef aan welke producten');
+    expect($d['orderProduct']->fresh()->returned_quantity)->toBe(0);
 });

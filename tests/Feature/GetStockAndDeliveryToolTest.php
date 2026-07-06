@@ -34,3 +34,12 @@ it('geeft found=false bij onbekend product', function () {
     $out = app(GetStockAndDeliveryTool::class)->handle(['product' => 'bestaat-niet'], $c);
     expect($out['found'])->toBeFalse();
 });
+
+it('geeft found=false bij een niet-gepubliceerd product', function () {
+    $c = Factories::makeConversation();
+    Factories::makeProduct(['slug' => ['nl' => 'geheim'], 'use_stock' => true, 'stock' => 5, 'reserved_stock' => 0, 'public' => 0]);
+
+    $out = app(GetStockAndDeliveryTool::class)->handle(['product' => 'geheim'], $c);
+
+    expect($out['found'])->toBeFalse();
+});

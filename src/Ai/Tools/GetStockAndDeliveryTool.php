@@ -42,6 +42,7 @@ class GetStockAndDeliveryTool implements ChatTool
 
         $product = Product::query()
             ->whereJsonContains('site_ids', $conversation->site_id)
+            ->where('public', 1)
             ->where(function ($q) use ($needle, $locale) {
                 $q->where('slug->' . $locale, $needle)
                     ->orWhere('name->' . $locale, 'like', "%{$needle}%");

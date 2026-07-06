@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dashed\DashedLivechat\Ai\Tools;
 
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedLivechat\Ai\Contracts\ChatTool;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\OrderVerification;
@@ -70,7 +71,7 @@ class StartReturnTool implements ChatTool
                 'quantity' => (int) ($l['quantity'] ?? 0),
             ],
             is_array($input['lines'] ?? null) ? $input['lines'] : [],
-        )));
+        ), fn ($l) => $l['order_product_id'] > 0 && $l['quantity'] > 0));
 
         if ($lines === []) {
             return ['ok' => false, 'message' => 'Geef aan welke producten en aantallen je wilt retourneren.'];
@@ -82,10 +83,19 @@ class StartReturnTool implements ChatTool
             return ['ok' => false, 'message' => $e->getMessage()];
         }
 
+        $reason = isset($input['reason']) ? trim((string) $input['reason']) : '';
+        if ($reason !== '') {
+            OrderLog::createLog(
+                orderId: $result->order->id,
+                tag: 'order.return.reason',
+                note: 'Retourreden (via chat): '.$reason,
+            );
+        }
+
         return [
             'ok' => true,
             'message' => 'De retour is aangemeld. Je ontvangt de retourinstructies per e-mail.',
-            'reason' => isset($input['reason']) ? (string) $input['reason'] : null,
+            'reason' => $reason !== '' ? $reason : null,
         ];
     }
 }
