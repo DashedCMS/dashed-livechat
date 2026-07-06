@@ -80,3 +80,28 @@ it('weigert een garbage-regel (order_product_id/quantity 0) zonder mutatie', fun
         ->and($out['message'])->toContain('Geef aan welke producten');
     expect($d['orderProduct']->fresh()->returned_quantity)->toBe(0);
 });
+
+it('simuleert de retour in een sandbox-conversatie zonder te muteren', function () {
+    Queue::fake();
+
+    $c = Factories::makeConversation(['is_sandbox' => true]);
+    $d = Factories::makeOrderWithProduct(['email' => 'klant@example.com', 'invoice_id' => '3005'], [], qty: 2);
+
+    $out = app(StartReturnTool::class)->handle([
+        'orderNumber' => '3005',
+        'email' => 'klant@example.com',
+        'lines' => [['order_product_id' => $d['orderProduct']->id, 'quantity' => 1]],
+        'reason' => 'Te klein',
+    ], $c);
+
+    expect($out['ok'])->toBeTrue();
+    expect($out['simulated'])->toBeTrue();
+
+    expect($d['orderProduct']->fresh()->returned_quantity)->toBe(0);
+    expect($d['order']->fresh()->retour_status)->toBeNull();
+
+    $log = OrderLog::where('order_id', $d['order']->id)
+        ->where('tag', 'order.return.reason')
+        ->first();
+    expect($log)->toBeNull();
+});

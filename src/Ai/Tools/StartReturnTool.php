@@ -77,6 +77,14 @@ class StartReturnTool implements ChatTool
             return ['ok' => false, 'message' => 'Geef aan welke producten en aantallen je wilt retourneren.'];
         }
 
+        if ($conversation->is_sandbox) {
+            return [
+                'ok' => true,
+                'simulated' => true,
+                'message' => '[Testmodus] De retour is niet echt aangemaakt — in de testomgeving voeren we geen wijzigingen door.',
+            ];
+        }
+
         try {
             $result->order->registerReturn($lines, restock: true, markForRefund: true);
         } catch (\InvalidArgumentException $e) {
