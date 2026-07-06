@@ -19,7 +19,15 @@ class ConversationManager
     public function findOrCreate(string $siteId, ?string $publicToken, array $attributes = []): ChatConversation
     {
         if ($publicToken) {
-            $existing = ChatConversation::where('site_id', $siteId)->where('public_token', $publicToken)->first();
+            $query = ChatConversation::where('site_id', $siteId)->where('public_token', $publicToken);
+            // Sandbox-conversaties (agent-testomgeving) zitten achter de
+            // global scope; zonder deze hole zou elke turn een nieuwe, wees
+            // sandbox-conversatie aanmaken in plaats van de bestaande te
+            // hervinden, en verliest de AI zijn gespreksgeschiedenis.
+            if (! empty($attributes['is_sandbox'])) {
+                $query->withSandbox();
+            }
+            $existing = $query->first();
             if ($existing) {
                 return $existing;
             }
@@ -43,7 +51,11 @@ class ConversationManager
         // Begint de bezoeker weer te chatten, dan is het gesprek weer actief/open.
         $c->forceFill(['last_message_at' => now(), 'status' => 'active'])->save();
 
-        $this->notifyNewVisitorMessage($c, $content, $message->attachments ?? []);
+        // Sandbox-gesprekken (agent-testomgeving) mogen nooit een echte
+        // push-notificatie naar medewerkers sturen.
+        if (! $c->is_sandbox) {
+            $this->notifyNewVisitorMessage($c, $content, $message->attachments ?? []);
+        }
 
         return $message;
     }
@@ -92,7 +104,11 @@ class ConversationManager
         ]);
         $c->forceFill(['last_message_at' => now()])->save();
 
-        $this->maybeEmailOfflineReply($c, $message);
+        // Sandbox-gesprekken mogen nooit een echte mail naar een bezoeker
+        // sturen (er is geen echte bezoeker).
+        if (! $c->is_sandbox) {
+            $this->maybeEmailOfflineReply($c, $message);
+        }
 
         return $message;
     }

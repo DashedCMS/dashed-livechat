@@ -7,6 +7,7 @@ namespace Dashed\DashedLivechat\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedLivechat\Models\Scopes\ExcludeSandboxScope;
 
 class ChatConversation extends Model
 {
@@ -22,10 +23,22 @@ class ChatConversation extends Model
 
     protected static function booted(): void
     {
+        static::addGlobalScope(new ExcludeSandboxScope());
+
         static::deleting(function (self $conversation): void {
             $conversation->messages()->delete();
             $conversation->events()->delete();
         });
+    }
+
+    /**
+     * Haalt de sandbox-uitsluiting weg zodat sandbox-conversaties (de
+     * agent-testomgeving) ook meekomen in de resultaten. Gebruik dit alleen
+     * op plekken die bewust met sandbox-data werken (bv. de playground zelf).
+     */
+    public function scopeWithSandbox($query)
+    {
+        return $query->withoutGlobalScope(ExcludeSandboxScope::class);
     }
 
     /**

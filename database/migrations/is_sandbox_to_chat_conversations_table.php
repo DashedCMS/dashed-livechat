@@ -19,6 +19,9 @@ return new class () extends Migration {
 
     public function down(): void
     {
+        if (! Schema::hasTable('dashed__chat_conversations')) {
+            return;
+        }
         Schema::table('dashed__chat_conversations', function (Blueprint $table) {
             if (Schema::hasColumn('dashed__chat_conversations', 'is_sandbox')) {
                 $table->dropColumn('is_sandbox');

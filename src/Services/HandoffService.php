@@ -69,8 +69,17 @@ class HandoffService
      */
     private function performHandoff(ChatConversation $c, ?string $reason): void
     {
+        // De lokale statusverandering geldt ook voor sandbox-gesprekken (zo
+        // ziet de agent-testomgeving dat er een escalatie plaatsvond), maar
+        // sandbox-gesprekken mogen nooit echte medewerkers/apparaten
+        // notificeren — dat gebeurt hieronder pas ná deze guard.
         $c->forceFill(['mode' => ConversationMode::WaitingHuman->value])->save();
         $c->events()->create(['type' => 'handoff_requested', 'payload' => ['reason' => $reason]]);
+
+        if ($c->is_sandbox) {
+            return;
+        }
+
         $this->notifyAgents($c, $reason);
 
         // Push-notificatie naar de app (alleen als de mobile-api geïnstalleerd is).

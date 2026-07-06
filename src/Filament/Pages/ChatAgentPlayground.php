@@ -103,7 +103,8 @@ class ChatAgentPlayground extends Page
             return;
         }
 
-        $conversation = ChatConversation::where('site_id', $this->siteId)
+        $conversation = ChatConversation::withSandbox()
+            ->where('site_id', $this->siteId)
             ->where('public_token', $this->sandboxToken)
             ->where('is_sandbox', true)
             ->first();
