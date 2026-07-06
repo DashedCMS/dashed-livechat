@@ -12,7 +12,13 @@ class ChatConversation extends Model
 {
     protected $table = 'dashed__chat_conversations';
     protected $guarded = [];
-    protected $casts = ['meta' => 'array', 'last_message_at' => 'datetime', 'visitor_read_at' => 'datetime', 'visitor_last_active_at' => 'datetime'];
+    protected $casts = [
+        'meta' => 'array',
+        'last_message_at' => 'datetime',
+        'visitor_read_at' => 'datetime',
+        'visitor_last_active_at' => 'datetime',
+        'is_sandbox' => 'boolean',
+    ];
 
     protected static function booted(): void
     {

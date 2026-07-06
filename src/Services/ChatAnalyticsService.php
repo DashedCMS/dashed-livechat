@@ -12,9 +12,15 @@ class ChatAnalyticsService
 {
     public function forSite(string $siteId): array
     {
-        $conversationIds = ChatConversation::where('site_id', $siteId)->pluck('id');
+        // Sandbox-gesprekken komen uit de agent-testomgeving (ChatAgentPlayground)
+        // en zijn geen echte bezoekers-traffic; ze mogen de statistieken niet
+        // opblazen, dus die sluiten we hier expliciet uit.
+        $conversationIds = ChatConversation::where('site_id', $siteId)
+            ->where('is_sandbox', false)
+            ->pluck('id');
 
         $byMode = ChatConversation::where('site_id', $siteId)
+            ->where('is_sandbox', false)
             ->selectRaw('mode, count(*) as aantal')
             ->groupBy('mode')
             ->pluck('aantal', 'mode')
