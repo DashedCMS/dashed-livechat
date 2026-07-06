@@ -1,1 +1,4 @@
 .php-cs-fixer.cache
+/vendor/
+/.phpunit.result.cache
+/.phpunit.cache

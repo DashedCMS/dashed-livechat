@@ -14,11 +14,24 @@
     },
     "require-dev": {
         "orchestra/testbench": "^9",
-        "pestphp/pest": "^2.35"
+        "pestphp/pest": "^2.35",
+        "dashed/dashed-ecommerce-core": "*",
+        "dashed/dashed-pages": "*"
     },
     "autoload": {
         "psr-4": {
             "Dashed\\DashedLivechat\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Dashed\\DashedLivechat\\Tests\\": "tests"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
         }
     },
     "extra": {
