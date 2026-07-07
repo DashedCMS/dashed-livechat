@@ -32,13 +32,6 @@ class ChatConversation extends Model
     }
 
     /**
-     * Aanwezigheid van de bezoeker op de website, afgeleid van
-     * visitor_last_active_at (de widget werkt dat ~elke 10s bij zolang de
-     * bezoeker een pagina open heeft): 'active' = nu actief op de site,
-     * 'idle' = net nog actief (waarschijnlijk nog op de site, tab op de
-     * achtergrond), 'away' = al een tijd geen teken van leven / van de site af.
-     */
-    /**
      * De site-brede presence-sessie van de bezoeker (gekoppeld via het
      * beacon-token dat de widget opslaat). last_seen_at loopt óók op de
      * achtergrond door (beacon elke ~25-60s) en stopt zodra de bezoeker weg is.
@@ -48,6 +41,12 @@ class ChatConversation extends Model
         return $this->hasOne(VisitorSession::class, 'token', 'visitor_session_token');
     }
 
+    /**
+     * Aanwezigheid van de bezoeker op de website, uit twee signalen:
+     * 'active' = nu bezig op de voorgrond (widget-poll vers), 'idle' = tab op
+     * de achtergrond maar nog op de site (beacon pingt nog), 'away' = beide
+     * signalen oud, bezoeker is van de site af.
+     */
     public function visitorPresence(): string
     {
         $activeWithin = (int) config('dashed-livechat.presence_active_seconds', 45);

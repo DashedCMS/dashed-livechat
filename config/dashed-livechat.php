@@ -6,6 +6,13 @@ return [
     'poll_interval_ms' => 1500,
     'rate_limit_per_minute' => 15,
 
+    // Bezoeker-aanwezigheid (chat-overzicht/CMS/app): 'active' zolang de
+    // widget-voorgrond-poll binnen dit venster verse activiteit toont.
+    'presence_active_seconds' => 45,
+    // Daarbuiten 'idle' zolang de site-brede presence-beacon nog binnen dit
+    // venster pingt (tab op de achtergrond, nog op de site); anders 'away'.
+    'presence_away_seconds' => 120,
+
     // Vraag de bezoeker om e-mail na zoveel seconden zonder nieuw bericht (inactiviteit).
     'ask_email_after_seconds' => 15,
     // Beschouw de bezoeker als 'offline' als de laatste activiteit ouder is dan dit;
