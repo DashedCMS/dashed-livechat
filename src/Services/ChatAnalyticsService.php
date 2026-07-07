@@ -33,15 +33,36 @@ class ChatAnalyticsService
             ->where('type', 'handoff_requested')
             ->count();
 
+        // Feedback op AI-antwoorden (👍/👎) — de leer-loop-kwaliteit.
+        $feedback = ChatMessage::whereIn('chat_conversation_id', $conversationIds)
+            ->where('role', 'ai')
+            ->whereIn('feedback', ['good', 'bad'])
+            ->selectRaw('feedback, count(*) as aantal')
+            ->groupBy('feedback')
+            ->pluck('aantal', 'feedback')
+            ->toArray();
+        $feedbackGood = (int) ($feedback['good'] ?? 0);
+        $feedbackBad = (int) ($feedback['bad'] ?? 0);
+
+        // % zelf-afgehandeld: gesprekken die de AI afhandelde zonder escalatie
+        // naar een mens (nooit handoff aangevraagd).
+        $conversationCount = $conversationIds->count();
+        $selfHandledPct = $conversationCount > 0
+            ? (int) round(max(0, $conversationCount - $escalations) / $conversationCount * 100)
+            : 0;
+
         $costUsd = $tokensIn / 1_000_000 * (float) config('dashed-livechat.cost_per_million_input', 3.0)
             + $tokensOut / 1_000_000 * (float) config('dashed-livechat.cost_per_million_output', 15.0);
 
         $costEur = $costUsd * (float) config('dashed-livechat.usd_to_eur', 0.92);
 
         return [
-            'conversations' => $conversationIds->count(),
+            'conversations' => $conversationCount,
             'by_mode' => array_merge(['ai' => 0, 'waiting_human' => 0, 'human' => 0], $byMode),
             'escalations' => $escalations,
+            'self_handled_pct' => $selfHandledPct,
+            'feedback_good' => $feedbackGood,
+            'feedback_bad' => $feedbackBad,
             'tokens_in' => $tokensIn,
             'tokens_out' => $tokensOut,
             'estimated_cost' => round($costUsd, 4),
