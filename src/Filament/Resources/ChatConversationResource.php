@@ -161,4 +161,10 @@ class ChatConversationResource extends Resource
             'view' => Pages\ViewChatConversation::route('/{record}'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        // visitorSession eager-loaden zodat de presence-badge geen N+1 doet.
+        return parent::getEloquentQuery()->with('visitorSession');
+    }
 }

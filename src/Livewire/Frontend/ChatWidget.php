@@ -21,6 +21,11 @@ class ChatWidget extends Component
 
     public string $siteId = '';
     public ?string $publicToken = null;
+
+    /** Site-breed bezoekers-token (uit localStorage 'dashed_visitor_token') dat de
+     *  presence-beacon gebruikt; opgeslagen op het gesprek zodat we de aanwezigheid
+     *  scherp kunnen bepalen (voorgrond vs achtergrond-op-de-site vs weg). */
+    public ?string $visitorSessionToken = null;
     public string $draft = '';
     /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
     public array $newAttachments = [];
@@ -348,6 +353,13 @@ class ChatWidget extends Component
         if (! $conversation) {
             return;
         }
+        // Koppel het beacon-token één keer aan het gesprek (voor de scherpe
+        // aanwezigheidsbepaling), los van de activiteits-throttle.
+        $token = trim((string) $this->visitorSessionToken);
+        if ($token !== '' && $conversation->visitor_session_token !== $token) {
+            $conversation->forceFill(['visitor_session_token' => $token])->save();
+        }
+
         $last = $conversation->visitor_last_active_at;
         if ($last && $last->gt(now()->subSeconds(10))) {
             return;

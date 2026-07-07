@@ -3,6 +3,7 @@
     x-data="{
         open: @entangle('open'),
         publicToken: @entangle('publicToken'),
+        visitorSessionToken: @entangle('visitorSessionToken'),
         proactive: @js($trigger ?? null),
         proactiveShown: false,
         proactiveTeaser: false,
@@ -88,6 +89,19 @@
         },
         initWidget() {
             this.initProactive();
+            // Koppel de site-brede presence-beacon aan dit gesprek: die token
+            // (localStorage 'dashed_visitor_token') blijft ook op de achtergrond
+            // pingen, waardoor de CMS/app "op de site, tab weg" kan onderscheiden
+            // van "helemaal weg". De beacon zet de token synchroon bij page-load;
+            // een korte fallback vangt een enkele race af.
+            const _readVisitorToken = () => {
+                try {
+                    const _vt = localStorage.getItem('dashed_visitor_token');
+                    if (_vt && this.visitorSessionToken !== _vt) { this.visitorSessionToken = _vt; }
+                } catch (e) {}
+            };
+            _readVisitorToken();
+            if (! this.visitorSessionToken) { setTimeout(_readVisitorToken, 1000); }
             const _key = 'dashed_livechat_token_' + @js($siteId);
             // Hervat-link uit een e-mail (?dashed_chat=<token>) heeft voorrang op de
             // lokaal opgeslagen token, zodat de bezoeker op elk apparaat verder kan.

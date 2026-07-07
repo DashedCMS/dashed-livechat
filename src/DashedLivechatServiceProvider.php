@@ -53,6 +53,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'add_ai_settings_to_chat_agents_table',
                 'add_visitor_read_at_to_chat_conversations_table',
                 'add_visitor_last_active_at_to_chat_conversations_table',
+                'add_visitor_session_token_to_chat_conversations_table',
                 'add_last_message_role_to_chat_conversations_table',
                 'add_receive_outside_hours_to_chat_agents_table',
                 'escalation_toggles_for_chat_agents_table',

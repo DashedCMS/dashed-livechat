@@ -38,18 +38,32 @@ class ChatConversation extends Model
      * 'idle' = net nog actief (waarschijnlijk nog op de site, tab op de
      * achtergrond), 'away' = al een tijd geen teken van leven / van de site af.
      */
+    /**
+     * De site-brede presence-sessie van de bezoeker (gekoppeld via het
+     * beacon-token dat de widget opslaat). last_seen_at loopt óók op de
+     * achtergrond door (beacon elke ~25-60s) en stopt zodra de bezoeker weg is.
+     */
+    public function visitorSession(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(VisitorSession::class, 'token', 'visitor_session_token');
+    }
+
     public function visitorPresence(): string
     {
-        $last = $this->visitor_last_active_at;
-        if (! $last) {
-            return 'away';
-        }
+        $activeWithin = (int) config('dashed-livechat.presence_active_seconds', 45);
+        $awayAfter = (int) config('dashed-livechat.presence_away_seconds', 120);
 
-        if ($last->gt(now()->subSeconds((int) config('dashed-livechat.presence_active_seconds', 45)))) {
+        // 'active' = nu bezig in de widget/op de voorgrond (widget-poll bumpt
+        // visitor_last_active_at; die bevriest zodra de tab op de achtergrond gaat).
+        $lastActive = $this->visitor_last_active_at;
+        if ($lastActive && $lastActive->gt(now()->subSeconds($activeWithin))) {
             return 'active';
         }
 
-        if ($last->gt(now()->subSeconds((int) config('dashed-livechat.presence_idle_seconds', 180)))) {
+        // Nog op de site? De presence-beacon blijft ook op de achtergrond pingen.
+        $lastSeen = optional($this->visitorSession)->last_seen_at;
+        $mostRecent = collect([$lastActive, $lastSeen])->filter()->max();
+        if ($mostRecent && $mostRecent->gt(now()->subSeconds($awayAfter))) {
             return 'idle';
         }
 

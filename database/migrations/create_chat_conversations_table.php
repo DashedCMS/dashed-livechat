@@ -25,6 +25,7 @@ return new class () extends Migration {
             $table->string('last_message_role')->nullable();
             $table->timestamp('visitor_read_at')->nullable();
             $table->timestamp('visitor_last_active_at')->nullable();
+            $table->string('visitor_session_token')->nullable()->index();
             $table->text('started_url')->nullable();
             $table->integer('order_lookup_attempts')->default(0);
             $table->string('ip_hash')->nullable();
