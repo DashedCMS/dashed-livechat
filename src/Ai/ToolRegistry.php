@@ -9,6 +9,7 @@ use Dashed\DashedLivechat\Ai\Tools\GetPageTool;
 use Dashed\DashedLivechat\Ai\Contracts\ChatTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchFaqTool;
 use Dashed\DashedLivechat\Ai\Tools\StartReturnTool;
+use Dashed\DashedLivechat\Ai\Tools\SubscribeBackInStockTool;
 use Dashed\DashedLivechat\Ai\Tools\GetProductTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchContentTool;
 use Dashed\DashedLivechat\Ai\Tools\GetOrderStatusTool;
@@ -35,6 +36,7 @@ class ToolRegistry
             'requestHumanHandoff' => RequestHumanHandoffTool::class,
             'getStockAndDelivery' => GetStockAndDeliveryTool::class,
             'startReturn' => StartReturnTool::class,
+            'subscribeBackInStock' => SubscribeBackInStockTool::class,
         ];
     }
 
@@ -78,6 +80,7 @@ class ToolRegistry
             'requestHumanHandoff' => 'Doorverbinden met een medewerker',
             'getStockAndDelivery' => 'Voorraad & levertijd opvragen',
             'startReturn' => 'Retour starten',
+            'subscribeBackInStock' => 'Terug-op-voorraad-melding instellen',
         ];
     }
 
