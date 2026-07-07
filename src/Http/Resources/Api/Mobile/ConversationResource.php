@@ -25,6 +25,9 @@ class ConversationResource extends JsonResource
             'last_message_at' => optional($this->last_message_at)->toIso8601String(),
             // 'agent' = jij moet antwoorden, 'visitor' = wachten op de bezoeker.
             'awaiting' => $this->awaiting,
+            // Aanwezigheid bezoeker: 'active' | 'idle' | 'away'.
+            'visitor_presence' => $this->visitorPresence(),
+            'visitor_last_active_at' => optional($this->visitor_last_active_at)->toIso8601String(),
         ];
     }
 }

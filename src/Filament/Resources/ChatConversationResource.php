@@ -63,6 +63,12 @@ class ChatConversationResource extends Resource
                     ->label('Bezoeker')
                     ->state(fn ($record) => $record->visitor_name ?: ($record->visitor_email ?: 'Anoniem'))
                     ->searchable(['visitor_name', 'visitor_email']),
+                TextColumn::make('visitor_presence')
+                    ->label('Bezoeker online')
+                    ->badge()
+                    ->state(fn ($record) => ['active' => 'Actief', 'idle' => 'Niet actief', 'away' => 'Weg'][$record->visitorPresence()] ?? 'Weg')
+                    ->color(fn ($record) => ['active' => 'success', 'idle' => 'warning', 'away' => 'gray'][$record->visitorPresence()] ?? 'gray')
+                    ->icon(fn ($record) => $record->visitorPresence() === 'active' ? 'heroicon-m-signal' : ($record->visitorPresence() === 'idle' ? 'heroicon-m-signal-slash' : 'heroicon-m-no-symbol')),
                 TextColumn::make('mode')
                     ->label('Modus')
                     ->badge()

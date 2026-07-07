@@ -32,6 +32,31 @@ class ChatConversation extends Model
     }
 
     /**
+     * Aanwezigheid van de bezoeker op de website, afgeleid van
+     * visitor_last_active_at (de widget werkt dat ~elke 10s bij zolang de
+     * bezoeker een pagina open heeft): 'active' = nu actief op de site,
+     * 'idle' = net nog actief (waarschijnlijk nog op de site, tab op de
+     * achtergrond), 'away' = al een tijd geen teken van leven / van de site af.
+     */
+    public function visitorPresence(): string
+    {
+        $last = $this->visitor_last_active_at;
+        if (! $last) {
+            return 'away';
+        }
+
+        if ($last->gt(now()->subSeconds((int) config('dashed-livechat.presence_active_seconds', 45)))) {
+            return 'active';
+        }
+
+        if ($last->gt(now()->subSeconds((int) config('dashed-livechat.presence_idle_seconds', 180)))) {
+            return 'idle';
+        }
+
+        return 'away';
+    }
+
+    /**
      * Haalt de sandbox-uitsluiting weg zodat sandbox-conversaties (de
      * agent-testomgeving) ook meekomen in de resultaten. Gebruik dit alleen
      * op plekken die bewust met sandbox-data werken (bv. de playground zelf).

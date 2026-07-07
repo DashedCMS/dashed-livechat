@@ -18,6 +18,14 @@
                 </x-filament::input.wrapper>
             </span>
 
+            @php($presence = $this->conversation?->visitorPresence() ?? 'away')
+            <span class="dlc__mode">
+                <span class="dlc__mode-label">Bezoeker</span>
+                <x-filament::badge :color="$presence === 'active' ? 'success' : ($presence === 'idle' ? 'warning' : 'gray')">
+                    {{ ['active' => 'Actief op de site', 'idle' => 'Niet actief', 'away' => 'Van de site af'][$presence] ?? 'Van de site af' }}
+                </x-filament::badge>
+            </span>
+
             <div class="dlc__actions">
                 @if($mode !== 'human')
                     <x-filament::button icon="heroicon-m-hand-raised" wire:click="takeOver" wire:loading.attr="disabled">
