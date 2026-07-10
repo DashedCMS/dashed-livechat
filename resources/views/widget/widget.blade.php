@@ -91,8 +91,8 @@
             this.initProactive();
             // Koppel de site-brede presence-beacon aan dit gesprek: die token
             // (localStorage 'dashed_visitor_token') blijft ook op de achtergrond
-            // pingen, waardoor de CMS/app "op de site, tab weg" kan onderscheiden
-            // van "helemaal weg". De beacon zet de token synchroon bij page-load;
+            // pingen, waardoor de CMS/app 'op de site, tab weg' kan onderscheiden
+            // van 'helemaal weg'. De beacon zet de token synchroon bij page-load;
             // een korte fallback vangt een enkele race af.
             const _readVisitorToken = () => {
                 try {
