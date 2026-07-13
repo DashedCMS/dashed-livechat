@@ -20,10 +20,16 @@ class LearningController extends Controller
         $query = ChatLearning::query()
             ->where('site_id', (string) Sites::getActive());
 
-        if ($search = $request->string('search')->toString()) {
-            $query->where(function ($q) use ($search): void {
-                $q->where('question', 'like', "%{$search}%")
-                    ->orWhere('answer', 'like', "%{$search}%");
+        if ($search = trim($request->string('search')->toString())) {
+            // Slim multi-term: elk woord moet matchen op vraag óf antwoord (AND over woorden).
+            $terms = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [$search];
+            $query->where(function ($outer) use ($terms): void {
+                foreach ($terms as $term) {
+                    $outer->where(function ($q) use ($term): void {
+                        $q->where('question', 'like', "%{$term}%")
+                            ->orWhere('answer', 'like', "%{$term}%");
+                    });
+                }
             });
         }
 

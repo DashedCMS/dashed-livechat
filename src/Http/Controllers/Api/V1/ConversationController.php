@@ -32,10 +32,16 @@ class ConversationController extends Controller
             $query->where('status', (string) $status);
         }
 
-        if ($search = $request->query('search')) {
-            $query->where(function ($q) use ($search): void {
-                $q->where('visitor_name', 'like', '%' . (string) $search . '%')
-                    ->orWhere('visitor_email', 'like', '%' . (string) $search . '%');
+        if ($search = trim((string) $request->query('search'))) {
+            // Slim multi-term: elk woord moet matchen op naam óf e-mail (AND over woorden).
+            $terms = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [$search];
+            $query->where(function ($outer) use ($terms): void {
+                foreach ($terms as $term) {
+                    $outer->where(function ($q) use ($term): void {
+                        $q->where('visitor_name', 'like', "%{$term}%")
+                            ->orWhere('visitor_email', 'like', "%{$term}%");
+                    });
+                }
             });
         }
 
