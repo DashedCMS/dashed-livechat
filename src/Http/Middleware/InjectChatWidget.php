@@ -59,7 +59,11 @@ class InjectChatWidget
             'value' => $trigger->trigger_value,
             'message' => $trigger->proactive_message,
         ] : null;
-        $widget = Blade::render('@livewire(\'chat.widget\', [\'siteId\' => $siteId, \'trigger\' => $trigger])', ['siteId' => $siteId, 'trigger' => $payload]);
+        $lazyProp = \Dashed\DashedCore\Classes\Caching\CacheDecision::for($request)->shouldCache() ? 'on-load' : false;
+        $widget = Blade::render(
+            '<livewire:chat.widget :siteId="$siteId" :trigger="$trigger" :lazy="$lazy" />',
+            ['siteId' => $siteId, 'trigger' => $payload, 'lazy' => $lazyProp]
+        );
         $response->setContent(str_replace('</body>', $widget . '</body>', $content));
 
         return $response;

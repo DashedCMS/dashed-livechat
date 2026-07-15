@@ -482,6 +482,33 @@ class ChatWidget extends Component
         }
     }
 
+    public function placeholder(): string
+    {
+        // Render a static bubble that matches the real widget's configured position,
+        // offset, and primary colour so there is no flash / side-swap when the real
+        // component loads after paint.
+        $siteId = $this->siteId ?: \Dashed\DashedCore\Classes\Sites::getActive();
+        $cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($siteId);
+
+        $position = $cfg['position'] ?? 'right';
+        $offset   = (int) ($cfg['offset'] ?? 24);
+        $primary  = $cfg['primary'] ?? '#111827';
+        $radius   = (int) ($cfg['radius'] ?? 16);
+
+        $side = $position === 'left' ? 'left' : 'right';
+
+        return '<div aria-hidden="true" style="'
+            . 'position:fixed;'
+            . 'bottom:' . $offset . 'px;'
+            . $side . ':' . $offset . 'px;'
+            . 'width:56px;height:56px;'
+            . 'border-radius:' . $radius . 'px;'
+            . 'background-color:' . htmlspecialchars($primary, ENT_QUOTES) . ';'
+            . 'z-index:9999;'
+            . 'opacity:0;'
+            . '"></div>';
+    }
+
     public function render()
     {
         $cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($this->siteId);
