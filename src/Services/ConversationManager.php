@@ -33,12 +33,23 @@ class ConversationManager
             }
         }
 
-        return ChatConversation::create(array_merge([
+        $conversation = ChatConversation::create(array_merge([
             'site_id' => $siteId,
             'public_token' => (string) Str::uuid(),
             'status' => 'active',
             'mode' => 'ai',
         ], $attributes));
+
+        if (! $conversation->is_sandbox) {
+            app(\Dashed\DashedLivechat\Services\WebPushService::class)->notify(
+                $conversation,
+                'new',
+                'Nieuw chatgesprek',
+                ($conversation->visitor_name ?: 'Een bezoeker') . ' is een chat gestart',
+            );
+        }
+
+        return $conversation;
     }
 
     public function addVisitorMessage(ChatConversation $c, string $content, array $attachments = []): ChatMessage
@@ -69,26 +80,31 @@ class ConversationManager
     private function notifyNewVisitorMessage(ChatConversation $c, string $content, array $attachmentIds = []): void
     {
         $center = '\Dashed\DashedMobileApi\Support\NotificationCenter';
-        if (! class_exists($center)) {
-            return;
+        if (class_exists($center)) {
+            try {
+                $body = Str::limit(trim($content), 120);
+                if ($body === '') {
+                    $body = ! empty($attachmentIds) ? '📷 Afbeelding' : 'Nieuw bericht in de chat';
+                }
+                app($center)->push()
+                    ->type('chat.message')
+                    ->site((string) $c->site_id)
+                    ->title($c->visitor_name ?: 'Nieuw chatbericht')
+                    ->body($body)
+                    ->route("/conversation/{$c->id}")
+                    ->data(['type' => 'conversation', 'id' => $c->id])
+                    ->send();
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
-        try {
-            $body = Str::limit(trim($content), 120);
-            if ($body === '') {
-                $body = ! empty($attachmentIds) ? '📷 Afbeelding' : 'Nieuw bericht in de chat';
-            }
-            app($center)->push()
-                ->type('chat.message')
-                ->site((string) $c->site_id)
-                ->title($c->visitor_name ?: 'Nieuw chatbericht')
-                ->body($body)
-                ->route("/conversation/{$c->id}")
-                ->data(['type' => 'conversation', 'id' => $c->id])
-                ->send();
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        app(\Dashed\DashedLivechat\Services\WebPushService::class)->notify(
+            $c,
+            'message',
+            $c->visitor_name ?: 'Nieuw chatbericht',
+            \Illuminate\Support\Str::limit(trim($content), 120) ?: 'Nieuw bericht in de chat',
+        );
     }
 
     public function addAiMessage(ChatConversation $c, ChatAgent $agent, string $content, array $toolCalls = [], ?int $tokensIn = null, ?int $tokensOut = null, array $attachments = []): ChatMessage

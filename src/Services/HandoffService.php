@@ -82,6 +82,13 @@ class HandoffService
 
         $this->notifyAgents($c, $reason);
 
+        app(\Dashed\DashedLivechat\Services\WebPushService::class)->notify(
+            $c,
+            'handoff',
+            'Nieuwe chat',
+            ($c->visitor_name ?: 'Een bezoeker') . ' wacht op een medewerker',
+        );
+
         // Push-notificatie naar de app (alleen als de mobile-api geïnstalleerd is).
         if (class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
             app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
