@@ -99,6 +99,18 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             ->get('dashed-livechat/presence', \Dashed\DashedLivechat\Http\Controllers\RecordVisitorPresenceController::class)
             ->name('dashed-livechat.presence');
 
+        Route::middleware(['web', 'auth'])
+            ->post('dashed-livechat/web-push/subscribe', [\Dashed\DashedLivechat\Http\Controllers\WebPushSubscriptionController::class, 'store'])
+            ->name('dashed-livechat.web-push.subscribe');
+
+        Route::middleware(['web', 'auth'])
+            ->delete('dashed-livechat/web-push/subscribe', [\Dashed\DashedLivechat\Http\Controllers\WebPushSubscriptionController::class, 'destroy'])
+            ->name('dashed-livechat.web-push.unsubscribe');
+
+        Route::middleware(['web'])
+            ->get('dashed-livechat-sw.js', \Dashed\DashedLivechat\Http\Controllers\WebPushServiceWorkerController::class)
+            ->name('dashed-livechat.web-push.sw');
+
         $cms = cms();
 
         if (method_exists($cms, 'registerNavigationGroup')) {
