@@ -33,16 +33,20 @@ class WebPushService
             return;
         }
 
-        $payload = [
-            'title' => $title,
-            'body' => $body,
-            'tag' => 'chat-' . $c->id,
-            'url' => $this->conversationUrl($c),
-            'conversationId' => $c->id,
-        ];
+        try {
+            $payload = [
+                'title' => $title,
+                'body' => $body,
+                'tag' => 'chat-' . $c->id,
+                'url' => $this->conversationUrl($c),
+                'conversationId' => $c->id,
+            ];
 
-        foreach ($this->recipientSubscriptions((string) $c->site_id, $type) as $subscription) {
-            SendWebPushJob::dispatch($subscription->id, $payload);
+            foreach ($this->recipientSubscriptions((string) $c->site_id, $type) as $subscription) {
+                SendWebPushJob::dispatch($subscription->id, $payload);
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 

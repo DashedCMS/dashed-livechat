@@ -17,7 +17,7 @@ self.addEventListener('push', function (event) {
     var options = {
         body: payload.body || '',
         tag: payload.tag || undefined,
-        renotify: true,
+        renotify: !!payload.tag,
         data: { url: payload.url || '/' },
         icon: '/favicon.ico',
     };

@@ -19,7 +19,7 @@ return new class () extends Migration {
             $table->string('endpoint_hash', 64)->unique(); // sha256 van endpoint voor uniciteit
             $table->string('public_key');
             $table->string('auth_token');
-            $table->string('content_encoding')->default('aesgcm');
+            $table->string('content_encoding')->default('aes128gcm');
             $table->string('user_agent')->nullable();
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();

@@ -10,6 +10,7 @@ use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\WebPushService;
 use Dashed\DashedLivechat\Models\WebPushPreference;
 use Dashed\DashedLivechat\Models\WebPushSubscription;
+use Dashed\DashedLivechat\Services\OpeningHoursService;
 
 beforeEach(function () {
     config()->set('dashed-livechat.web_push.public_key', 'test-public');
@@ -108,6 +109,30 @@ it('stuurt niets zonder geconfigureerde sleutels', function () {
     ]);
 
     app(WebPushService::class)->notify($conversation, 'handoff', 'Nieuwe chat', 'Er wacht iemand');
+
+    Bus::assertNotDispatched(SendWebPushJob::class);
+});
+
+it('laat een fout tijdens ontvanger-resolutie niet naar de aanroeper lekken', function () {
+    Bus::fake();
+    makeAgentWithSubscription(1);
+
+    // Forceer een fout in het pad dat notify() intern doorloopt (openingstijden-check),
+    // om te bewijzen dat de conversatie-flow hier niet op stukloopt.
+    $hours = Mockery::mock(OpeningHoursService::class);
+    $hours->shouldReceive('isOpen')->andThrow(new \RuntimeException('database weg'));
+    app()->instance(OpeningHoursService::class, $hours);
+
+    $conversation = ChatConversation::create([
+        'site_id' => 'main',
+        'public_token' => (string) Str::uuid(),
+        'is_sandbox' => false,
+    ]);
+
+    $service = app(WebPushService::class);
+
+    expect(fn () => $service->notify($conversation, 'handoff', 'Nieuwe chat', 'Er wacht iemand'))
+        ->not->toThrow(\Throwable::class);
 
     Bus::assertNotDispatched(SendWebPushJob::class);
 });

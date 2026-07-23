@@ -117,7 +117,7 @@
                                 endpoint: sub.endpoint,
                                 public_key: json.keys.p256dh,
                                 auth_token: json.keys.auth,
-                                content_encoding: 'aesgcm',
+                                content_encoding: 'aes128gcm',
                             }),
                         });
 
