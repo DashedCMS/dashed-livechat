@@ -59,6 +59,8 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'add_receive_outside_hours_to_chat_agents_table',
                 'escalation_toggles_for_chat_agents_table',
                 'is_sandbox_to_chat_conversations_table',
+                'create_web_push_subscriptions_table',
+                'create_web_push_preferences_table',
             ])
             ->runsMigrations();
     }
