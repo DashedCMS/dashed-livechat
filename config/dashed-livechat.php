@@ -40,4 +40,16 @@ return [
 
     // SSE token-streaming voor de widget (opt-in, default uit zodat fase-1 polling-tests groen blijven).
     'streaming' => false,
+
+    // Web Push (bureaubladmeldingen voor medewerkers in het CMS).
+    // Genereer sleutels met `php artisan chat:generate-web-push-keys` en zet ze in .env.
+    // Zonder public+private key is de hele Web Push-laag inert.
+    'web_push' => [
+        'public_key' => env('LIVECHAT_WEBPUSH_PUBLIC_KEY'),
+        'private_key' => env('LIVECHAT_WEBPUSH_PRIVATE_KEY'),
+        // VAPID subject: een mailto: of https: URL die jouw dienst identificeert.
+        'subject' => env('LIVECHAT_WEBPUSH_SUBJECT', 'mailto:info@dashed.nl'),
+        // Named route voor de conversatie-deeplink waar een klik op de melding naartoe gaat.
+        'conversation_route' => 'filament.dashed.resources.chat-conversations.view',
+    ],
 ];

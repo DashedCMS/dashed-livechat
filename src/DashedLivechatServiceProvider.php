@@ -29,6 +29,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 \Dashed\DashedLivechat\Commands\IndexChatEmbeddings::class,
                 \Dashed\DashedLivechat\Commands\SweepStaleConversationsCommand::class,
                 \Dashed\DashedLivechat\Commands\NotifyVisitorCountCommand::class,
+                \Dashed\DashedLivechat\Commands\GenerateWebPushKeysCommand::class,
             ])
             ->hasMigrations([
                 'create_chat_agents_table',
