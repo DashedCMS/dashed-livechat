@@ -27,7 +27,7 @@ class WebPushSubscriptionController extends Controller
                 'endpoint' => $data['endpoint'],
                 'public_key' => $data['public_key'],
                 'auth_token' => $data['auth_token'],
-                'content_encoding' => $data['content_encoding'] ?? 'aesgcm',
+                'content_encoding' => $data['content_encoding'] ?? 'aes128gcm',
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
                 'last_used_at' => now(),
             ],
