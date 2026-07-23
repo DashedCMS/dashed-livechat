@@ -191,6 +191,40 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         $providers = [
+            // Testbench draait vanuit het skeleton-basepath (niet dit package),
+            // dus Laravel's package-auto-discovery vindt vendor/composer/installed.json
+            // niet en pakt Livewire's en Filament's ServiceProviders niet automatisch
+            // op. Zonder deze regels bestaat de 'livewire'-container-binding niet en
+            // ontbreken de `x-filament::`-Blade-componenten, en knalt elke
+            // `Livewire::test(...)` van een Filament-pagina.
+            //
+            // Volgorde is bewust: Filament\Support\SupportServiceProvider bindt
+            // DataStore::class via `bind()` (niet-shared) op Livewire's eigen
+            // DataStore-mechanism. Livewire's eigen ServiceProvider registreert
+            // zijn mechanismen daarna via `app()->instance(...)`, wat container-
+            // intern voorrang krijgt boven een eerdere `bind()`. Staat Livewire
+            // vóór Filament, dan overschrijft Filament's `bind()` die instance-
+            // binding alsnog en levert elke `app(DataStore::class)`-aanroep een
+            // nieuw (leeg) object op, waardoor Livewire's validation-errorbag
+            // altijd null teruggeeft (crash bij elke Filament-paginarender in
+            // tests). In een normale app registreert package-discovery Filament
+            // toevallig vóór Livewire, dus deze volgorde is de echte productie-
+            // volgorde na te bootsen, niet een testbench-only workaround.
+            \Filament\Support\SupportServiceProvider::class,
+            \Filament\Actions\ActionsServiceProvider::class,
+            \Filament\Notifications\NotificationsServiceProvider::class,
+            \Filament\Schemas\SchemasServiceProvider::class,
+            \Filament\Forms\FormsServiceProvider::class,
+            \Filament\Infolists\InfolistsServiceProvider::class,
+            \Filament\Tables\TablesServiceProvider::class,
+            \Filament\Widgets\WidgetsServiceProvider::class,
+            \Filament\FilamentServiceProvider::class,
+            \Livewire\LivewireServiceProvider::class,
+            // Registreert een minimaal standaardpaneel; Filament's page-Blade-
+            // componenten hebben `Filament::getDefaultPanel()` nodig, ook
+            // wanneer een pagina rechtstreeks via `Livewire::test()` gerenderd
+            // wordt zonder door de echte panel-routing te gaan.
+            \Dashed\DashedLivechat\Tests\Support\TestPanelProvider::class,
             DashedCoreServiceProvider::class,
             DashedPagesServiceProvider::class,
             DashedEcommerceCoreServiceProvider::class,
