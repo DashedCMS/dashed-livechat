@@ -41,10 +41,10 @@ function makeAgentWithSubscription(int $userId, array $agentOverrides = [], arra
 }
 
 it('configured() is true met beide sleutels en false zonder', function () {
-    expect(app(WebPushService::class)->configured())->toBeTrue();
+    expect(app(WebPushService::class)->configured('main'))->toBeTrue();
 
     config()->set('dashed-livechat.web_push.private_key', null);
-    expect(app(WebPushService::class)->configured())->toBeFalse();
+    expect(app(WebPushService::class)->configured('main'))->toBeFalse();
 });
 
 it('dispatcht een job per abonnee-subscription wanneer het type aanstaat', function () {

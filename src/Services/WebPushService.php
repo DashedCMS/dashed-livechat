@@ -3,6 +3,8 @@
 namespace Dashed\DashedLivechat\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Enums\AgentType;
 use Dashed\DashedLivechat\Jobs\SendWebPushJob;
@@ -16,10 +18,47 @@ class WebPushService
     {
     }
 
-    public function configured(): bool
+    public function configured(string $siteId): bool
     {
-        return (bool) config('dashed-livechat.web_push.public_key')
-            && (bool) config('dashed-livechat.web_push.private_key');
+        return (bool) self::publicKeyFor($siteId)
+            && (bool) self::privateKeyFor($siteId);
+    }
+
+    /**
+     * Effectieve VAPID-sleutels/subject per site: eerst de per-site
+     * Customsetting, anders de .env/config-fallback.
+     */
+    public static function publicKeyFor(string $siteId): ?string
+    {
+        $value = Customsetting::get('web_push_public_key', $siteId);
+
+        return $value !== null && $value !== ''
+            ? (string) $value
+            : (config('dashed-livechat.web_push.public_key') ?: null);
+    }
+
+    public static function privateKeyFor(string $siteId): ?string
+    {
+        $stored = Customsetting::get('web_push_private_key', $siteId);
+
+        if ($stored !== null && $stored !== '') {
+            try {
+                return Crypt::decryptString((string) $stored);
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        return config('dashed-livechat.web_push.private_key') ?: null;
+    }
+
+    public static function subjectFor(string $siteId): string
+    {
+        $value = Customsetting::get('web_push_subject', $siteId);
+
+        return $value !== null && $value !== ''
+            ? (string) $value
+            : (string) config('dashed-livechat.web_push.subject');
     }
 
     /**
@@ -29,7 +68,7 @@ class WebPushService
      */
     public function notify(ChatConversation $c, string $type, string $title, string $body): void
     {
-        if ($c->is_sandbox || ! $this->configured()) {
+        if ($c->is_sandbox || ! $this->configured((string) $c->site_id)) {
             return;
         }
 
