@@ -65,6 +65,24 @@ it('ruimt subscriptions van de site op als de publieke sleutel wijzigt', functio
     expect(WebPushSubscription::where('site_id', $site)->count())->toBe(0);
 });
 
+it('ruimt subscriptions van de site op als de publieke sleutel wordt leeggemaakt', function () {
+    $site = activeSite();
+    Customsetting::set('web_push_public_key', 'oude-pub', $site);
+    WebPushSubscription::create([
+        'user_id' => 1, 'site_id' => $site,
+        'endpoint' => 'https://push.example.com/y', 'endpoint_hash' => hash('sha256', 'https://push.example.com/y'),
+        'public_key' => 'p', 'auth_token' => 'a', 'content_encoding' => 'aes128gcm',
+    ]);
+    $user = User::factory()->create(['role' => 'superadmin']);
+
+    Livewire::actingAs($user)
+        ->test(WebPushKeyConfigPage::class)
+        ->set("data.web_push_public_key_{$site}", '')
+        ->call('submit');
+
+    expect(WebPushSubscription::where('site_id', $site)->count())->toBe(0);
+});
+
 it('genereert een sleutelpaar en vult de velden', function () {
     $site = activeSite();
     $user = User::factory()->create(['role' => 'superadmin']);

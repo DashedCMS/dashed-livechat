@@ -126,9 +126,9 @@ class WebPushKeyConfigPage extends Page implements HasSchemas
                 Customsetting::set('web_push_private_key', Crypt::encryptString($newPrivate), $id);
             }
 
-            // Publieke sleutel gewijzigd: bestaande aanmeldingen horen bij de
-            // oude sleutel en werken niet meer, dus opruimen.
-            if ($oldPublic && $newPublic && $oldPublic !== $newPublic) {
+            // Publieke sleutel gewijzigd (of leeggemaakt): bestaande aanmeldingen
+            // horen bij de oude sleutel en werken niet meer, dus opruimen.
+            if (($oldPublic ?: '') !== ($newPublic ?: '')) {
                 WebPushSubscription::where('site_id', $id)->delete();
             }
         }
