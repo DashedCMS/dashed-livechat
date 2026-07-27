@@ -27,29 +27,53 @@ class WebPushService
     /**
      * Effectieve VAPID-sleutels/subject per site: eerst de per-site
      * Customsetting, anders de .env/config-fallback.
+     *
+     * Een sleutelpaar komt alleen uit de DB als BEIDE sleutels (publiek
+     * en privaat) daar zijn opgeslagen. Zo niet, dan komen ze allebei
+     * uit .env/config, zodat er nooit een publieke en private sleutel
+     * uit twee verschillende bronnen gemixt worden.
      */
     public static function publicKeyFor(string $siteId): ?string
     {
-        $value = Customsetting::get('web_push_public_key', $siteId);
+        [$dbPublic, $dbPrivate] = self::storedKeyPair($siteId);
 
-        return $value !== null && $value !== ''
-            ? (string) $value
-            : (config('dashed-livechat.web_push.public_key') ?: null);
+        if (self::hasCompletePair($dbPublic, $dbPrivate)) {
+            return (string) $dbPublic;
+        }
+
+        return config('dashed-livechat.web_push.public_key') ?: null;
     }
 
     public static function privateKeyFor(string $siteId): ?string
     {
-        $stored = Customsetting::get('web_push_private_key', $siteId);
+        [$dbPublic, $dbPrivate] = self::storedKeyPair($siteId);
 
-        if ($stored !== null && $stored !== '') {
+        if (self::hasCompletePair($dbPublic, $dbPrivate)) {
             try {
-                return Crypt::decryptString((string) $stored);
+                return Crypt::decryptString((string) $dbPrivate);
             } catch (\Throwable $e) {
                 return null;
             }
         }
 
         return config('dashed-livechat.web_push.private_key') ?: null;
+    }
+
+    /**
+     * @return array{0: mixed, 1: mixed} ruwe DB-waarden [public, private]
+     */
+    private static function storedKeyPair(string $siteId): array
+    {
+        return [
+            Customsetting::get('web_push_public_key', $siteId),
+            Customsetting::get('web_push_private_key', $siteId),
+        ];
+    }
+
+    private static function hasCompletePair(mixed $public, mixed $private): bool
+    {
+        return $public !== null && $public !== ''
+            && $private !== null && $private !== '';
     }
 
     public static function subjectFor(string $siteId): string
