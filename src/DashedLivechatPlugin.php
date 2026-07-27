@@ -10,10 +10,11 @@ use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatLearningResource;
 use Dashed\DashedLivechat\Filament\Pages\Settings\ChatSettingsPage;
-use Dashed\DashedLivechat\Filament\Pages\Settings\WebPushSettingsPage;
 use Dashed\DashedLivechat\Filament\Resources\ChatQuickReplyResource;
 use Dashed\DashedLivechat\Filament\Resources\ChatOpeningHourResource;
+use Dashed\DashedLivechat\Filament\Pages\Settings\WebPushSettingsPage;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource;
+use Dashed\DashedLivechat\Filament\Pages\Settings\WebPushKeyConfigPage;
 
 class DashedLivechatPlugin implements Plugin
 {
@@ -36,6 +37,7 @@ class DashedLivechatPlugin implements Plugin
             ->pages([
                 ChatSettingsPage::class,
                 WebPushSettingsPage::class,
+                WebPushKeyConfigPage::class,
                 ChatDashboard::class,
                 VisitorsLivePage::class,
             ]);

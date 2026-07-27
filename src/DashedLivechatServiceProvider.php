@@ -19,6 +19,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
         if (method_exists($cms, 'registerSettingsPage')) {
             $cms->registerSettingsPage(\Dashed\DashedLivechat\Filament\Pages\Settings\ChatSettingsPage::class, 'Chat');
+            $cms->registerSettingsPage(\Dashed\DashedLivechat\Filament\Pages\Settings\WebPushKeyConfigPage::class, 'Web Push');
         }
 
         $package

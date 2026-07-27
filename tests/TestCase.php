@@ -6,8 +6,8 @@ namespace Dashed\DashedLivechat\Tests;
 
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Facades\Schema;
-use Orchestra\Testbench\TestCase as Orchestra;
 use Illuminate\Database\Schema\Blueprint;
+use Orchestra\Testbench\TestCase as Orchestra;
 use Dashed\DashedCore\DashedCoreServiceProvider;
 use Dashed\DashedPages\DashedPagesServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -210,6 +210,12 @@ class TestCase extends Orchestra
             // tests). In een normale app registreert package-discovery Filament
             // toevallig vóór Livewire, dus deze volgorde is de echte productie-
             // volgorde na te bootsen, niet een testbench-only workaround.
+            // Filament's schema-Actions renderen icoontjes via blade-icons; zonder
+            // diens ServiceProvider bindt niemand `IconsManifest` en knalt elke
+            // pagina die een `->icon(...)` op een form-Action zet (bv. de
+            // "Genereer sleutelpaar"-knop) op een unresolvable-dependency-fout.
+            \BladeUI\Icons\BladeIconsServiceProvider::class,
+            \BladeUI\Heroicons\BladeHeroiconsServiceProvider::class,
             \Filament\Support\SupportServiceProvider::class,
             \Filament\Actions\ActionsServiceProvider::class,
             \Filament\Notifications\NotificationsServiceProvider::class,
