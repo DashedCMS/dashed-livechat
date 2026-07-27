@@ -35,7 +35,10 @@ it('slaat gewijzigde voorkeuren op naar de preferences-tabel', function () {
 
 it('gebruikt de per-site publieke sleutel uit de database voor de opt-in', function () {
     config()->set('dashed-livechat.web_push.public_key', null);
+    // Een sleutelpaar geldt alleen als beide sleutels in de DB staan (atomische bron),
+    // dus ook de private sleutel zetten zodat de publieke uit de DB gebruikt wordt.
     \Dashed\DashedCore\Models\Customsetting::set('web_push_public_key', 'db-site-public', \Dashed\DashedCore\Classes\Sites::getActive());
+    \Dashed\DashedCore\Models\Customsetting::set('web_push_private_key', \Illuminate\Support\Facades\Crypt::encryptString('db-site-private'), \Dashed\DashedCore\Classes\Sites::getActive());
 
     $user = User::factory()->create();
 
