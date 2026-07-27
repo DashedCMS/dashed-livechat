@@ -32,8 +32,8 @@ class SendWebPushJob implements ShouldQueue
             return;
         }
 
-        $publicKey = config('dashed-livechat.web_push.public_key');
-        $privateKey = config('dashed-livechat.web_push.private_key');
+        $publicKey = \Dashed\DashedLivechat\Services\WebPushService::publicKeyFor((string) $subscription->site_id);
+        $privateKey = \Dashed\DashedLivechat\Services\WebPushService::privateKeyFor((string) $subscription->site_id);
         if (! $publicKey || ! $privateKey) {
             return;
         }
@@ -41,7 +41,7 @@ class SendWebPushJob implements ShouldQueue
         try {
             $webPush = new WebPush([
                 'VAPID' => [
-                    'subject' => config('dashed-livechat.web_push.subject'),
+                    'subject' => \Dashed\DashedLivechat\Services\WebPushService::subjectFor((string) $subscription->site_id),
                     'publicKey' => $publicKey,
                     'privateKey' => $privateKey,
                 ],
