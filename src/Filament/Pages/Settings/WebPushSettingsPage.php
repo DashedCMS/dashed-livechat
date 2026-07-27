@@ -56,7 +56,7 @@ class WebPushSettingsPage extends Page
 
     public function getVapidPublicKey(): ?string
     {
-        return config('dashed-livechat.web_push.public_key');
+        return \Dashed\DashedLivechat\Services\WebPushService::publicKeyFor($this->siteId());
     }
 
     protected function siteId(): string

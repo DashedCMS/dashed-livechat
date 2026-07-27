@@ -32,3 +32,17 @@ it('slaat gewijzigde voorkeuren op naar de preferences-tabel', function () {
         ->and($preference->notify_message)->toBeFalse()
         ->and($preference->notify_handoff)->toBeTrue();
 });
+
+it('gebruikt de per-site publieke sleutel uit de database voor de opt-in', function () {
+    config()->set('dashed-livechat.web_push.public_key', null);
+    \Dashed\DashedCore\Models\Customsetting::set('web_push_public_key', 'db-site-public', \Dashed\DashedCore\Classes\Sites::getActive());
+
+    $user = User::factory()->create();
+
+    $key = Livewire::actingAs($user)
+        ->test(WebPushSettingsPage::class)
+        ->instance()
+        ->getVapidPublicKey();
+
+    expect($key)->toBe('db-site-public');
+});
