@@ -123,4 +123,31 @@ class ChatConversation extends Model
     {
         $this->forceFill(['status' => 'active'])->save();
     }
+
+    /**
+     * Leidt "nieuw vs terugkerend" af uit eerdere gesprekken met dezelfde
+     * `ip_hash` binnen dezelfde site, van de afgelopen 6 maanden.
+     *
+     * @return array{is_returning: bool, count: int, last_at: ?\Illuminate\Support\Carbon}
+     */
+    public function returningVisitorInfo(): array
+    {
+        if (! $this->ip_hash) {
+            return ['is_returning' => false, 'count' => 0, 'last_at' => null];
+        }
+
+        $prior = static::query()
+            ->where('site_id', $this->site_id)
+            ->where('ip_hash', $this->ip_hash)
+            ->where('id', '!=', $this->id)
+            ->where('created_at', '>=', now()->subMonths(6));
+
+        return [
+            'is_returning' => (clone $prior)->exists(),
+            'count' => (clone $prior)->count(),
+            'last_at' => (clone $prior)->max('created_at')
+                ? \Illuminate\Support\Carbon::parse((clone $prior)->max('created_at'))
+                : null,
+        ];
+    }
 }
