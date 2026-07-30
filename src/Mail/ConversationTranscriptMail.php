@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Envelope;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatConversation;
 
 class ConversationTranscriptMail extends Mailable
@@ -24,8 +25,12 @@ class ConversationTranscriptMail extends Mailable
     public function envelope(): Envelope
     {
         $name = config('app.name');
+        $siteId = $this->conversation->site_id;
+        $fromEmail = Customsetting::get('site_from_email', $siteId) ?: config('mail.from.address');
+        $fromName = Customsetting::get('site_name', $siteId) ?: config('mail.from.name');
 
         return new Envelope(
+            from: new Address($fromEmail, $fromName),
             subject: 'Je gesprek met ' . $name,
             replyTo: $this->replyToEmail ? [new Address($this->replyToEmail, $name)] : [],
         );

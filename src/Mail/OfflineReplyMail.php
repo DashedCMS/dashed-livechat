@@ -4,9 +4,11 @@ namespace Dashed\DashedLivechat\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Envelope;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatConversation;
 
@@ -27,7 +29,12 @@ class OfflineReplyMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $siteId = $this->conversation->site_id;
+        $fromEmail = Customsetting::get('site_from_email', $siteId) ?: config('mail.from.address');
+        $fromName = Customsetting::get('site_name', $siteId) ?: config('mail.from.name');
+
         return new Envelope(
+            from: new Address($fromEmail, $fromName),
             subject: 'Nieuw bericht van ' . config('app.name'),
         );
     }

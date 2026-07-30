@@ -40,7 +40,10 @@ class HandoffNotificationMail extends Mailable
             : 'dashed-core::emails.notification';
 
         return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
+            ->from(
+                Customsetting::get('site_from_email', $this->conversation->site_id) ?: config('mail.from.address'),
+                Customsetting::get('site_name', $this->conversation->site_id) ?: config('mail.from.name')
+            )
             ->subject('Een chatgesprek vraagt om een medewerker')
             ->with([
                 'notification' => $notification,
