@@ -62,6 +62,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'is_sandbox_to_chat_conversations_table',
                 'create_web_push_subscriptions_table',
                 'create_web_push_preferences_table',
+                '2026_07_30_120000_add_visitor_metadata_to_chat_conversations_table',
             ])
             ->runsMigrations();
     }

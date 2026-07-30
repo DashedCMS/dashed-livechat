@@ -29,6 +29,11 @@ return new class () extends Migration {
             $table->text('started_url')->nullable();
             $table->integer('order_lookup_attempts')->default(0);
             $table->string('ip_hash')->nullable();
+            $table->string('visitor_ip')->nullable();
+            $table->string('visitor_user_agent')->nullable();
+            $table->string('visitor_referrer')->nullable();
+            $table->string('visitor_country')->nullable();
+            $table->string('visitor_city')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
         });

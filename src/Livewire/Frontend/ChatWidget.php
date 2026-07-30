@@ -163,11 +163,17 @@ class ChatWidget extends Component
             return;
         }
 
+        $geo = \Dashed\DashedLivechat\Support\VisitorGeo::lookup(request()->ip());
         $conversation = $manager->findOrCreate($this->siteId, $this->publicToken, [
             'ai_agent_id' => $agent?->id,
             'mode' => $humanOnly ? 'waiting_human' : 'ai',
             'started_url' => url()->previous(),
             'ip_hash' => hash('sha256', request()->ip() . config('app.key')),
+            'visitor_ip' => request()->ip(),
+            'visitor_user_agent' => substr((string) request()->userAgent(), 0, 255),
+            'visitor_referrer' => substr((string) request()->header('referer', ''), 0, 255) ?: null,
+            'visitor_country' => $geo['country'] ?? null,
+            'visitor_city' => $geo['city'] ?? null,
             'locale' => app()->getLocale(),
         ]);
         $isNewConversation = $conversation->wasRecentlyCreated;
