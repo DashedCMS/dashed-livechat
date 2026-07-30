@@ -28,21 +28,6 @@ class ConversationResource extends JsonResource
             // Aanwezigheid bezoeker: 'active' | 'idle' | 'away'.
             'visitor_presence' => $this->visitorPresence(),
             'visitor_last_active_at' => optional($this->visitor_last_active_at)->toIso8601String(),
-            'visitor' => (function () {
-                $r = $this->returningVisitorInfo();
-
-                return [
-                    'ip' => $this->visitor_ip,
-                    'user_agent' => $this->visitor_user_agent,
-                    'started_url' => $this->started_url,
-                    'referrer' => $this->visitor_referrer,
-                    'city' => $this->visitor_city,
-                    'country' => $this->visitor_country,
-                    'is_returning' => $r['is_returning'],
-                    'previous_count' => $r['count'],
-                    'last_seen_before' => optional($r['last_at'])->toIso8601String(),
-                ];
-            })(),
         ];
     }
 }

@@ -30,6 +30,23 @@ class ConversationDetailResource extends JsonResource
             'ai_agent' => $this->aiAgent ? ['id' => $this->aiAgent->id, 'name' => $this->aiAgent->name] : null,
             'assigned_agent' => $this->assignedAgent ? ['id' => $this->assignedAgent->id, 'name' => $this->assignedAgent->name] : null,
             'related' => $this->related_context ?? ['customers' => [], 'orders' => []],
+            // Bewust ook 'started_url' hierin (dupliceert de top-level sleutel
+            // hierboven) zodat het 'visitor'-blok overal dezelfde vaste vorm heeft.
+            'visitor' => (function () {
+                $r = $this->returningVisitorInfo();
+
+                return [
+                    'ip' => $this->visitor_ip,
+                    'user_agent' => $this->visitor_user_agent,
+                    'started_url' => $this->started_url,
+                    'referrer' => $this->visitor_referrer,
+                    'city' => $this->visitor_city,
+                    'country' => $this->visitor_country,
+                    'is_returning' => $r['is_returning'],
+                    'previous_count' => $r['count'],
+                    'last_seen_before' => optional($r['last_at'])->toIso8601String(),
+                ];
+            })(),
         ];
     }
 }

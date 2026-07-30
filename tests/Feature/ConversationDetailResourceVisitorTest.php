@@ -2,6 +2,7 @@
 
 use Dashed\DashedLivechat\Tests\Support\Factories;
 use Dashed\DashedLivechat\Http\Resources\Api\Mobile\ConversationResource;
+use Dashed\DashedLivechat\Http\Resources\Api\Mobile\ConversationDetailResource;
 
 it('bevat een visitor-blok met de metadata', function () {
     $c = Factories::makeConversation([
@@ -13,7 +14,7 @@ it('bevat een visitor-blok met de metadata', function () {
         'visitor_country' => 'Netherlands',
         'started_url' => 'https://shop.nl/product',
     ]);
-    $arr = (new ConversationResource($c))->toArray(request());
+    $arr = (new ConversationDetailResource($c))->toArray(request());
     expect($arr['visitor'])->toMatchArray([
         'ip' => '1.2.3.4',
         'user_agent' => 'TestBrowser/1.0',
@@ -24,4 +25,13 @@ it('bevat een visitor-blok met de metadata', function () {
         'is_returning' => false,
         'previous_count' => 0,
     ]);
+});
+
+it('laat het visitor-blok weg uit de lijst-resource (voorkomt N+1)', function () {
+    $c = Factories::makeConversation([
+        'ip_hash' => 'HASH-X',
+        'visitor_ip' => '1.2.3.4',
+    ]);
+    $arr = (new ConversationResource($c))->toArray(request());
+    expect($arr)->not->toHaveKey('visitor');
 });
