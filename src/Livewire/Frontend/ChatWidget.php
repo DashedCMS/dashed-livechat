@@ -40,6 +40,8 @@ class ChatWidget extends Component
     // Feature C: conversational contact capture
     public bool $contactDismissed = false;
     public ?string $contactStep = null; // null | 'email' | 'name'
+    public string $contactDraft = '';
+    public ?string $contactError = null;
 
     public function mount(?string $siteId = null, ?array $trigger = null): void
     {
@@ -130,65 +132,6 @@ class ChatWidget extends Component
 
     public function sendMessage(ConversationManager $manager, InputGuard $guard): void
     {
-        // Intercept contact-capture steps before normal flow.
-        if ($this->contactStep === 'email') {
-            $input = trim($this->draft);
-            if ($input === '') {
-                return;
-            }
-
-            $conversation = $this->conversation();
-            if (! $conversation) {
-                return;
-            }
-
-            if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
-                $this->draft = '';
-                $conversation->messages()->create([
-                    'role' => 'visitor',
-                    'content' => $input,
-                ]);
-                $conversation->visitor_email = $input;
-                $conversation->save();
-
-                $this->postBotMessage($conversation, 'Dank je! En wat is je naam?');
-                $this->contactStep = 'name';
-
-                return;
-            }
-
-            // Geen e-mailadres? Niet aandringen: iemand wil dat misschien niet
-            // geven. We stoppen met vragen en behandelen de invoer hieronder als
-            // een gewone vraag (valt door naar de normale flow).
-            $this->contactStep = null;
-            $this->contactDismissed = true;
-        }
-
-        if ($this->contactStep === 'name') {
-            $name = trim($this->draft);
-            if ($name === '') {
-                return;
-            }
-            $this->draft = '';
-
-            $conversation = $this->conversation();
-            if (! $conversation) {
-                return;
-            }
-
-            $conversation->messages()->create([
-                'role' => 'visitor',
-                'content' => $name,
-            ]);
-            $conversation->visitor_name = $name;
-            $conversation->save();
-
-            $this->postBotMessage($conversation, "Dank je, {$name}! Waar kan ik je verder mee helpen?");
-            $this->contactStep = null;
-
-            return;
-        }
-
         // Normal flow.
         $text = trim($this->draft);
         $hasFiles = ! empty($this->newAttachments);
@@ -275,6 +218,59 @@ class ChatWidget extends Component
                 $this->awaitingReply = $delay === 0;
             }
         }
+    }
+
+    public function submitContactEmail(): void
+    {
+        $email = trim($this->contactDraft);
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return;
+        }
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->contactError = 'Vul een geldig e-mailadres in.';
+
+            return;
+        }
+        $this->contactError = null;
+        $this->contactDraft = '';
+
+        $conversation->messages()->create(['role' => 'visitor', 'content' => $email]);
+        $conversation->visitor_email = $email;
+        $conversation->save();
+
+        $this->postBotMessage($conversation, 'Dank je! En wat is je naam?');
+        $this->contactStep = 'name';
+    }
+
+    public function submitContactName(): void
+    {
+        $name = trim($this->contactDraft);
+        $conversation = $this->conversation();
+        if (! $conversation) {
+            return;
+        }
+        // Een gewoon chatbericht komt hier nooit terecht (dat gaat via sendMessage);
+        // dit kaartje schrijft als enige de naam. Weiger invoer die duidelijk geen
+        // naam is (leeg, of een e-mail/URL — vaak een misplaatste invoer).
+        if ($name === '' || str_contains($name, '@') || str_contains($name, '://')) {
+            $this->contactError = 'Vul alsjeblieft je naam in.';
+
+            return;
+        }
+        $this->contactError = null;
+        $this->contactDraft = '';
+
+        $conversation->messages()->create(['role' => 'visitor', 'content' => $name]);
+        $conversation->visitor_name = $name;
+        $conversation->save();
+
+        // Punt 2: geen "waar kan ik je mee helpen" als een mens het gesprek voert.
+        $followUp = $conversation->mode === 'human'
+            ? "Dank je, {$name}!"
+            : "Dank je, {$name}! Waar kan ik je verder mee helpen?";
+        $this->postBotMessage($conversation, $followUp);
+        $this->contactStep = null;
     }
 
     public function pollReply(): void
@@ -457,13 +453,10 @@ class ChatWidget extends Component
     // Feature C: dismiss the conversational contact capture
     public function dismissContact(): void
     {
-        $this->contactDismissed = true;
         $this->contactStep = null;
-
-        $conversation = $this->conversation();
-        if ($conversation) {
-            $this->postBotMessage($conversation, 'Geen probleem. Typ gerust verder.');
-        }
+        $this->contactDismissed = true;
+        $this->contactDraft = '';
+        $this->contactError = null;
     }
 
     /**

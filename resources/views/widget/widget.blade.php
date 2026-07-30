@@ -450,6 +450,26 @@
                 @endforeach
             </div>
         @endif
+        @if ($contactStep === 'email' || $contactStep === 'name')
+            <div style="flex-shrink:0; padding:10px 12px; border-top:1px solid #eee; display:flex; flex-direction:column; gap:6px;">
+                <input wire:model="contactDraft"
+                    type="{{ $contactStep === 'email' ? 'email' : 'text' }}"
+                    autocomplete="{{ $contactStep === 'email' ? 'email' : 'name' }}"
+                    placeholder="{{ $contactStep === 'email' ? 'jouw@e-mail.nl' : 'Je naam' }}"
+                    wire:keydown.enter="{{ $contactStep === 'email' ? 'submitContactEmail' : 'submitContactName' }}"
+                    style="border:1px solid #ddd; border-radius:8px; padding:10px 14px; outline:none;">
+                @if ($contactError)
+                    <div style="color:#dc2626; font-size:13px;">{{ $contactError }}</div>
+                @endif
+                <div style="display:flex; gap:8px;">
+                    <button type="button"
+                        wire:click="{{ $contactStep === 'email' ? 'submitContactEmail' : 'submitContactName' }}"
+                        style="background:var(--chat-primary); color:var(--chat-on-primary); border:0; border-radius:8px; padding:8px 14px; cursor:pointer;">Versturen</button>
+                    <button type="button" wire:click="dismissContact"
+                        style="background:transparent; color:#6b7280; border:0; padding:8px 6px; cursor:pointer;">Liever niet</button>
+                </div>
+            </div>
+        @endif
         <form wire:submit.prevent="sendMessage" x-on:submit="_justSent = true" style="display: flex; flex-shrink: 0; gap: 8px; padding: 12px; border-top: 1px solid #eee; margin: 0;">
             <label style="display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0 6px; color:#6b7280;" title="Voeg afbeelding of PDF toe">
                 <span style="font-size:18px;">📎</span>
@@ -458,7 +478,7 @@
             <input wire:model="draft"
                 type="text"
                 autocomplete="off"
-                placeholder="{{ $contactStep === 'name' ? 'Typ je naam…' : 'Typ je bericht…' }}"
+                placeholder="Typ je bericht…"
                 style="flex: 1; border: 1px solid #ddd; border-radius: 9999px; padding: 10px 14px; outline: none;">
             <button type="submit" style="background: var(--chat-primary); color: var(--chat-on-primary); border: 0; border-radius: 9999px; padding: 0 16px; cursor: pointer;">&uarr;</button>
         </form>
