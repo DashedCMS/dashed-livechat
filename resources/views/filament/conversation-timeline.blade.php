@@ -189,6 +189,80 @@
 
             <aside class="dlc__aside">
                 <x-filament::section>
+                    <x-slot name="heading">Bezoeker</x-slot>
+
+                    @php($returning = $conversation->returningVisitorInfo())
+                    <div class="dlc__rel-group">
+                        <div class="dlc__rel-title">Terugkerend</div>
+                        <div class="dlc__rel-line">
+                            @if($returning['is_returning'])
+                                <x-filament::badge color="info">
+                                    Terugkerend &mdash; {{ $returning['count'] }} eerder{{ $returning['count'] === 1 ? '' : 'e' }} gesprek{{ $returning['count'] === 1 ? '' : 'ken' }}, laatst op {{ $returning['last_at']?->format('d-m-Y H:i') }}
+                                </x-filament::badge>
+                            @else
+                                <x-filament::badge color="gray">Nieuwe bezoeker</x-filament::badge>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="dlc__rel-group">
+                        <div class="dlc__rel-title">Locatie</div>
+                        <div class="dlc__rel-line">
+                            @php($location = collect([$conversation->visitor_city, $conversation->visitor_country])->filter()->join(', '))
+                            @if($location !== '')
+                                {{ $location }}
+                            @else
+                                <span class="dlc__rel-empty">Onbekend</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="dlc__rel-group">
+                        <div class="dlc__rel-title">IP-adres</div>
+                        <div class="dlc__rel-line">
+                            @if($conversation->visitor_ip)
+                                {{ $conversation->visitor_ip }}
+                            @else
+                                <span class="dlc__rel-empty">Onbekend</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="dlc__rel-group">
+                        <div class="dlc__rel-title">Entree-pagina</div>
+                        <div class="dlc__rel-line" style="word-break:break-all;">
+                            @if($conversation->started_url)
+                                <a href="{{ $conversation->started_url }}" target="_blank" rel="noopener">{{ $conversation->started_url }}</a>
+                            @else
+                                <span class="dlc__rel-empty">Onbekend</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="dlc__rel-group">
+                        <div class="dlc__rel-title">Referrer</div>
+                        <div class="dlc__rel-line" style="word-break:break-all;">
+                            @if($conversation->visitor_referrer)
+                                {{ $conversation->visitor_referrer }}
+                            @else
+                                <span class="dlc__rel-empty">Onbekend</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="dlc__rel-group">
+                        <div class="dlc__rel-title">User agent</div>
+                        <div class="dlc__rel-line dlc__rel-sub" style="word-break:break-all;">
+                            @if($conversation->visitor_user_agent)
+                                {{ $conversation->visitor_user_agent }}
+                            @else
+                                <span class="dlc__rel-empty">Onbekend</span>
+                            @endif
+                        </div>
+                    </div>
+                </x-filament::section>
+
+                <x-filament::section>
                     <x-slot name="heading">Gerelateerd</x-slot>
 
                     <div class="dlc__rel-group">
