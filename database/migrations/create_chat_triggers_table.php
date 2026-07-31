@@ -22,6 +22,11 @@ return new class () extends Migration {
             $table->json('model_links')->nullable();
             $table->string('trigger_type')->default('none');   // none|immediate|time_on_page|scroll_depth|exit_intent
             $table->integer('trigger_value')->nullable();
+            // `min_page_views` is later toegevoegd (zie
+            // 2026_07_31_120000_add_min_page_views_to_chat_triggers_table); hier ook
+            // meteen opgenomen zodat een verse install/testomgeving 'm direct heeft,
+            // ongeacht de (alfabetische) migratievolgorde.
+            $table->unsignedInteger('min_page_views')->nullable();
             $table->text('proactive_message')->nullable();
             $table->unsignedBigInteger('ai_agent_id')->nullable();
             $table->timestamps();

@@ -58,6 +58,8 @@ class InjectChatWidget
             'type' => $trigger->trigger_type,
             'value' => $trigger->trigger_value,
             'message' => $trigger->proactive_message,
+            // Gedrag-conditie: pas tonen vanaf de N-de paginaweergave (client-side).
+            'min_page_views' => $trigger->min_page_views,
         ] : null;
         $lazyProp = \Dashed\DashedCore\Classes\Caching\CacheDecision::for($request)->shouldCache() ? 'on-load' : false;
         $widget = Blade::render(

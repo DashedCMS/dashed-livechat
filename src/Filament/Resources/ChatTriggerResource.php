@@ -156,6 +156,12 @@ class ChatTriggerResource extends Resource
                             default => null,
                         })
                         ->visible(fn (Get $get) => in_array($get('trigger_type'), ['time_on_page', 'scroll_depth'])),
+                    TextInput::make('min_page_views')
+                        ->label('Pas tonen vanaf paginaweergave')
+                        ->helperText('Optioneel: toon dit proactieve bericht pas vanaf de N-de paginaweergave van de bezoeker in deze browser. Leeg = direct.')
+                        ->numeric()
+                        ->minValue(1)
+                        ->nullable(),
                     Textarea::make('proactive_message')
                         ->label('Proactief bericht')
                         ->rows(3)

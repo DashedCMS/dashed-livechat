@@ -41,6 +41,14 @@
         },
         fireProactive() {
             if (this.proactiveShown || !this.proactive || !this.proactive.message) return;
+            // Gedrag-conditie: pas tonen vanaf de N-de paginaweergave in deze browser.
+            const _minViews = parseInt((this.proactive && this.proactive.min_page_views) || 0);
+            if (_minViews > 0) {
+                try {
+                    const _pv = parseInt(localStorage.getItem('dashed_chat_pageviews_' + @js($siteId)) || '0');
+                    if (_pv < _minViews) return;
+                } catch (e) {}
+            }
             this.proactiveShown = true;
             // Op mobiel het volledige paneel niet automatisch openen: dat bedekt de
             // hele pagina (paneel is daar bijna fullscreen). Toon in plaats daarvan een
@@ -54,6 +62,11 @@
             // binnen wire:ignore zodat Livewire-polls de tekst niet wegmorphen.
         },
         initProactive() {
+            // Tel elke paginaweergave (voor de min_page_views-conditie), ongeacht trigger.
+            try {
+                const _k = 'dashed_chat_pageviews_' + @js($siteId);
+                localStorage.setItem(_k, String(parseInt(localStorage.getItem(_k) || '0') + 1));
+            } catch (e) {}
             if (!this.proactive || !this.proactive.type || this.proactive.type === 'none') return;
             const t = this.proactive.type, v = parseInt(this.proactive.value || 0);
             if (t === 'immediate') { this.fireProactive(); }
