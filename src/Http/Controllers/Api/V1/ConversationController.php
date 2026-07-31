@@ -113,6 +113,20 @@ class ConversationController extends Controller
         return response()->json(['data' => $tags]);
     }
 
+    /** AI-copilot: genereert een concept-antwoord (verstuurt niet). */
+    public function suggestReply(Request $request, int $conversation): JsonResponse
+    {
+        $model = $this->resolve($conversation);
+
+        try {
+            $suggestion = \Dashed\DashedLivechat\Support\ReplySuggester::suggest($model);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Kon geen suggestie ophalen: ' . $e->getMessage()], 502);
+        }
+
+        return response()->json(['suggestion' => $suggestion]);
+    }
+
     /** Voegt een interne notitie toe (niet zichtbaar voor de bezoeker). */
     public function addNote(Request $request, int $conversation): JsonResponse
     {
