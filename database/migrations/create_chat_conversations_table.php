@@ -21,6 +21,11 @@ return new class () extends Migration {
             // hier ook meteen opgenomen voor verse/testomgevingen (migratievolgorde).
             $table->boolean('auto_translate')->default(false);
             $table->string('agent_locale', 16)->nullable();
+            // CSAT (zie 2026_07_31_140000_add_rating_to_chat_conversations_table);
+            // hier ook meteen opgenomen voor verse/testomgevingen (migratievolgorde).
+            $table->unsignedTinyInteger('rating')->nullable();
+            $table->text('rating_comment')->nullable();
+            $table->timestamp('rated_at')->nullable();
             $table->string('status')->default('active');   // active|closed
             $table->string('mode')->default('ai');         // ai|waiting_human|human
             $table->unsignedBigInteger('ai_agent_id')->nullable();

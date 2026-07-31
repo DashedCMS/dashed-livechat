@@ -42,6 +42,7 @@ class ChatWidget extends Component
     public ?string $contactStep = null; // null | 'email' | 'name'
     public string $contactDraft = '';
     public ?string $contactError = null;
+    public string $ratingComment = '';
 
     public function mount(?string $siteId = null, ?array $trigger = null): void
     {
@@ -381,26 +382,35 @@ class ChatWidget extends Component
     }
 
     /** Bezoeker beoordeelt het gesprek (CSAT); opgeslagen in conversation->meta. */
-    public function rate(string $value): void
+    public function rate(int $value): void
     {
-        if (! in_array($value, ['up', 'down'], true)) {
+        if ($value < 1 || $value > 5) {
             return;
         }
 
         $conversation = $this->conversation();
-        if (! $conversation) {
+        if (! $conversation || $conversation->rating) {
             return;
         }
 
-        $meta = $conversation->meta ?? [];
-        if (! empty($meta['rating'])) {
+        $conversation->forceFill(['rating' => $value, 'rated_at' => now()])->save();
+    }
+
+    /** Optionele toelichting bij de beoordeling (na het geven van een cijfer). */
+    public function submitRatingComment(): void
+    {
+        $conversation = $this->conversation();
+        if (! $conversation || ! $conversation->rating) {
             return;
         }
 
-        $meta['rating'] = $value;
-        $meta['rated_at'] = now()->toIso8601String();
-        $conversation->meta = $meta;
-        $conversation->save();
+        $comment = trim((string) $this->ratingComment);
+        if ($comment === '') {
+            return;
+        }
+
+        $conversation->forceFill(['rating_comment' => $comment])->save();
+        $this->ratingComment = '';
     }
 
     public function toggle(): void
@@ -597,8 +607,9 @@ class ChatWidget extends Component
             'agentAvatarUrl' => $agentAvatarUrl,
             'availableAgents' => $this->availableAgents,
             'contactStep' => $this->contactStep,
-            'rating' => $conversation?->meta['rating'] ?? null,
-            'canRate' => $conversation && empty($conversation->meta['rating']) && $this->messages->where('role', 'ai')->isNotEmpty(),
+            'rating' => $conversation?->rating,
+            'ratingComment' => $conversation?->rating_comment,
+            'canRate' => $conversation && ! $conversation->rating && $this->messages->where('role', 'ai')->isNotEmpty(),
             'newMessageIndicator' => $cfg['new_message_indicator'] ?? 'badge',
             'partnerName' => $partnerName,
             'partnerType' => $partnerType,

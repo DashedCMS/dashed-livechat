@@ -438,13 +438,22 @@
 
         @if($rating)
             <div style="flex-shrink:0; padding:8px 12px; border-top:1px solid #eee; font-size:12px; color:#6b7280; text-align:center;">
-                Bedankt voor je feedback!
+                @if(empty($ratingComment))
+                    <div style="margin-bottom:6px;">Bedankt voor je feedback! Wil je het nog kort toelichten?</div>
+                    <div style="display:flex; gap:6px; align-items:center; justify-content:center;">
+                        <input type="text" wire:model="ratingComment" placeholder="Toelichting (optioneel)…" maxlength="500"
+                               style="flex:1; max-width:220px; border:1px solid #e5e7eb; border-radius:8px; padding:6px 8px; font-size:12px;">
+                        <button type="button" wire:click="submitRatingComment" style="background:var(--chat-primary); color:var(--chat-on-primary); border:0; border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer;">Versturen</button>
+                    </div>
+                @else
+                    Bedankt voor je feedback!
+                @endif
             </div>
         @elseif($canRate)
             <div style="flex-shrink:0; padding:8px 12px; border-top:1px solid #eee; display:flex; align-items:center; justify-content:center; gap:10px; font-size:12px; color:#6b7280;">
                 <span>Was dit nuttig?</span>
-                <button type="button" wire:click="rate('up')" title="Ja" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128077;</button>
-                <button type="button" wire:click="rate('down')" title="Nee" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128078;</button>
+                <button type="button" wire:click="rate(5)" title="Ja" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128077;</button>
+                <button type="button" wire:click="rate(1)" title="Nee" style="background:transparent; border:0; cursor:pointer; font-size:16px; line-height:1;">&#128078;</button>
             </div>
         @endif
 

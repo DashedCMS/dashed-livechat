@@ -21,6 +21,7 @@ class ChatConversation extends Model
         'visitor_last_active_at' => 'datetime',
         'is_sandbox' => 'boolean',
         'auto_translate' => 'boolean',
+        'rated_at' => 'datetime',
     ];
 
     protected static function booted(): void

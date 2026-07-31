@@ -70,6 +70,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 '2026_07_31_120000_add_min_page_views_to_chat_triggers_table',
                 '2026_07_31_130000_add_translation_to_chat_messages_table',
                 '2026_07_31_130100_add_auto_translate_to_chat_conversations_table',
+                '2026_07_31_140000_add_rating_to_chat_conversations_table',
             ])
             ->runsMigrations();
     }

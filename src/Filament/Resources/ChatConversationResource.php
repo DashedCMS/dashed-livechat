@@ -98,10 +98,12 @@ class ChatConversationResource extends Resource
                     ->selectablePlaceholder(false),
                 TextColumn::make('rating')
                     ->label('Beoordeling')
-                    ->state(fn ($record) => match ($record->meta['rating'] ?? null) {
-                        'up' => '👍',
-                        'down' => '👎',
-                        default => '—',
+                    ->tooltip(fn ($record) => $record->rating_comment ?: null)
+                    ->state(fn ($record) => match (true) {
+                        $record->rating === null => '—',
+                        $record->rating >= 4 => '👍 ' . $record->rating,
+                        $record->rating <= 2 => '👎 ' . $record->rating,
+                        default => '★ ' . $record->rating,
                     }),
                 TextColumn::make('tags.name')
                     ->label('Tags')
@@ -155,6 +157,15 @@ class ChatConversationResource extends Resource
                         'inactive' => 'Inactief',
                         'closed' => 'Afgerond',
                     ]),
+                SelectFilter::make('rating')
+                    ->label('Beoordeling')
+                    ->options(['rated' => 'Beoordeeld', 'positive' => 'Positief (≥4)', 'negative' => 'Negatief (≤2)'])
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'rated' => $query->whereNotNull('rating'),
+                        'positive' => $query->where('rating', '>=', 4),
+                        'negative' => $query->where('rating', '<=', 2)->whereNotNull('rating'),
+                        default => $query,
+                    }),
                 SelectFilter::make('tag')
                     ->label('Tag')
                     ->options(fn () => \Dashed\DashedLivechat\Models\ChatTag::query()
