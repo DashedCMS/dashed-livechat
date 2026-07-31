@@ -35,6 +35,8 @@ Route::prefix('api/v1')
             ->middleware('chat.ability:chat.takeover');
         Route::post('conversations/{conversation}/suggest-reply', [ConversationController::class, 'suggestReply'])
             ->middleware(['chat.ability:chat.reply', 'throttle:20,1']);
+        Route::put('conversations/{conversation}/auto-translate', [ConversationController::class, 'setAutoTranslate'])
+            ->middleware('chat.ability:chat.reply');
         Route::put('conversations/{conversation}/tags', [ConversationController::class, 'setTags'])
             ->middleware('chat.ability:chat.reply');
         Route::post('conversations/{conversation}/notes', [ConversationController::class, 'addNote'])

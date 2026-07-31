@@ -391,7 +391,8 @@
                         <div class="dashed-chat__msg dashed-chat__msg--ai"
                              style="min-width:0; padding: 10px 12px; border-radius: 12px; line-height: 1.4; background: #fff; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.06);">
                             <div style="font-size:10px; opacity:.65; margin-bottom:3px;">{{ $senderLabel }}{{ $message->role === 'human' ? ' · medewerker' : '' }}</div>
-                            <div class="dashed-chat__md">{!! \Illuminate\Support\Str::markdown($message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}</div>
+                            {{-- Bij auto-vertaling toont de bezoeker de vertaalde tekst (translated_content). --}}
+                            <div class="dashed-chat__md">{!! \Illuminate\Support\Str::markdown($message->translated_content ?: $message->content, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}</div>
                             @foreach($message->attachmentsData() as $att)
                                 @if($att['is_image'])
                                     <a href="{{ $att['url'] }}" target="_blank" rel="noopener" style="display:block; margin-top:6px;"><img src="{{ $att['thumb_url'] }}" alt="" style="max-width:180px; border-radius:8px;"></a>

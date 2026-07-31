@@ -113,6 +113,27 @@ class ConversationController extends Controller
         return response()->json(['data' => $tags]);
     }
 
+    /** Zet auto-vertaling aan/uit voor dit gesprek (uitgaand → bezoeker-taal). */
+    public function setAutoTranslate(Request $request, int $conversation): JsonResponse
+    {
+        $model = $this->resolve($conversation);
+
+        $data = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'agent_locale' => ['nullable', 'string', 'max:16'],
+        ]);
+
+        $model->forceFill([
+            'auto_translate' => $data['enabled'],
+            'agent_locale' => $data['agent_locale'] ?? $model->agent_locale ?? (app()->getLocale() ?: 'nl'),
+        ])->save();
+
+        return response()->json([
+            'auto_translate' => (bool) $model->auto_translate,
+            'agent_locale' => $model->agent_locale,
+        ]);
+    }
+
     /** AI-copilot: genereert een concept-antwoord (verstuurt niet). */
     public function suggestReply(Request $request, int $conversation): JsonResponse
     {

@@ -16,6 +16,10 @@ return new class () extends Migration {
             $table->string('role');                 // visitor|ai|human|system
             $table->unsignedBigInteger('agent_id')->nullable();
             $table->text('content');
+            // Vertaal-cache (zie 2026_07_31_130000_add_translation_to_chat_messages_table);
+            // hier ook meteen opgenomen voor verse/testomgevingen (migratievolgorde).
+            $table->text('translated_content')->nullable();
+            $table->string('source_locale', 16)->nullable();
             $table->json('attachments')->nullable();
             $table->json('tool_calls')->nullable();
             $table->boolean('is_internal')->default(false);

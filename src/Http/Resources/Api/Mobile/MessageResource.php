@@ -18,6 +18,8 @@ class MessageResource extends JsonResource
             'id' => $this->id,
             'role' => $this->role,
             'content' => $this->content,
+            'translated_content' => $this->translated_content,
+            'source_locale' => $this->source_locale,
             'created_at' => optional($this->created_at)->toIso8601String(),
             'agent' => $this->agent ? [
                 'id' => $this->agent->id,

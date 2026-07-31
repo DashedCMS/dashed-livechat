@@ -27,6 +27,8 @@ class ConversationDetailResource extends JsonResource
             'visitor_read_at' => optional($this->visitor_read_at)->toIso8601String(),
             'visitor_presence' => $this->visitorPresence(),
             'visitor_last_active_at' => optional($this->visitor_last_active_at)->toIso8601String(),
+            'auto_translate' => (bool) $this->auto_translate,
+            'agent_locale' => $this->agent_locale,
             'ai_agent' => $this->aiAgent ? ['id' => $this->aiAgent->id, 'name' => $this->aiAgent->name] : null,
             'assigned_agent' => $this->assignedAgent ? ['id' => $this->assignedAgent->id, 'name' => $this->assignedAgent->name] : null,
             'related' => $this->related_context ?? ['customers' => [], 'orders' => []],

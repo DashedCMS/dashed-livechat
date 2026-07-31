@@ -139,6 +139,14 @@ class ConversationManager
         ]);
         $c->forceFill(['last_message_at' => now()])->save();
 
+        // Auto-vertaling: als aan staat en de bezoeker een andere taal spreekt dan
+        // de medewerker, vertaal het uitgaande bericht naar de bezoeker-taal
+        // (de widget toont dan translated_content). Best-effort.
+        if ($c->auto_translate && $c->locale && $c->locale !== $c->agent_locale) {
+            app(\Dashed\DashedLivechat\Support\MessageTranslator::class)->ensureTranslated($message, $c->locale);
+            $message->refresh();
+        }
+
         $this->learnFromHumanReply($c, $message);
         $this->maybeEmailOfflineReply($c, $message);
 

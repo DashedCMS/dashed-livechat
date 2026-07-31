@@ -17,6 +17,10 @@ return new class () extends Migration {
             $table->string('visitor_name')->nullable();
             $table->string('visitor_email')->nullable();
             $table->string('locale')->nullable();
+            // Auto-vertaling (zie 2026_07_31_130100_add_auto_translate_to_chat_conversations_table);
+            // hier ook meteen opgenomen voor verse/testomgevingen (migratievolgorde).
+            $table->boolean('auto_translate')->default(false);
+            $table->string('agent_locale', 16)->nullable();
             $table->string('status')->default('active');   // active|closed
             $table->string('mode')->default('ai');         // ai|waiting_human|human
             $table->unsignedBigInteger('ai_agent_id')->nullable();
