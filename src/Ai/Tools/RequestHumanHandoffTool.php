@@ -7,6 +7,7 @@ namespace Dashed\DashedLivechat\Ai\Tools;
 use Dashed\DashedLivechat\Ai\Contracts\ChatTool;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
+use Dashed\DashedLivechat\Models\ChatUnansweredQuestion;
 
 class RequestHumanHandoffTool implements ChatTool
 {
@@ -40,6 +41,10 @@ class RequestHumanHandoffTool implements ChatTool
 
     public function handle(array $input, ChatConversation $conversation): array
     {
+        // De AI kon de vraag niet zelf afhandelen → leg 'm vast voor de
+        // kennisbank-review-wachtrij.
+        ChatUnansweredQuestion::capture($conversation, 'handoff');
+
         return $this->handoff->requestHandoff($conversation, $input['reason'] ?? null);
     }
 }

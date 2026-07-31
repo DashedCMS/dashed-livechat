@@ -12,6 +12,7 @@ use Dashed\DashedLivechat\Ai\LivechatAi;
 use Filament\Notifications\Notification;
 use Dashed\DashedLivechat\Models\ChatTag;
 use Dashed\DashedLivechat\Models\ChatNote;
+use Dashed\DashedLivechat\Models\ChatUnansweredQuestion;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Support\ChatAccess;
@@ -206,6 +207,18 @@ class ViewChatConversation extends Page
         $message = ChatMessage::findOrFail($messageId);
         $message->feedback = $value;
         $message->save();
+
+        // Negatieve feedback op een AI-antwoord = signaal dat de kennisbank
+        // tekortschiet → leg de bijbehorende bezoekersvraag vast voor review.
+        if (in_array($value, ['down', 'negative'], true) && $message->role === 'ai') {
+            $preceding = $this->conversation->messages
+                ->where('role', 'visitor')
+                ->where('id', '<', $messageId)
+                ->sortByDesc('id')
+                ->first();
+            ChatUnansweredQuestion::capture($this->conversation, 'negative_feedback', $preceding?->content);
+        }
+
         $this->refreshRecord();
         Notification::make()->title('Feedback opgeslagen')->success()->send();
     }

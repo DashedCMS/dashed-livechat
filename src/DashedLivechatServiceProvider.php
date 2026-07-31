@@ -66,6 +66,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 '2026_07_31_090000_add_shortcut_and_owner_to_chat_quick_replies_table',
                 '2026_07_31_100000_create_chat_tags_table',
                 '2026_07_31_100100_create_chat_conversation_tag_table',
+                '2026_07_31_110000_create_chat_unanswered_questions_table',
             ])
             ->runsMigrations();
     }
