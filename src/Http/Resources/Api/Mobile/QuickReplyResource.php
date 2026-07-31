@@ -18,6 +18,8 @@ class QuickReplyResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'content' => $this->content,
+            'shortcut' => $this->shortcut,
+            'scope' => $this->owner_id === null ? 'shared' : 'personal',
         ];
     }
 }

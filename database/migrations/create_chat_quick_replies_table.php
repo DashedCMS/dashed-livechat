@@ -14,8 +14,14 @@ return new class () extends Migration {
             $table->id();
             $table->string('site_id')->index();
             $table->string('title');
+            // `shortcut`/`owner_id` zijn later toegevoegd (zie
+            // 2026_07_31_090000_add_shortcut_and_owner_to_chat_quick_replies_table);
+            // hier ook meteen opgenomen zodat een verse install/testomgeving ze
+            // direct heeft, ongeacht de (alfabetische) migratievolgorde.
+            $table->string('shortcut')->nullable();
             $table->text('content');
             $table->integer('sort')->default(0);
+            $table->unsignedBigInteger('owner_id')->nullable()->index();
             $table->timestamps();
         });
     }

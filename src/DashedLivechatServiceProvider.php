@@ -63,6 +63,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'create_web_push_subscriptions_table',
                 'create_web_push_preferences_table',
                 '2026_07_30_120000_add_visitor_metadata_to_chat_conversations_table',
+                '2026_07_31_090000_add_shortcut_and_owner_to_chat_quick_replies_table',
             ])
             ->runsMigrations();
     }

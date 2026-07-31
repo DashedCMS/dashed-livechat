@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\BulkActionGroup;
+use Filament\Forms\Components\Select;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
@@ -52,7 +53,24 @@ class ChatQuickReplyResource extends Resource
                 ->rows(5)
                 ->required()
                 ->columnSpanFull()
-                ->helperText('De tekst die wordt ingevoegd wanneer dit antwoord wordt gekozen.'),
+                ->helperText('De tekst die wordt ingevoegd wanneer dit antwoord wordt gekozen. Ondersteunt variabelen: {naam}, {shop}, {agent}, {email}.'),
+
+            TextInput::make('shortcut')
+                ->label('Shortcut')
+                ->nullable()
+                ->prefix('/')
+                ->helperText('Typ /shortcut in de reply-box om dit antwoord direct in te voegen.'),
+
+            Select::make('owner_id')
+                ->label('Zichtbaarheid')
+                ->options(fn () => [
+                    '' => 'Gedeeld (team)',
+                    (string) auth()->id() => 'Alleen ik',
+                ])
+                ->default('')
+                ->dehydrateStateUsing(fn ($state) => $state === '' || $state === null ? null : (int) $state)
+                ->formatStateUsing(fn ($state) => $state === null ? '' : (string) $state)
+                ->helperText('Gedeelde antwoorden zijn zichtbaar voor alle medewerkers van deze site.'),
 
             TextInput::make('sort')
                 ->label('Volgorde')
@@ -69,10 +87,19 @@ class ChatQuickReplyResource extends Resource
                     ->label('Titel')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('shortcut')
+                    ->label('Shortcut')
+                    ->formatStateUsing(fn (?string $state) => $state ? '/'.$state : '—')
+                    ->searchable(),
                 TextColumn::make('content')
                     ->label('Antwoord')
                     ->limit(80)
                     ->searchable(),
+                TextColumn::make('owner_id')
+                    ->label('Zichtbaarheid')
+                    ->badge()
+                    ->formatStateUsing(fn (?int $state) => $state === null ? 'Gedeeld' : 'Persoonlijk')
+                    ->color(fn (?int $state) => $state === null ? 'info' : 'gray'),
                 TextColumn::make('sort')
                     ->label('Volgorde')
                     ->sortable(),
@@ -92,7 +119,7 @@ class ChatQuickReplyResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('site_id', (string) Sites::getActive());
+            ->visibleTo(auth()->id(), (string) Sites::getActive());
     }
 
     public static function getPages(): array

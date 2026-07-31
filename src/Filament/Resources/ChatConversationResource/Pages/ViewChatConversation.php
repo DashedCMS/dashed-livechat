@@ -15,6 +15,8 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Support\ChatAccess;
 use Dashed\DashedLivechat\Models\ChatLearning;
+use Dashed\DashedLivechat\Models\ChatQuickReply;
+use Dashed\DashedLivechat\Support\SnippetRenderer;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
 use Dashed\DashedLivechat\Services\ConversationManager;
@@ -131,6 +133,70 @@ class ViewChatConversation extends Page
         $this->reply = '';
         $this->replyAttachments = [];
         $this->refreshRecord();
+    }
+
+    /**
+     * Antwoord-snippets die de ingelogde medewerker mag gebruiken op deze
+     * site: gedeelde (team) snippets + haar/zijn eigen persoonlijke.
+     */
+    public function getQuickRepliesProperty(): Collection
+    {
+        return ChatQuickReply::query()
+            ->visibleTo(auth()->id(), $this->conversation->site_id)
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * Voegt de (resolved) inhoud van een snippet in als concept-antwoord.
+     * Vervangt het huidige conceptantwoord — de medewerker kan het daarna
+     * nog aanpassen vóór verzenden.
+     */
+    public function insertQuickReply(int $quickReplyId): void
+    {
+        $this->requireAuth();
+
+        $quickReply = ChatQuickReply::query()
+            ->visibleTo(auth()->id(), $this->conversation->site_id)
+            ->find($quickReplyId);
+
+        if (! $quickReply) {
+            return;
+        }
+
+        $this->reply = SnippetRenderer::render($quickReply->content, $this->conversation, auth()->user(), $this->siteName());
+    }
+
+    /**
+     * Alpine detecteert client-side wanneer de medewerker `/<shortcut>`
+     * gevolgd door een spatie typt in het antwoordveld en roept dit dan aan
+     * met de volledige huidige inhoud. Bij een match wordt het conceptantwoord
+     * vervangen door de (resolved) snippet-inhoud; anders gebeurt er niets.
+     */
+    public function expandShortcut(string $typed): void
+    {
+        $this->requireAuth();
+
+        if (! preg_match('/^\/([a-z0-9_-]+)\s$/i', $typed, $matches)) {
+            return;
+        }
+
+        $quickReply = ChatQuickReply::query()
+            ->visibleTo(auth()->id(), $this->conversation->site_id)
+            ->whereRaw('LOWER(shortcut) = ?', [mb_strtolower($matches[1])])
+            ->first();
+
+        if (! $quickReply) {
+            return;
+        }
+
+        $this->reply = SnippetRenderer::render($quickReply->content, $this->conversation, auth()->user(), $this->siteName());
+    }
+
+    private function siteName(): string
+    {
+        return (string) (Sites::get($this->conversation->site_id)['name'] ?? $this->conversation->site_id);
     }
 
     public function markFeedback(int $messageId, string $value): void

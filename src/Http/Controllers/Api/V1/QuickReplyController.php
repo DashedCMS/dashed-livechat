@@ -16,7 +16,7 @@ class QuickReplyController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $replies = ChatQuickReply::query()
-            ->where('site_id', (string) Sites::getActive())
+            ->visibleTo($request->user()?->id, (string) Sites::getActive())
             ->orderBy('sort')
             ->orderBy('id')
             ->get();

@@ -146,7 +146,40 @@
             </div>
 
             @if($mode === 'human')
-                <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+                <div style="margin-top:1rem; display:flex; justify-content:flex-end; gap:.5rem;">
+                    @if($this->quickReplies->isNotEmpty())
+                        <div x-data="{ open: false }" style="position:relative;">
+                            <x-filament::button size="sm" color="gray" icon="heroicon-m-bolt" x-on:click="open = !open">
+                                Snelle antwoorden
+                            </x-filament::button>
+                            <div
+                                x-show="open"
+                                x-on:click.outside="open = false"
+                                x-cloak
+                                style="position:absolute; right:0; bottom:calc(100% + 6px); z-index:20; width:320px; max-height:280px; overflow-y:auto; background:var(--gray-50, #fafafa); border:1px solid rgba(127,127,127,.2); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:6px;"
+                            >
+                                @foreach($this->quickReplies as $quickReply)
+                                    <button
+                                        type="button"
+                                        wire:click="insertQuickReply({{ $quickReply->id }})"
+                                        x-on:click="open = false"
+                                        style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:8px 10px; border-radius:8px; background:transparent; border:none; cursor:pointer;"
+                                        onmouseover="this.style.background='rgba(127,127,127,.08)'" onmouseout="this.style.background='transparent'"
+                                    >
+                                        <span style="display:flex; align-items:center; gap:6px; font-size:.8125rem; font-weight:600;">
+                                            {{ $quickReply->title }}
+                                            <x-filament::badge size="sm" :color="$quickReply->owner_id === null ? 'info' : 'gray'">
+                                                {{ $quickReply->owner_id === null ? 'Gedeeld' : 'Persoonlijk' }}
+                                            </x-filament::badge>
+                                        </span>
+                                        @if($quickReply->shortcut)
+                                            <span style="font-size:.6875rem; opacity:.6;">/{{ $quickReply->shortcut }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                     <x-filament::button size="sm" color="gray" icon="heroicon-m-sparkles"
                         wire:click="suggestReply" wire:target="suggestReply" wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="suggestReply">Stel antwoord voor</span>
@@ -175,9 +208,10 @@
                     <input
                         wire:model="reply"
                         type="text"
-                        placeholder="Typ je antwoord…"
+                        placeholder="Typ je antwoord… (of /shortcut + spatie voor een snel antwoord)"
                         class="dlc__input fi-input"
                         autocomplete="off"
+                        x-on:keyup="if ($event.key === ' ') { $wire.expandShortcut($event.target.value) }"
                     >
                     <x-filament::button type="submit" icon="heroicon-m-paper-airplane" wire:loading.attr="disabled">
                         Verstuur
