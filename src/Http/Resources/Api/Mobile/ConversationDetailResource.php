@@ -39,6 +39,20 @@ class ConversationDetailResource extends JsonResource
                 'author' => $n->author_name,
                 'created_at' => optional($n->created_at)->toIso8601String(),
             ])->values(), []),
+            // Live winkelmandje/pagina van de bezoeker (uit de presence-sessie).
+            // Null als er geen (verse) sessie meer is (opgeruimd na ~1 dag).
+            'cart' => (function () {
+                $s = $this->visitorSession;
+                if (! $s || $s->cart_total === null) {
+                    return null;
+                }
+
+                return [
+                    'total' => (float) $s->cart_total,
+                    'current_url' => $s->url,
+                    'updated_at' => optional($s->last_seen_at)->toIso8601String(),
+                ];
+            })(),
             // Bewust ook 'started_url' hierin (dupliceert de top-level sleutel
             // hierboven) zodat het 'visitor'-blok overal dezelfde vaste vorm heeft.
             'visitor' => (function () {

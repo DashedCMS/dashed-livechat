@@ -51,7 +51,7 @@ class ViewChatConversation extends Page
 
     public function mount(int|string $record): void
     {
-        $this->conversation = ChatConversation::with('messages.agent', 'tags')->findOrFail($record);
+        $this->conversation = ChatConversation::with('messages.agent', 'tags', 'visitorSession')->findOrFail($record);
         $this->mode = $this->conversation->mode;
         $this->status = $this->conversation->status;
         $this->lastMessageId = (int) ($this->conversation->messages->max('id') ?? 0);

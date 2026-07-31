@@ -26,6 +26,16 @@
                 </x-filament::badge>
             </span>
 
+            @php($cart = $this->conversation?->visitorSession)
+            @if($cart && $cart->cart_total !== null)
+                <span class="dlc__mode">
+                    <span class="dlc__mode-label">Winkelmandje</span>
+                    <x-filament::badge color="success" icon="heroicon-m-shopping-cart">
+                        &euro; {{ number_format((float) $cart->cart_total, 2, ',', '.') }}
+                    </x-filament::badge>
+                </span>
+            @endif
+
             <div class="dlc__actions">
                 @if($mode !== 'human')
                     <x-filament::button icon="heroicon-m-hand-raised" wire:click="takeOver" wire:loading.attr="disabled">

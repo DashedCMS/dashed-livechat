@@ -71,7 +71,7 @@ class ConversationController extends Controller
     public function show(int $conversation, ConversationContextService $context): ConversationDetailResource
     {
         $model = $this->resolve($conversation);
-        $model->load(['aiAgent', 'assignedAgent', 'tags', 'notes']);
+        $model->load(['aiAgent', 'assignedAgent', 'tags', 'notes', 'visitorSession']);
         $model->related_context = $context->relatedFor($model);
 
         return new ConversationDetailResource($model);
