@@ -262,7 +262,16 @@
             </div>
         @elseif($chatMode === 'waiting_human')
             <div style="padding: 8px 12px; border-bottom: 1px solid #eee; background:#fff7ed; color:#9a3412; font-size:12px; text-align:center;">
-                Je vraag staat klaar voor een collega. Je kunt ondertussen gewoon verder typen.
+                @if(($queuePosition ?? 0) > 0)
+                    @if($withinHours ?? true)
+                        Je bent nummer <strong>{{ $queuePosition }}</strong> in de wachtrij@if(($queueWaitMinutes ?? null) !== null) — geschatte wachttijd ± <strong>{{ $queueWaitMinutes }}</strong> min@endif.
+                        Je kunt ondertussen gewoon verder typen.
+                    @else
+                        We zijn nu buiten kantooruren. Je vraag staat klaar; we reageren zodra we er weer zijn, of per e-mail als je die achterlaat.
+                    @endif
+                @else
+                    Een collega is bij je. Je kunt ondertussen gewoon verder typen.
+                @endif
             </div>
         @endif
 

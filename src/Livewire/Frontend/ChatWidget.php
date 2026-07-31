@@ -549,6 +549,16 @@ class ChatWidget extends Component
             $partnerName = $assigned?->name ? (explode(' ', trim($assigned->name))[0] ?: $assigned->name) : 'Medewerker';
         }
 
+        // Wachtrij-info: alleen zinvol wanneer de bezoeker op een mens wacht.
+        $queuePosition = 0;
+        $queueWaitMinutes = null;
+        if ($mode === 'waiting_human' && $conversation) {
+            $queue = app(\Dashed\DashedLivechat\Services\ChatQueue::class);
+            $queuePosition = $queue->positionOf($conversation);
+            $queueWaitMinutes = $queue->estimatedWaitMinutes($conversation);
+        }
+        $withinHours = app(\Dashed\DashedLivechat\Services\OpeningHoursService::class)->isOpen($this->siteId);
+
         $humanAvailable = collect($this->availableAgents)->contains(fn ($a) => ($a['type'] ?? null) === 'human');
 
         // Foto van degene met wie je nu praat (voor de header): de toegewezen
@@ -602,6 +612,10 @@ class ChatWidget extends Component
             // reactie langer kan duren.
             'showDelayNotice' => $showDelayNotice,
             'delayNotice' => $cfg['delay_notice'] ?? null,
+            // Wachtrij: positie + geschatte wachttijd (min); withinHours voor de tekst.
+            'queuePosition' => $queuePosition,
+            'queueWaitMinutes' => $queueWaitMinutes,
+            'withinHours' => $withinHours,
         ]);
     }
 }
