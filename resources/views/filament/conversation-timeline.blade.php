@@ -39,6 +39,20 @@
             </div>
         </div>
 
+        @php($activeTagIds = $this->conversation?->tags->pluck('id')->all() ?? [])
+        @if($this->availableTags->isNotEmpty())
+            <div class="dlc__tags" style="display:flex;flex-wrap:wrap;gap:.375rem;align-items:center;margin-bottom:.75rem;">
+                <span class="dlc__mode-label">Tags</span>
+                @foreach($this->availableTags as $tag)
+                    @php($isActive = in_array($tag->id, $activeTagIds, true))
+                    <button type="button" wire:click="toggleTag({{ $tag->id }})"
+                        style="display:inline-flex;align-items:center;gap:.25rem;padding:.125rem .5rem;border-radius:9999px;font-size:.75rem;line-height:1.25rem;cursor:pointer;border:1px solid {{ $tag->color }};{{ $isActive ? 'background:'.$tag->color.';color:#fff;' : 'background:transparent;color:inherit;opacity:.7;' }}">
+                        {{ $isActive ? '✓ ' : '' }}{{ $tag->name }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
+
         <div class="dlc__layout">
             <div class="dlc__main">
         <x-filament::section class="dlc__panel">

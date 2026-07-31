@@ -28,6 +28,9 @@ class ConversationResource extends JsonResource
             // Aanwezigheid bezoeker: 'active' | 'idle' | 'away'.
             'visitor_presence' => $this->visitorPresence(),
             'visitor_last_active_at' => optional($this->visitor_last_active_at)->toIso8601String(),
+            'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($t) => [
+                'id' => $t->id, 'name' => $t->name, 'color' => $t->color,
+            ])->values(), []),
         ];
     }
 }

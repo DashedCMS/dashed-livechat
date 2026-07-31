@@ -33,6 +33,12 @@ Route::prefix('api/v1')
             ->middleware('chat.ability:chat.takeover');
         Route::post('conversations/{conversation}/release', [ConversationController::class, 'release'])
             ->middleware('chat.ability:chat.takeover');
+        Route::put('conversations/{conversation}/tags', [ConversationController::class, 'setTags'])
+            ->middleware('chat.ability:chat.reply');
+        Route::post('conversations/{conversation}/notes', [ConversationController::class, 'addNote'])
+            ->middleware('chat.ability:chat.reply');
+
+        Route::get('tags', [ConversationController::class, 'tags'])->middleware('chat.ability:chat.read');
 
         Route::get('agents', [AgentController::class, 'index'])->middleware('chat.ability:chat.manage');
         Route::get('agents/{agent}', [AgentController::class, 'show'])->middleware('chat.ability:chat.manage');

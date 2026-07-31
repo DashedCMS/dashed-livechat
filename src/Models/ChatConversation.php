@@ -7,6 +7,7 @@ namespace Dashed\DashedLivechat\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedLivechat\Models\Scopes\ExcludeSandboxScope;
 
 class ChatConversation extends Model
@@ -102,6 +103,23 @@ class ChatConversation extends Model
     public function events(): HasMany
     {
         return $this->hasMany(ChatEvent::class);
+    }
+
+    /** Interne notities (niet zichtbaar voor de bezoeker). */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(ChatNote::class, 'chat_conversation_id')->orderBy('id');
+    }
+
+    /** Labels op het gesprek (verkoop/support/klacht…). */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ChatTag::class,
+            'dashed__chat_conversation_tag',
+            'chat_conversation_id',
+            'chat_tag_id',
+        );
     }
 
     public function aiAgent(): BelongsTo

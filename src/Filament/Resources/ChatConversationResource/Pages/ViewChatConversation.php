@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Ai\LivechatAi;
 use Filament\Notifications\Notification;
+use Dashed\DashedLivechat\Models\ChatTag;
 use Dashed\DashedLivechat\Models\ChatNote;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedLivechat\Models\ChatMessage;
@@ -50,7 +51,7 @@ class ViewChatConversation extends Page
 
     public function mount(int|string $record): void
     {
-        $this->conversation = ChatConversation::with('messages.agent')->findOrFail($record);
+        $this->conversation = ChatConversation::with('messages.agent', 'tags')->findOrFail($record);
         $this->mode = $this->conversation->mode;
         $this->status = $this->conversation->status;
         $this->lastMessageId = (int) ($this->conversation->messages->max('id') ?? 0);
@@ -403,6 +404,33 @@ class ViewChatConversation extends Page
 
         $this->noteBody = '';
         Notification::make()->title('Notitie opgeslagen')->success()->send();
+    }
+
+    /** Alle tags van de actieve site (voor de tag-badges op het gesprek). */
+    public function getAvailableTagsProperty(): Collection
+    {
+        return ChatTag::query()
+            ->where('site_id', (string) Sites::getActive())
+            ->orderBy('sort')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /** Koppelt/ontkoppelt een tag (alleen tags van de eigen site). */
+    public function toggleTag(int $tagId): void
+    {
+        $this->requireAuth();
+
+        $tag = ChatTag::query()
+            ->where('site_id', (string) Sites::getActive())
+            ->find($tagId);
+
+        if (! $tag) {
+            return;
+        }
+
+        $this->conversation->tags()->toggle([$tag->id]);
+        $this->conversation->load('tags');
     }
 
     /**

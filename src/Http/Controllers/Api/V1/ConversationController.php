@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedLivechat\Models\ChatTag;
+use Dashed\DashedLivechat\Models\ChatNote;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
 use Dashed\DashedLivechat\Services\ConversationManager;
@@ -21,11 +23,15 @@ class ConversationController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        // visitorSession eager-loaden zodat visitorPresence() geen N+1 doet.
-        $query = ChatConversation::query()->with('visitorSession')->where('site_id', Sites::getActive());
+        // visitorSession + tags eager-loaden zodat visitorPresence()/tags geen N+1 doen.
+        $query = ChatConversation::query()->with(['visitorSession', 'tags'])->where('site_id', Sites::getActive());
 
         if ($mode = $request->query('mode')) {
             $query->where('mode', (string) $mode);
+        }
+
+        if ($tagId = $request->query('tag_id')) {
+            $query->whereHas('tags', fn ($q) => $q->where('dashed__chat_tags.id', (int) $tagId));
         }
 
         if (($status = $request->query('status')) && $status !== 'all') {
@@ -65,10 +71,73 @@ class ConversationController extends Controller
     public function show(int $conversation, ConversationContextService $context): ConversationDetailResource
     {
         $model = $this->resolve($conversation);
-        $model->load(['aiAgent', 'assignedAgent']);
+        $model->load(['aiAgent', 'assignedAgent', 'tags', 'notes']);
         $model->related_context = $context->relatedFor($model);
 
         return new ConversationDetailResource($model);
+    }
+
+    /** Alle tags van de actieve site (voor de tag-picker in de app). */
+    public function tags(): JsonResponse
+    {
+        $tags = ChatTag::query()
+            ->where('site_id', Sites::getActive())
+            ->orderBy('sort')
+            ->orderBy('name')
+            ->get(['id', 'name', 'color']);
+
+        return response()->json(['data' => $tags]);
+    }
+
+    /** Koppelt de opgegeven tags aan het gesprek (vervangt de huidige set). */
+    public function setTags(Request $request, int $conversation): JsonResponse
+    {
+        $model = $this->resolve($conversation);
+
+        $data = $request->validate([
+            'tag_ids' => ['present', 'array'],
+            'tag_ids.*' => ['integer'],
+        ]);
+
+        // Alleen tags van dezelfde site mogen gekoppeld worden.
+        $validIds = ChatTag::query()
+            ->where('site_id', Sites::getActive())
+            ->whereIn('id', $data['tag_ids'])
+            ->pluck('id')
+            ->all();
+
+        $model->tags()->sync($validIds);
+
+        $tags = $model->tags()->orderBy('sort')->orderBy('name')->get(['dashed__chat_tags.id', 'name', 'color']);
+
+        return response()->json(['data' => $tags]);
+    }
+
+    /** Voegt een interne notitie toe (niet zichtbaar voor de bezoeker). */
+    public function addNote(Request $request, int $conversation): JsonResponse
+    {
+        $model = $this->resolve($conversation);
+
+        $data = $request->validate([
+            'body' => ['required', 'string'],
+        ]);
+
+        $user = $request->user();
+        $note = ChatNote::create([
+            'chat_conversation_id' => $model->id,
+            'user_id' => $user?->id,
+            'author_name' => $user?->name,
+            'body' => trim((string) $data['body']),
+        ]);
+
+        return response()->json([
+            'data' => [
+                'id' => $note->id,
+                'body' => $note->body,
+                'author' => $note->author_name,
+                'created_at' => optional($note->created_at)->toIso8601String(),
+            ],
+        ], 201);
     }
 
     public function messages(Request $request, int $conversation): JsonResponse

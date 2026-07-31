@@ -30,6 +30,15 @@ class ConversationDetailResource extends JsonResource
             'ai_agent' => $this->aiAgent ? ['id' => $this->aiAgent->id, 'name' => $this->aiAgent->name] : null,
             'assigned_agent' => $this->assignedAgent ? ['id' => $this->assignedAgent->id, 'name' => $this->assignedAgent->name] : null,
             'related' => $this->related_context ?? ['customers' => [], 'orders' => []],
+            'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($t) => [
+                'id' => $t->id, 'name' => $t->name, 'color' => $t->color,
+            ])->values(), []),
+            'notes' => $this->whenLoaded('notes', fn () => $this->notes->map(fn ($n) => [
+                'id' => $n->id,
+                'body' => $n->body,
+                'author' => $n->author_name,
+                'created_at' => optional($n->created_at)->toIso8601String(),
+            ])->values(), []),
             // Bewust ook 'started_url' hierin (dupliceert de top-level sleutel
             // hierboven) zodat het 'visitor'-blok overal dezelfde vaste vorm heeft.
             'visitor' => (function () {

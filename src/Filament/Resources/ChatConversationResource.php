@@ -103,6 +103,10 @@ class ChatConversationResource extends Resource
                         'down' => '👎',
                         default => '—',
                     }),
+                TextColumn::make('tags.name')
+                    ->label('Tags')
+                    ->badge()
+                    ->separator(','),
                 TextColumn::make('messages_count')
                     ->counts('messages')
                     ->label('Berichten'),
@@ -151,6 +155,14 @@ class ChatConversationResource extends Resource
                         'inactive' => 'Inactief',
                         'closed' => 'Afgerond',
                     ]),
+                SelectFilter::make('tag')
+                    ->label('Tag')
+                    ->options(fn () => \Dashed\DashedLivechat\Models\ChatTag::query()
+                        ->where('site_id', (string) \Dashed\DashedCore\Classes\Sites::getActive())
+                        ->orderBy('sort')->orderBy('name')->pluck('name', 'id'))
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? $query->whereHas('tags', fn ($q) => $q->where('dashed__chat_tags.id', $data['value']))
+                        : $query),
             ]);
     }
 
