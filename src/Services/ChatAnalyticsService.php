@@ -56,6 +56,48 @@ class ChatAnalyticsService
 
         $costEur = $costUsd * (float) config('dashed-livechat.usd_to_eur', 0.92);
 
+        // CSAT (uit de rating-kolommen). Sandbox is al uitgesloten.
+        $rated = ChatConversation::where('site_id', $siteId)
+            ->where('is_sandbox', false)
+            ->whereNotNull('rating');
+        $ratingCount = (clone $rated)->count();
+        $ratingAvg = $ratingCount > 0 ? round((float) (clone $rated)->avg('rating'), 1) : null;
+        $ratingPositive = (clone $rated)->where('rating', '>=', 4)->count();
+        $csatPositivePct = $ratingCount > 0 ? (int) round($ratingPositive / $ratingCount * 100) : 0;
+
+        // Tag-verdeling (top 8). withCount respecteert de ExcludeSandboxScope.
+        $tagBreakdown = \Dashed\DashedLivechat\Models\ChatTag::where('site_id', $siteId)
+            ->withCount('conversations')
+            ->orderByDesc('conversations_count')
+            ->limit(8)
+            ->get()
+            ->filter(fn ($t) => $t->conversations_count > 0)
+            ->map(fn ($t) => ['name' => $t->name, 'color' => $t->color, 'count' => $t->conversations_count])
+            ->values()
+            ->all();
+
+        // Drukte per uur (0-23), portable in PHP gebucket (geen DB-specifieke functies).
+        $busyHours = array_fill(0, 24, 0);
+        ChatConversation::where('site_id', $siteId)
+            ->where('is_sandbox', false)
+            ->orderByDesc('id')
+            ->limit(2000)
+            ->pluck('created_at')
+            ->each(function ($createdAt) use (&$busyHours): void {
+                if ($createdAt) {
+                    $busyHours[(int) $createdAt->format('G')]++;
+                }
+            });
+
+        // Gemiddelde eerste-reactietijd (min), begrensd tot de recentste gesprekken.
+        $recentIds = ChatConversation::where('site_id', $siteId)
+            ->where('is_sandbox', false)
+            ->orderByDesc('id')
+            ->limit(500)
+            ->pluck('id')
+            ->all();
+        $avgResponseMinutes = $this->averageFirstResponseMinutes($recentIds);
+
         return [
             'conversations' => $conversationCount,
             'by_mode' => array_merge(['ai' => 0, 'waiting_human' => 0, 'human' => 0], $byMode),
@@ -67,6 +109,59 @@ class ChatAnalyticsService
             'tokens_out' => $tokensOut,
             'estimated_cost' => round($costUsd, 4),
             'estimated_cost_eur' => round($costEur, 4),
+            'rating_count' => $ratingCount,
+            'rating_avg' => $ratingAvg,
+            'csat_positive_pct' => $csatPositivePct,
+            'tag_breakdown' => $tagBreakdown,
+            'busy_hours' => $busyHours,
+            'avg_response_minutes' => $avgResponseMinutes,
         ];
+    }
+
+    /**
+     * Gemiddelde tijd (in minuten) tussen het eerste bezoekersbericht en het
+     * eerstvolgende AI/mens-antwoord, over de opgegeven gesprekken.
+     *
+     * @param  array<int, int>  $conversationIds
+     */
+    private function averageFirstResponseMinutes(array $conversationIds): ?int
+    {
+        if (empty($conversationIds)) {
+            return null;
+        }
+
+        $messages = ChatMessage::whereIn('chat_conversation_id', $conversationIds)
+            ->where('is_internal', false)
+            ->whereIn('role', ['visitor', 'ai', 'human'])
+            ->orderBy('chat_conversation_id')
+            ->orderBy('id')
+            ->get(['chat_conversation_id', 'role', 'created_at']);
+
+        $firstVisitorAt = [];
+        $deltas = [];
+
+        foreach ($messages as $message) {
+            $cid = $message->chat_conversation_id;
+
+            if ($message->role === 'visitor') {
+                // Onthoud alleen het eerste bezoekersbericht per gesprek.
+                if (! isset($firstVisitorAt[$cid])) {
+                    $firstVisitorAt[$cid] = $message->created_at;
+                }
+
+                continue;
+            }
+
+            // Eerste AI/mens-antwoord ná een bezoekersbericht: reactietijd.
+            if (isset($firstVisitorAt[$cid]) && $firstVisitorAt[$cid] !== null && $message->created_at) {
+                $deltas[$cid] ??= abs($message->created_at->diffInSeconds($firstVisitorAt[$cid]));
+            }
+        }
+
+        if (empty($deltas)) {
+            return null;
+        }
+
+        return (int) round((array_sum($deltas) / count($deltas)) / 60);
     }
 }
