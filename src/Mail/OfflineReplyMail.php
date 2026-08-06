@@ -21,9 +21,14 @@ class OfflineReplyMail extends Mailable
     use Queueable;
     use SerializesModels;
 
+    /**
+     * Let op de naam: niet $message. Illuminate\Mail\Mailer::send() doet
+     * $data['message'] = $this->createMessage(), dus view-data met die sleutel
+     * wordt bij het renderen altijd overschreven door de mail-Message zelf.
+     */
     public function __construct(
         public ChatConversation $conversation,
-        public ChatMessage $message,
+        public ChatMessage $chatMessage,
     ) {
     }
 
@@ -45,9 +50,9 @@ class OfflineReplyMail extends Mailable
             view: 'dashed-livechat::mail.offline-reply',
             with: [
                 'conversation' => $this->conversation,
-                'message' => $this->message,
+                'chatMessage' => $this->chatMessage,
                 'businessName' => config('app.name'),
-                'agentName' => $this->message->agent?->name,
+                'agentName' => $this->chatMessage->agent?->name,
                 'resumeUrl' => $this->resumeUrl(),
             ],
         );

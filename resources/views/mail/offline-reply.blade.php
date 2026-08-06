@@ -14,10 +14,10 @@
 
         <div style="border:1px solid #f3f4f6; border-radius:12px; padding:14px 16px; background:#f9fafb;">
             <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">
-                {{ $agentName ?: $businessName }} · {{ $message->created_at?->format('d-m-Y H:i') }}
+                {{ $agentName ?: $businessName }} · {{ $chatMessage->created_at?->format('d-m-Y H:i') }}
             </div>
             <div style="font-size:15px; line-height:1.5; color:#1f2937;">
-                {!! nl2br(e($message->content)) !!}
+                {!! nl2br(e($chatMessage->content)) !!}
             </div>
         </div>
 

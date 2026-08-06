@@ -34,6 +34,10 @@ return new class () extends Migration {
             $table->unsignedSmallInteger('max_tokens')->default(1536);
             $table->string('guardrail_mode')->default('standard'); // standard|strict
             $table->json('enabled_tools')->nullable();
+            // Ook hier, en niet alleen in add_abilities_to_chat_agents_table:
+            // Laravel sorteert migraties alfabetisch, dus die add-migratie draait
+            // vóór deze create en valt stil op zijn hasTable-guard.
+            $table->json('abilities')->nullable();
             $table->timestamps();
         });
     }
