@@ -58,7 +58,7 @@ class ChatQuickReplyResource extends Resource
             TextInput::make('shortcut')
                 ->label(__('Shortcut'))
                 ->nullable()
-                ->prefix(__('/'))
+                ->prefix('/')
                 ->helperText(__('Typ /shortcut in de reply-box om dit antwoord direct in te voegen.')),
 
             Select::make('owner_id')
