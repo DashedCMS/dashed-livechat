@@ -41,12 +41,20 @@ class ReplySuggester
         $agent = $conversation->aiAgent;
         $system = 'Je bent een medewerker van de klantenservice. Stel een kort, vriendelijk en concreet concept-antwoord in het Nederlands voor op het laatste bericht van de klant, dat de medewerker kan versturen. Geef alleen het antwoord zelf, zonder inleiding of uitleg.';
 
-        $response = LivechatAi::requireClaude()->messages($messages, [
+        $options = [
             'system' => $system,
-            'model' => $agent?->model,
             'temperature' => 0.4,
             'max_tokens' => 400,
-        ]);
+        ];
+
+        // Alleen een expliciet model meesturen als het gesprek een AI-agent heeft;
+        // anders valt de provider terug op zijn eigen default (net als de
+        // translate-endpoint). Een null-model overschrijven brak de AI-call.
+        if ($agent?->model) {
+            $options['model'] = $agent->model;
+        }
+
+        $response = LivechatAi::requireClaude()->messages($messages, $options);
 
         $draft = collect($response['content'] ?? [])
             ->where('type', 'text')
