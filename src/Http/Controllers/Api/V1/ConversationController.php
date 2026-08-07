@@ -142,7 +142,14 @@ class ConversationController extends Controller
         try {
             $suggestion = \Dashed\DashedLivechat\Support\ReplySuggester::suggest($model);
         } catch (\Throwable $e) {
-            return response()->json(['message' => 'Kon geen suggestie ophalen: ' . $e->getMessage()], 502);
+            // Log de echte oorzaak naar de error-tracker/laravel.log; de app toont
+            // alleen een generieke 502 dus zonder dit is de fout onzichtbaar.
+            report($e);
+
+            return response()->json([
+                'message' => 'Kon geen suggestie ophalen: ' . $e->getMessage(),
+                'exception' => class_basename($e),
+            ], 502);
         }
 
         return response()->json(['suggestion' => $suggestion]);
