@@ -38,6 +38,19 @@ class ReplySuggester
             return '';
         }
 
+        // Zorg dat de reeks op een user-turn eindigt. Eindigt het gesprek op een
+        // assistant-bericht (de AI/agent was laatste aan het woord), dan zou Claude
+        // dat bericht "prefillen"/voortzetten i.p.v. een nieuw concept schrijven.
+        // Een expliciete instructie-turn dwingt een nieuw antwoord af en is meteen
+        // de veiligst ondersteunde payload-vorm.
+        $instruction = 'Schrijf op basis van het gesprek hierboven een kort, vriendelijk en concreet concept-antwoord dat de medewerker naar de klant kan sturen. Geef alleen het antwoord zelf, zonder inleiding of uitleg.';
+        $lastIndex = count($messages) - 1;
+        if ($messages[$lastIndex]['role'] === 'user') {
+            $messages[$lastIndex]['content'] .= "\n\n" . $instruction;
+        } else {
+            $messages[] = ['role' => 'user', 'content' => $instruction];
+        }
+
         $agent = $conversation->aiAgent;
         $system = 'Je bent een medewerker van de klantenservice. Stel een kort, vriendelijk en concreet concept-antwoord in het Nederlands voor op het laatste bericht van de klant, dat de medewerker kan versturen. Geef alleen het antwoord zelf, zonder inleiding of uitleg.';
 
