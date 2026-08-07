@@ -124,7 +124,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
         $cms = cms();
 
         if (method_exists($cms, 'registerNavigationGroup')) {
-            $cms->registerNavigationGroup('Chat', 26);
+            $cms->registerNavigationGroup('Chat', 25);
         }
 
         $cms->builder('plugins', [
