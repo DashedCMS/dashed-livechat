@@ -32,10 +32,19 @@ class ChatQueue
             return 0;
         }
 
+        // Alleen gesprekken waar nog NIET op gereageerd is tellen mee: de bezoeker
+        // was als laatste aan het woord. Een gesprek waar de agent al reageerde (of
+        // dit gesprek zelf) staat niet meer in de rij, ook al blijft de mode
+        // 'waiting_human' tot het wordt vrijgegeven/gesloten.
+        if ($conversation->last_message_role !== 'visitor') {
+            return 0;
+        }
+
         $ahead = ChatConversation::query()
             ->where('site_id', $conversation->site_id)
             ->where('mode', 'waiting_human')
             ->whereNull('assigned_agent_id')
+            ->where('last_message_role', 'visitor')
             ->where('id', '!=', $conversation->id)
             ->where(function ($q) use ($conversation): void {
                 // Ouder (eerder aangemaakt) staat voor je; bij gelijke tijd op id.

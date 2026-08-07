@@ -6,7 +6,7 @@ use Dashed\DashedLivechat\Services\ChatQueue;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\OpeningHoursService;
 
-function waitingConversation(string $site = 'main', ?int $assigned = null): ChatConversation
+function waitingConversation(string $site = 'main', ?int $assigned = null, string $lastRole = 'visitor'): ChatConversation
 {
     return ChatConversation::create([
         'site_id' => $site,
@@ -14,6 +14,7 @@ function waitingConversation(string $site = 'main', ?int $assigned = null): Chat
         'status' => 'active',
         'mode' => 'waiting_human',
         'assigned_agent_id' => $assigned,
+        'last_message_role' => $lastRole,
     ]);
 }
 
@@ -44,6 +45,17 @@ it('geeft positie 0 voor een toegewezen of niet-wachtend gesprek', function () {
     $q = queue();
     expect($q->positionOf($assigned))->toBe(0)
         ->and($q->positionOf($ai))->toBe(0);
+});
+
+it('telt alleen gesprekken waar nog niet op gereageerd is', function () {
+    // Een ouder gesprek waar de agent al reageerde (last_message_role != visitor)
+    // hoort NIET meer in de rij en telt ook niet mee voor de positie van anderen.
+    $responded = waitingConversation('main', null, 'human');
+    $waiting = waitingConversation('main', null, 'visitor');
+
+    $q = queue();
+    expect($q->positionOf($responded))->toBe(0)      // al gereageerd → niet in de rij
+        ->and($q->positionOf($waiting))->toBe(1);    // niet '2': het beantwoorde telt niet mee
 });
 
 it('schat de wachttijd als positie × afhandeltijd binnen kantooruren', function () {
