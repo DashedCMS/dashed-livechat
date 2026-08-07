@@ -264,7 +264,11 @@
             <div style="padding: 8px 12px; border-bottom: 1px solid #eee; background:#fff7ed; color:#9a3412; font-size:12px; text-align:center;">
                 @if(($queuePosition ?? 0) > 0)
                     @if($withinHours ?? true)
-                        Je bent nummer <strong>{{ $queuePosition }}</strong> in de wachtrij@if(($queueWaitMinutes ?? null) !== null) — geschatte wachttijd ± <strong>{{ $queueWaitMinutes }}</strong> min@endif.
+                        {{-- Let op: een @directive die direct achter een woord plakt (bv. "wachtrij@if")
+                             wordt door Blade NIET herkend (negatieve lookbehind op \w) en verschijnt
+                             letterlijk. Daarom de wachttijd vooraf opbouwen i.p.v. een inline @if. --}}
+                        @php($waitSuffix = ($queueWaitMinutes ?? null) !== null ? ' — geschatte wachttijd ± <strong>'.e($queueWaitMinutes).'</strong> min' : '')
+                        Je bent nummer <strong>{{ $queuePosition }}</strong> in de wachtrij{!! $waitSuffix !!}.
                         Je kunt ondertussen gewoon verder typen.
                     @else
                         We zijn nu buiten kantooruren. Je vraag staat klaar; we reageren zodra we er weer zijn, of per e-mail als je die achterlaat.
