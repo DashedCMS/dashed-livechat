@@ -68,7 +68,7 @@ class ViewChatConversation extends Page
         $this->conversation->forceFill(['status' => $value])->save();
         Notification::make()
             ->success()
-            ->title($value === 'closed' ? 'Gesprek afgerond' : 'Gesprek heractiveerd')
+            ->title($value === 'closed' ? __('Gesprek afgerond') : __('Gesprek heractiveerd'))
             ->send();
     }
 
@@ -77,7 +77,7 @@ class ViewChatConversation extends Page
         return [
             // Afronden/heropenen gebeurt nu via de Status-keuzelijst in de toolbar.
             Action::make('delete')
-                ->label('Verwijderen')
+                ->label(__('Verwijderen'))
                 ->icon('heroicon-o-trash')
                 ->color('danger')
                 ->requiresConfirmation()
@@ -128,7 +128,7 @@ class ViewChatConversation extends Page
             $manager->addHumanMessage($this->conversation, $agent, $text, $this->replyAttachments);
         } catch (\Throwable $e) {
             report($e);
-            Notification::make()->title('Versturen mislukt')->body($e->getMessage())->danger()->send();
+            Notification::make()->title(__('Versturen mislukt'))->body($e->getMessage())->danger()->send();
 
             return;
         }
@@ -220,7 +220,7 @@ class ViewChatConversation extends Page
         }
 
         $this->refreshRecord();
-        Notification::make()->title('Feedback opgeslagen')->success()->send();
+        Notification::make()->title(__('Feedback opgeslagen'))->success()->send();
     }
 
     public function learnFromMessage(int $messageId): void
@@ -256,7 +256,7 @@ class ViewChatConversation extends Page
         ]);
 
         Notification::make()
-            ->title('Toegevoegd aan wat de bot leert. Pas het antwoord eventueel aan bij Chat -> Geleerd.')
+            ->title(__('Toegevoegd aan wat de bot leert. Pas het antwoord eventueel aan bij Chat -> Geleerd.'))
             ->success()
             ->send();
     }
@@ -416,7 +416,7 @@ class ViewChatConversation extends Page
         ]);
 
         $this->noteBody = '';
-        Notification::make()->title('Notitie opgeslagen')->success()->send();
+        Notification::make()->title(__('Notitie opgeslagen'))->success()->send();
     }
 
     /** Alle tags van de actieve site (voor de tag-badges op het gesprek). */
@@ -459,7 +459,7 @@ class ViewChatConversation extends Page
         } catch (\Throwable $e) {
             report($e);
             Notification::make()
-                ->title('Kon geen suggestie ophalen')
+                ->title(__('Kon geen suggestie ophalen'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
@@ -468,13 +468,13 @@ class ViewChatConversation extends Page
         }
 
         if ($draft === '') {
-            Notification::make()->title('Geen suggestie ontvangen')->warning()->send();
+            Notification::make()->title(__('Geen suggestie ontvangen'))->warning()->send();
 
             return;
         }
 
         $this->reply = $draft;
-        Notification::make()->title('Concept-antwoord ingevuld')->success()->send();
+        Notification::make()->title(__('Concept-antwoord ingevuld'))->success()->send();
     }
 
     protected function refreshRecord(): void

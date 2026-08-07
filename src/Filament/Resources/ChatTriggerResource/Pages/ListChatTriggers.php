@@ -24,7 +24,7 @@ class ListChatTriggers extends ListRecords
     {
         return [
             Action::make('suggestTriggers')
-                ->label('AI-voorstellen')
+                ->label(__('AI-voorstellen'))
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
                 ->form(function (): array {
@@ -53,41 +53,41 @@ class ListChatTriggers extends ListRecords
 
                     return [
                         Repeater::make('voorstellen')
-                            ->label('Trigger-voorstellen')
-                            ->helperText('Vink "Toevoegen" aan om een voorstel op te nemen. Pas de velden naar wens aan.')
+                            ->label(__('Trigger-voorstellen'))
+                            ->helperText(__('Vink "Toevoegen" aan om een voorstel op te nemen. Pas de velden naar wens aan.'))
                             ->default($suggestions)
                             ->schema([
                                 Toggle::make('toevoegen')
-                                    ->label('Toevoegen')
+                                    ->label(__('Toevoegen'))
                                     ->default(true)
                                     ->columnSpanFull(),
                                 TextInput::make('name')
-                                    ->label('Naam')
+                                    ->label(__('Naam'))
                                     ->required(),
                                 Select::make('placement')
-                                    ->label('Plaatsing')
+                                    ->label(__('Plaatsing'))
                                     ->options([
-                                        'all_pages' => 'Alle pagina\'s',
-                                        'include_urls' => 'Specifieke URL\'s',
-                                        'url_pattern' => 'URL-patroon',
+                                        'all_pages' => __('Alle pagina\'s'),
+                                        'include_urls' => __('Specifieke URL\'s'),
+                                        'url_pattern' => __('URL-patroon'),
                                     ])
                                     ->default('all_pages'),
                                 Select::make('trigger_type')
-                                    ->label('Trigger-type')
+                                    ->label(__('Trigger-type'))
                                     ->options([
-                                        'none' => 'Geen',
-                                        'immediate' => 'Direct',
-                                        'time_on_page' => 'Tijd op pagina',
-                                        'scroll_depth' => 'Scroll-diepte',
-                                        'exit_intent' => 'Vertrekintentie',
+                                        'none' => __('Geen'),
+                                        'immediate' => __('Direct'),
+                                        'time_on_page' => __('Tijd op pagina'),
+                                        'scroll_depth' => __('Scroll-diepte'),
+                                        'exit_intent' => __('Vertrekintentie'),
                                     ])
                                     ->default('none'),
                                 TextInput::make('trigger_value')
-                                    ->label('Triggerwaarde')
+                                    ->label(__('Triggerwaarde'))
                                     ->numeric()
                                     ->nullable(),
                                 Textarea::make('proactive_message')
-                                    ->label('Proactief bericht')
+                                    ->label(__('Proactief bericht'))
                                     ->rows(2)
                                     ->columnSpanFull(),
                             ])
@@ -124,11 +124,11 @@ class ListChatTriggers extends ListRecords
 
                     Notification::make()
                         ->title($count > 0
-                            ? "{$count} trigger(s) toegevoegd"
-                            : 'Geen triggers toegevoegd')
+                            ? __(':aantal trigger(s) toegevoegd', ['aantal' => $count])
+                            : __('Geen triggers toegevoegd'))
                         ->body($count > 0
-                            ? 'De geselecteerde triggers zijn opgeslagen.'
-                            : 'Selecteer minimaal een voorstel om toe te voegen.')
+                            ? __('De geselecteerde triggers zijn opgeslagen.')
+                            : __('Selecteer minimaal een voorstel om toe te voegen.'))
                         ->success()
                         ->send();
                 }),

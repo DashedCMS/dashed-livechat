@@ -84,12 +84,12 @@ class ConversationManager
             try {
                 $body = Str::limit(trim($content), 120);
                 if ($body === '') {
-                    $body = ! empty($attachmentIds) ? '📷 Afbeelding' : 'Nieuw bericht in de chat';
+                    $body = ! empty($attachmentIds) ? __('📷 Afbeelding') : __('Nieuw bericht in de chat');
                 }
                 app($center)->push()
                     ->type('chat.message')
                     ->site((string) $c->site_id)
-                    ->title($c->visitor_name ?: 'Nieuw chatbericht')
+                    ->title($c->visitor_name ?: __('Nieuw chatbericht'))
                     ->body($body)
                     ->route("/conversation/{$c->id}")
                     ->data(['type' => 'conversation', 'id' => $c->id])

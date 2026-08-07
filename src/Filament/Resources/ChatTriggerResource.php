@@ -48,50 +48,50 @@ class ChatTriggerResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Algemeen')->columnSpanFull()
+            Section::make(__('Algemeen'))->columnSpanFull()
                 ->schema([
                     TextInput::make('name')
-                        ->label('Naam')
+                        ->label(__('Naam'))
                         ->required(),
                     Toggle::make('is_active')
-                        ->label('Actief')
+                        ->label(__('Actief'))
                         ->default(true),
                     TextInput::make('sort_order')
-                        ->label('Volgorde')
+                        ->label(__('Volgorde'))
                         ->numeric()
                         ->default(0),
                 ])
                 ->columns(2),
 
-            Section::make('Plaatsing')->columnSpanFull()
+            Section::make(__('Plaatsing'))->columnSpanFull()
                 ->schema([
                     Select::make('placement')
-                        ->label('Plaatsing')
+                        ->label(__('Plaatsing'))
                         ->options([
-                            'all_pages' => 'Alle pagina\'s',
-                            'include_urls' => 'Specifieke URL\'s',
-                            'url_pattern' => 'URL-patroon',
-                            'models' => 'Specifieke modellen',
+                            'all_pages' => __('Alle pagina\'s'),
+                            'include_urls' => __('Specifieke URL\'s'),
+                            'url_pattern' => __('URL-patroon'),
+                            'models' => __('Specifieke modellen'),
                         ])
                         ->default('all_pages')
                         ->live()
                         ->required(),
                     TagsInput::make('url_rules')
-                        ->label('URL-regels')
-                        ->helperText('Voer de URL\'s of patronen in die van toepassing zijn.')
+                        ->label(__('URL-regels'))
+                        ->helperText(__('Voer de URL\'s of patronen in die van toepassing zijn.'))
                         ->visible(fn (Get $get) => in_array($get('placement'), ['include_urls', 'url_pattern'], true)),
                     Repeater::make('model_links')
-                        ->label('Gekoppelde modellen')
-                        ->helperText('Selecteer de specifieke modellen waarop deze trigger actief is.')
+                        ->label(__('Gekoppelde modellen'))
+                        ->helperText(__('Selecteer de specifieke modellen waarop deze trigger actief is.'))
                         ->schema([
                             Select::make('type')
-                                ->label('Type')
+                                ->label(__('Type'))
                                 ->options(self::routeModelOptions())
                                 ->required()
                                 ->live()
                                 ->afterStateUpdated(fn (callable $set) => $set('id', null)),
                             Select::make('id')
-                                ->label('Model')
+                                ->label(__('Model'))
                                 ->searchable()
                                 ->required()
                                 ->getSearchResultsUsing(function (string $search, callable $get) {
@@ -128,27 +128,27 @@ class ChatTriggerResource extends Resource
                         ->columnSpanFull()
                         ->visible(fn (Get $get) => $get('placement') === 'models'),
                     TagsInput::make('exclude_urls')
-                        ->label('Uitgesloten URL\'s')
-                        ->helperText('URL\'s waarop deze trigger niet actief is.'),
+                        ->label(__('Uitgesloten URL\'s'))
+                        ->helperText(__('URL\'s waarop deze trigger niet actief is.')),
                 ])
                 ->columns(2),
 
-            Section::make('Trigger')->columnSpanFull()
+            Section::make(__('Trigger'))->columnSpanFull()
                 ->schema([
                     Select::make('trigger_type')
-                        ->label('Trigger-type')
+                        ->label(__('Trigger-type'))
                         ->options([
-                            'none' => 'Geen',
-                            'immediate' => 'Direct',
-                            'time_on_page' => 'Tijd op pagina',
-                            'scroll_depth' => 'Scroll-diepte',
-                            'exit_intent' => 'Vertrekintentie',
+                            'none' => __('Geen'),
+                            'immediate' => __('Direct'),
+                            'time_on_page' => __('Tijd op pagina'),
+                            'scroll_depth' => __('Scroll-diepte'),
+                            'exit_intent' => __('Vertrekintentie'),
                         ])
                         ->default('none')
                         ->live()
                         ->required(),
                     TextInput::make('trigger_value')
-                        ->label('Triggerwaarde')
+                        ->label(__('Triggerwaarde'))
                         ->numeric()
                         ->suffix(fn (Get $get) => match ($get('trigger_type')) {
                             'time_on_page' => 'sec',
@@ -157,17 +157,17 @@ class ChatTriggerResource extends Resource
                         })
                         ->visible(fn (Get $get) => in_array($get('trigger_type'), ['time_on_page', 'scroll_depth'])),
                     TextInput::make('min_page_views')
-                        ->label('Pas tonen vanaf paginaweergave')
-                        ->helperText('Optioneel: toon dit proactieve bericht pas vanaf de N-de paginaweergave van de bezoeker in deze browser. Leeg = direct.')
+                        ->label(__('Pas tonen vanaf paginaweergave'))
+                        ->helperText(__('Optioneel: toon dit proactieve bericht pas vanaf de N-de paginaweergave van de bezoeker in deze browser. Leeg = direct.'))
                         ->numeric()
                         ->minValue(1)
                         ->nullable(),
                     Textarea::make('proactive_message')
-                        ->label('Proactief bericht')
+                        ->label(__('Proactief bericht'))
                         ->rows(3)
                         ->columnSpanFull(),
                     Select::make('ai_agent_id')
-                        ->label('AI-medewerker')
+                        ->label(__('AI-medewerker'))
                         ->options(ChatAgent::where('type', 'ai')->pluck('name', 'id')->toArray())
                         ->nullable()
                         ->searchable(),
@@ -181,11 +181,11 @@ class ChatTriggerResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('placement')
-                    ->label('Plaatsing')
+                    ->label(__('Plaatsing'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'all_pages' => 'Alle pagina\'s',
@@ -194,7 +194,7 @@ class ChatTriggerResource extends Resource
                         default => $state,
                     }),
                 TextColumn::make('trigger_type')
-                    ->label('Trigger-type')
+                    ->label(__('Trigger-type'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'none' => 'Geen',
@@ -205,7 +205,7 @@ class ChatTriggerResource extends Resource
                         default => $state,
                     }),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean(),
             ])
             ->defaultSort('sort_order')

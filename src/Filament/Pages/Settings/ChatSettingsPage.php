@@ -66,71 +66,71 @@ class ChatSettingsPage extends Page implements HasSchemas
                 ->label(ucfirst($site['name']))
                 ->schema([
                     Toggle::make("chat_enabled_{$site['id']}")
-                        ->label('Chat ingeschakeld'),
+                        ->label(__('Chat ingeschakeld')),
                     ColorPicker::make("chat_primary_color_{$site['id']}")
-                        ->label('Primaire kleur'),
+                        ->label(__('Primaire kleur')),
                     ColorPicker::make("chat_on_primary_color_{$site['id']}")
-                        ->label('Tekst op primair'),
+                        ->label(__('Tekst op primair')),
                     TextInput::make("chat_radius_{$site['id']}")
-                        ->label('Hoekradius (px)')
+                        ->label(__('Hoekradius (px)'))
                         ->numeric(),
                     Select::make("chat_position_{$site['id']}")
-                        ->label('Positie')
-                        ->options(['right' => 'Rechtsonder', 'left' => 'Linksonder']),
+                        ->label(__('Positie'))
+                        ->options(['right' => __('Rechtsonder'), 'left' => __('Linksonder')]),
                     TextInput::make("chat_offset_{$site['id']}")
-                        ->label('Marge (px)')
+                        ->label(__('Marge (px)'))
                         ->numeric(),
                     TextInput::make("chat_title_{$site['id']}")
-                        ->label('Titel'),
+                        ->label(__('Titel')),
                     Textarea::make("chat_greeting_{$site['id']}")
-                        ->label('Begroeting'),
+                        ->label(__('Begroeting')),
                     mediaHelper()->field("chat_avatar_url_{$site['id']}", 'Avatar', isImage: true),
                     Select::make("chat_out_of_hours_behavior_{$site['id']}")
-                        ->label('Buiten openingstijden')
+                        ->label(__('Buiten openingstijden'))
                         ->options([
-                            'ai_only' => 'Alleen AI',
-                            'contact_form' => 'Contactformulier',
-                            'callback' => 'Terugbelverzoek',
-                            'accept_delayed' => 'Chats blijven ontvangen (met melding langere reactietijd)',
+                            'ai_only' => __('Alleen AI'),
+                            'contact_form' => __('Contactformulier'),
+                            'callback' => __('Terugbelverzoek'),
+                            'accept_delayed' => __('Chats blijven ontvangen (met melding langere reactietijd)'),
                         ])
                         ->default('ai_only'),
                     Textarea::make("chat_delay_notice_{$site['id']}")
-                        ->label('Melding buiten openingstijden')
-                        ->helperText('Getoond in de chat wanneer er buiten openingstijden toch gechat kan worden ("Chats blijven ontvangen"). Vermeld bijvoorbeeld dat een reactie langer kan duren.')
+                        ->label(__('Melding buiten openingstijden'))
+                        ->helperText(__('Getoond in de chat wanneer er buiten openingstijden toch gechat kan worden ("Chats blijven ontvangen"). Vermeld bijvoorbeeld dat een reactie langer kan duren.'))
                         ->rows(2),
                     Select::make("chat_search_driver_{$site['id']}")
-                        ->label('Zoekstrategie')
+                        ->label(__('Zoekstrategie'))
                         ->options([
-                            'fulltext' => 'Zoeken op tekst (LIKE)',
-                            'embedding' => 'Semantisch (embeddings)',
+                            'fulltext' => __('Zoeken op tekst (LIKE)'),
+                            'embedding' => __('Semantisch (embeddings)'),
                         ])
                         ->default('fulltext'),
                     TextInput::make("chat_contact_phone_{$site['id']}")
-                        ->label('Snelcontact telefoonnummer')
+                        ->label(__('Snelcontact telefoonnummer'))
                         ->tel()
-                        ->helperText('Telefoonnummer voor snelcontact in de chat. Leeg = bedrijfsnummer gebruiken.'),
+                        ->helperText(__('Telefoonnummer voor snelcontact in de chat. Leeg = bedrijfsnummer gebruiken.')),
                     TextInput::make("chat_contact_email_{$site['id']}")
-                        ->label('Snelcontact e-mailadres')
+                        ->label(__('Snelcontact e-mailadres'))
                         ->email()
-                        ->helperText('E-mailadres voor snelcontact in de chat. Leeg = standaard site-e-mail gebruiken.'),
+                        ->helperText(__('E-mailadres voor snelcontact in de chat. Leeg = standaard site-e-mail gebruiken.')),
                     Toggle::make("chat_handoff_notifications_{$site['id']}")
-                        ->label('E-mail bij doorverbinden naar medewerker')
-                        ->helperText('Ontvang een e-mail wanneer een bezoeker om een medewerker vraagt.')
+                        ->label(__('E-mail bij doorverbinden naar medewerker'))
+                        ->helperText(__('Ontvang een e-mail wanneer een bezoeker om een medewerker vraagt.'))
                         ->default(true),
                     Select::make("chat_new_message_indicator_{$site['id']}")
-                        ->label('Melding bij nieuw bericht (chat gesloten)')
+                        ->label(__('Melding bij nieuw bericht (chat gesloten)'))
                         ->options([
-                            'badge' => 'Groen bolletje met aantal',
-                            'preview' => 'Voorbeeld van het bericht boven het icoon',
+                            'badge' => __('Groen bolletje met aantal'),
+                            'preview' => __('Voorbeeld van het bericht boven het icoon'),
                         ])
                         ->default('badge'),
                     Toggle::make("chat_cart_nudge_{$site['id']}")
-                        ->label('Proactieve mandje-nudge')
-                        ->helperText('Spreek bezoekers met producten in hun mandje proactief aan (max 1x per uur per bezoeker).')
+                        ->label(__('Proactieve mandje-nudge'))
+                        ->helperText(__('Spreek bezoekers met producten in hun mandje proactief aan (max 1x per uur per bezoeker).'))
                         ->default(false),
                     TextInput::make("chat_cart_nudge_message_{$site['id']}")
-                        ->label('Tekst van de mandje-nudge')
-                        ->placeholder('Kan ik je ergens mee helpen met je bestelling? 🛒'),
+                        ->label(__('Tekst van de mandje-nudge'))
+                        ->placeholder(__('Kan ik je ergens mee helpen met je bestelling? 🛒')),
                 ])
                 ->columns(['default' => 1, 'lg' => 2]);
         }
@@ -165,7 +165,7 @@ class ChatSettingsPage extends Page implements HasSchemas
         }
 
         Notification::make()
-            ->title('De chat-instellingen zijn opgeslagen')
+            ->title(__('De chat-instellingen zijn opgeslagen'))
             ->success()
             ->send();
 

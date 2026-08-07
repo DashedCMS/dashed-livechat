@@ -24,7 +24,7 @@ class CreateChatAgent extends CreateRecord
     {
         return [
             Action::make('vulMetAi')
-                ->label('Vul met AI')
+                ->label(__('Vul met AI'))
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
                 ->action(function (): void {
@@ -34,7 +34,7 @@ class CreateChatAgent extends CreateRecord
                         $suggestion = app(AgentConfigSuggestionService::class)->suggest((string) $siteId);
                     } catch (\Throwable $e) {
                         Notification::make()
-                            ->title('AI-suggestie mislukt')
+                            ->title(__('AI-suggestie mislukt'))
                             ->body($e->getMessage())
                             ->danger()
                             ->send();
@@ -53,8 +53,8 @@ class CreateChatAgent extends CreateRecord
                     $this->form->fill($this->data);
 
                     Notification::make()
-                        ->title('AI-suggestie geladen')
-                        ->body('De gedragsvelden zijn ingevuld. Controleer en pas aan naar wens.')
+                        ->title(__('AI-suggestie geladen'))
+                        ->body(__('De gedragsvelden zijn ingevuld. Controleer en pas aan naar wens.'))
                         ->success()
                         ->send();
                 }),

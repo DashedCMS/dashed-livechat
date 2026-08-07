@@ -40,35 +40,35 @@ class ChatOpeningHourResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Openingstijd')->columnSpanFull()
+            Section::make(__('Openingstijd'))->columnSpanFull()
                 ->schema([
                     Select::make('day_of_week')
-                        ->label('Dag van de week')
+                        ->label(__('Dag van de week'))
                         ->options([
-                            0 => 'Zondag',
-                            1 => 'Maandag',
-                            2 => 'Dinsdag',
-                            3 => 'Woensdag',
-                            4 => 'Donderdag',
-                            5 => 'Vrijdag',
-                            6 => 'Zaterdag',
+                            0 => __('Zondag'),
+                            1 => __('Maandag'),
+                            2 => __('Dinsdag'),
+                            3 => __('Woensdag'),
+                            4 => __('Donderdag'),
+                            5 => __('Vrijdag'),
+                            6 => __('Zaterdag'),
                         ])
                         ->nullable(),
                     DatePicker::make('date')
-                        ->label('Datum (uitzondering)')
+                        ->label(__('Datum (uitzondering)'))
                         ->nullable(),
                     Toggle::make('is_closed')
-                        ->label('Gesloten'),
+                        ->label(__('Gesloten')),
                     TimePicker::make('opens_at')
-                        ->label('Opent om')
+                        ->label(__('Opent om'))
                         ->seconds(false)
                         ->nullable(),
                     TimePicker::make('closes_at')
-                        ->label('Sluit om')
+                        ->label(__('Sluit om'))
                         ->seconds(false)
                         ->nullable(),
                     TextInput::make('label')
-                        ->label('Label')
+                        ->label(__('Label'))
                         ->nullable(),
                 ])
                 ->columns(2),
@@ -80,7 +80,7 @@ class ChatOpeningHourResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('day_of_week')
-                    ->label('Dag / Datum')
+                    ->label(__('Dag / Datum'))
                     ->formatStateUsing(function ($record) {
                         if ($record->date) {
                             return $record->date->format('d-m-Y');
@@ -99,11 +99,11 @@ class ChatOpeningHourResource extends Resource
                         return $days[$record->day_of_week] ?? '-';
                     }),
                 TextColumn::make('opens_at')
-                    ->label('Opent om'),
+                    ->label(__('Opent om')),
                 TextColumn::make('closes_at')
-                    ->label('Sluit om'),
+                    ->label(__('Sluit om')),
                 IconColumn::make('is_closed')
-                    ->label('Gesloten')
+                    ->label(__('Gesloten'))
                     ->boolean(),
             ])
             ->defaultSort('day_of_week');

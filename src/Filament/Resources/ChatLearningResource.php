@@ -38,32 +38,32 @@ class ChatLearningResource extends Resource
     {
         return $schema->schema([
             Textarea::make('question')
-                ->label('Vraag / aanleiding')
+                ->label(__('Vraag / aanleiding'))
                 ->rows(3)
                 ->columnSpanFull()
-                ->helperText('De vraag of aanleiding voor dit leervoorbeeld.'),
+                ->helperText(__('De vraag of aanleiding voor dit leervoorbeeld.')),
 
             Textarea::make('answer')
-                ->label('Gewenst antwoord')
+                ->label(__('Gewenst antwoord'))
                 ->rows(5)
                 ->columnSpanFull()
                 ->required()
-                ->helperText('Het antwoord dat de bot voortaan moet geven.'),
+                ->helperText(__('Het antwoord dat de bot voortaan moet geven.')),
 
             Select::make('source')
-                ->label('Bron')
+                ->label(__('Bron'))
                 ->options([
-                    'feedback' => 'Feedback (slecht AI-antwoord)',
-                    'human' => 'Mens (menselijk antwoord)',
-                    'ai' => 'AI (goed AI-antwoord)',
+                    'feedback' => __('Feedback (slecht AI-antwoord)'),
+                    'human' => __('Mens (menselijk antwoord)'),
+                    'ai' => __('AI (goed AI-antwoord)'),
                 ])
                 ->default('feedback')
                 ->required(),
 
             Toggle::make('is_active')
-                ->label('Actief')
+                ->label(__('Actief'))
                 ->default(true)
-                ->helperText('Alleen actieve voorbeelden worden aan de bot meegegeven.'),
+                ->helperText(__('Alleen actieve voorbeelden worden aan de bot meegegeven.')),
         ]);
     }
 
@@ -72,15 +72,15 @@ class ChatLearningResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('question')
-                    ->label('Vraag')
+                    ->label(__('Vraag'))
                     ->limit(60)
                     ->searchable(),
                 TextColumn::make('answer')
-                    ->label('Antwoord')
+                    ->label(__('Antwoord'))
                     ->limit(80)
                     ->searchable(),
                 TextColumn::make('source')
-                    ->label('Bron')
+                    ->label(__('Bron'))
                     ->badge()
                     ->color(fn (string $state) => match ($state) {
                         'feedback' => 'danger',
@@ -89,10 +89,10 @@ class ChatLearningResource extends Resource
                         default => 'gray',
                     }),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean(),
                 TextColumn::make('created_at')
-                    ->label('Aangemaakt')
+                    ->label(__('Aangemaakt'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
             ])

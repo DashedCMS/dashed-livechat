@@ -93,8 +93,8 @@ class HandoffService
         if (class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
             app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
                 ->type('chat.handoff')
-                ->title('Nieuwe chat')
-                ->body(($c->visitor_name ?: 'Een bezoeker') . ' wacht op een medewerker')
+                ->title(__('Nieuwe chat'))
+                ->body(__(':naam wacht op een medewerker', ['naam' => $c->visitor_name ?: __('Een bezoeker')]))
                 ->route("/conversation/{$c->id}")
                 ->data(['type' => 'conversation', 'id' => $c->id])
                 ->category('chat_handoff')

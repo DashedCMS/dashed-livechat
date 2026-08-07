@@ -52,17 +52,17 @@ class ChatAgentResource extends Resource
         );
 
         return $schema->schema([
-            Section::make('Algemeen')->columnSpanFull()
+            Section::make(__('Algemeen'))->columnSpanFull()
                 ->schema([
                     Select::make('type')
-                        ->label('Type')
-                        ->options(['ai' => 'AI', 'human' => 'Mens'])
+                        ->label(__('Type'))
+                        ->options(['ai' => __('AI'), 'human' => __('Mens')])
                         ->default('ai')
                         ->live()
                         ->required()
-                        ->helperText('AI = chatbot. Mens = medewerker die gesprekken kan overnemen.'),
+                        ->helperText(__('AI = chatbot. Mens = medewerker die gesprekken kan overnemen.')),
                     Select::make('user_id')
-                        ->label('Gekoppelde gebruiker')
+                        ->label(__('Gekoppelde gebruiker'))
                         ->options(
                             User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->get()
                                 ->mapWithKeys(fn ($u) => [$u->id => $u->name ?: ($u->email ?: 'Gebruiker #' . $u->id)])
@@ -71,102 +71,102 @@ class ChatAgentResource extends Resource
                         ->searchable()
                         ->visible(fn (Get $get) => $get('type') === 'human')
                         ->required(fn (Get $get) => $get('type') === 'human')
-                        ->helperText('De medewerker (admin of superadmin) die deze gesprekken voert. Naam en e-mail komen automatisch van deze gebruiker.'),
+                        ->helperText(__('De medewerker (admin of superadmin) die deze gesprekken voert. Naam en e-mail komen automatisch van deze gebruiker.')),
                     TextInput::make('name')
-                        ->label('Naam')
+                        ->label(__('Naam'))
                         ->visible(fn (Get $get) => $get('type') === 'ai')
                         ->required(fn (Get $get) => $get('type') === 'ai')
-                        ->helperText('Naam die de bezoeker in de chat ziet.'),
+                        ->helperText(__('Naam die de bezoeker in de chat ziet.')),
                     Toggle::make('is_active')
-                        ->label('Actief')
+                        ->label(__('Actief'))
                         ->default(true)
-                        ->helperText('Alleen actieve medewerkers worden ingezet.'),
+                        ->helperText(__('Alleen actieve medewerkers worden ingezet.')),
                     Toggle::make('receive_outside_hours')
-                        ->label('Ook buiten openingstijden ontvangen')
+                        ->label(__('Ook buiten openingstijden ontvangen'))
                         ->default(false)
                         ->visible(fn (Get $get) => $get('type') === 'human')
-                        ->helperText('Wanneer aan: deze medewerker krijgt ook buiten de openingstijden chats/handoffs (en notificaties).'),
+                        ->helperText(__('Wanneer aan: deze medewerker krijgt ook buiten de openingstijden chats/handoffs (en notificaties).')),
                     mediaHelper()->field('avatar', 'Profielfoto', isImage: true)
-                        ->helperText('Profielfoto die in de chat wordt getoond.'),
+                        ->helperText(__('Profielfoto die in de chat wordt getoond.')),
                 ])
                 ->columns(2),
 
-            Section::make('AI-instellingen')->columnSpanFull()
+            Section::make(__('AI-instellingen'))->columnSpanFull()
                 ->schema([
                     Textarea::make('persona')
-                        ->label('Persona / Systeem-prompt')
+                        ->label(__('Persona / Systeem-prompt'))
                         ->rows(4)
-                        ->helperText('Korte beschrijving van karakter en rol, bv. "Vriendelijke webshop-assistent".'),
+                        ->helperText(__('Korte beschrijving van karakter en rol, bv. "Vriendelijke webshop-assistent".')),
                     TextInput::make('tone')
-                        ->label('Toon')
-                        ->helperText('Toon van de antwoorden, bv. informeel, zakelijk of behulpzaam.'),
+                        ->label(__('Toon'))
+                        ->helperText(__('Toon van de antwoorden, bv. informeel, zakelijk of behulpzaam.')),
                     Select::make('languages')
-                        ->label('Talen')
+                        ->label(__('Talen'))
                         ->multiple()
                         ->options(Locales::getLocalesArray())
-                        ->helperText('Talen waarin de bot mag antwoorden. Kies uit de in het CMS geactiveerde talen.'),
+                        ->helperText(__('Talen waarin de bot mag antwoorden. Kies uit de in het CMS geactiveerde talen.')),
                     Textarea::make('allowed_topics')
-                        ->label('Toegestane onderwerpen')
-                        ->helperText('Onderwerpen waarover de bot wel mag praten.'),
+                        ->label(__('Toegestane onderwerpen'))
+                        ->helperText(__('Onderwerpen waarover de bot wel mag praten.')),
                     Textarea::make('disallowed_topics')
-                        ->label('Verboden onderwerpen')
-                        ->helperText('Onderwerpen die de bot moet weigeren of doorverwijzen.'),
+                        ->label(__('Verboden onderwerpen'))
+                        ->helperText(__('Onderwerpen die de bot moet weigeren of doorverwijzen.')),
                     Toggle::make('escalate_on_request')
-                        ->label('Escaleer als de bezoeker om een mens vraagt')
+                        ->label(__('Escaleer als de bezoeker om een mens vraagt'))
                         ->default(true),
                     Toggle::make('escalate_on_negative')
-                        ->label('Escaleer bij een boze/ontevreden bezoeker')
+                        ->label(__('Escaleer bij een boze/ontevreden bezoeker'))
                         ->default(true),
                     Toggle::make('escalate_on_tool_failure')
-                        ->label('Escaleer als tools herhaald geen antwoord geven')
+                        ->label(__('Escaleer als tools herhaald geen antwoord geven'))
                         ->default(true),
                     Toggle::make('escalate_off_topic')
-                        ->label('Escaleer bij vragen buiten de onderwerpen')
+                        ->label(__('Escaleer bij vragen buiten de onderwerpen'))
                         ->default(false),
                     Textarea::make('escalation_rules')
-                        ->label('Extra escalatieregels (optioneel)')
-                        ->helperText('Aanvullende gevallen die niet door de knoppen hierboven worden gedekt.'),
+                        ->label(__('Extra escalatieregels (optioneel)'))
+                        ->helperText(__('Aanvullende gevallen die niet door de knoppen hierboven worden gedekt.')),
                     Textarea::make('greeting')
-                        ->label('Begroeting')
-                        ->helperText('Openingsbericht dat de bot als eerste bericht plaatst bij een nieuw gesprek.'),
+                        ->label(__('Begroeting'))
+                        ->helperText(__('Openingsbericht dat de bot als eerste bericht plaatst bij een nieuw gesprek.')),
                     Select::make('model')
-                        ->label('Model')
+                        ->label(__('Model'))
                         ->options([
-                            'claude-sonnet-5' => 'Claude Sonnet 5 (aanbevolen)',
-                            'claude-sonnet-4-6' => 'Claude Sonnet 4.6 (standaard, gebalanceerd)',
-                            'claude-opus-4-8' => 'Claude Opus 4.8 (krachtigst)',
-                            'claude-haiku-4-5-20251001' => 'Claude Haiku 4.5 (snel, goedkoop)',
+                            'claude-sonnet-5' => __('Claude Sonnet 5 (aanbevolen)'),
+                            'claude-sonnet-4-6' => __('Claude Sonnet 4.6 (standaard, gebalanceerd)'),
+                            'claude-opus-4-8' => __('Claude Opus 4.8 (krachtigst)'),
+                            'claude-haiku-4-5-20251001' => __('Claude Haiku 4.5 (snel, goedkoop)'),
                         ])
                         ->default('claude-sonnet-4-6')
-                        ->helperText('Welk Claude-model de bot gebruikt. Sonnet is een goede standaard.'),
+                        ->helperText(__('Welk Claude-model de bot gebruikt. Sonnet is een goede standaard.')),
                     TextInput::make('temperature')
-                        ->label('Temperatuur')
+                        ->label(__('Temperatuur'))
                         ->numeric()
                         ->default(0.5)
-                        ->helperText('Creativiteit: 0 = feitelijk en consistent, 1 = creatiever.'),
+                        ->helperText(__('Creativiteit: 0 = feitelijk en consistent, 1 = creatiever.')),
                     TextInput::make('ai_reply_delay_seconds')
-                        ->label('Reactievertraging (seconden)')
+                        ->label(__('Reactievertraging (seconden)'))
                         ->numeric()
                         ->default(8)
                         ->minValue(0)
-                        ->helperText('Seconden wachten voordat de AI reageert. Binnen dit venster kan een medewerker het overnemen of kan de bezoeker nog typen (de AI antwoordt dan op het hele blok). 0 = direct.'),
+                        ->helperText(__('Seconden wachten voordat de AI reageert. Binnen dit venster kan een medewerker het overnemen of kan de bezoeker nog typen (de AI antwoordt dan op het hele blok). 0 = direct.')),
                     TextInput::make('max_tokens')
-                        ->label('Max. antwoordlengte (tokens)')
+                        ->label(__('Max. antwoordlengte (tokens)'))
                         ->numeric()
                         ->default(1536)
                         ->minValue(256)
-                        ->helperText('Maximale lengte van een AI-antwoord per beurt. Hoger = langere antwoorden mogelijk.'),
+                        ->helperText(__('Maximale lengte van een AI-antwoord per beurt. Hoger = langere antwoorden mogelijk.')),
                     Select::make('guardrail_mode')
-                        ->label('Guardrail-modus')
-                        ->options(['standard' => 'Standaard', 'strict' => 'Streng'])
+                        ->label(__('Guardrail-modus'))
+                        ->options(['standard' => __('Standaard'), 'strict' => __('Streng')])
                         ->default('standard')
-                        ->helperText('Streng voegt een extra controle toe die off-topic vragen harder afvangt (iets duurder).'),
+                        ->helperText(__('Streng voegt een extra controle toe die off-topic vragen harder afvangt (iets duurder).')),
                     CheckboxList::make('enabled_tools')
-                        ->label('Ingeschakelde tools')
+                        ->label(__('Ingeschakelde tools'))
                         ->options($toolOptions)
                         ->columns(2)
                         ->bulkToggleable()
-                        ->helperText('Welke gegevens en acties de bot mag gebruiken om te antwoorden.'),
+                        ->helperText(__('Welke gegevens en acties de bot mag gebruiken om te antwoorden.')),
                 ])
                 ->columns(2)
                 ->visible(fn (Get $get) => $get('type') === 'ai'),
@@ -178,16 +178,16 @@ class ChatAgentResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->badge(),
                 TextColumn::make('site_id')
-                    ->label('Site'),
+                    ->label(__('Site')),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean(),
             ])
             ->defaultSort('name');

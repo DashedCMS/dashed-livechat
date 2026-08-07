@@ -46,43 +46,43 @@ class ChatUnansweredQuestionResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('question')
-                    ->label('Vraag')
+                    ->label(__('Vraag'))
                     ->wrap()
                     ->limit(120)
                     ->searchable(),
                 TextColumn::make('reason')
-                    ->label('Reden')
+                    ->label(__('Reden'))
                     ->badge()
                     ->formatStateUsing(fn (?string $state) => self::REASONS[$state] ?? $state)
                     ->color(fn (?string $state) => $state === 'negative_feedback' ? 'danger' : 'warning'),
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->formatStateUsing(fn (?string $state) => $state === 'resolved' ? 'Opgelost' : 'Open')
                     ->color(fn (?string $state) => $state === 'resolved' ? 'success' : 'gray'),
                 TextColumn::make('created_at')
-                    ->label('Wanneer')
+                    ->label(__('Wanneer'))
                     ->dateTime()
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
-                    ->options(['open' => 'Open', 'resolved' => 'Opgelost'])
+                    ->label(__('Status'))
+                    ->options(['open' => __('Open'), 'resolved' => __('Opgelost')])
                     ->default('open'),
                 SelectFilter::make('reason')
-                    ->label('Reden')
+                    ->label(__('Reden'))
                     ->options(self::REASONS),
             ])
             ->recordActions([
                 Action::make('learn')
-                    ->label('Maak leerpunt')
+                    ->label(__('Maak leerpunt'))
                     ->icon('heroicon-m-academic-cap')
                     ->color('primary')
                     ->visible(fn (ChatUnansweredQuestion $record) => $record->status !== 'resolved')
                     ->requiresConfirmation()
-                    ->modalDescription('Maakt een concept-leerpunt aan met deze vraag. Vul het antwoord aan en activeer het bij Leerpunten.')
+                    ->modalDescription(__('Maakt een concept-leerpunt aan met deze vraag. Vul het antwoord aan en activeer het bij Leerpunten.'))
                     ->action(function (ChatUnansweredQuestion $record): void {
                         ChatLearning::create([
                             'site_id' => $record->site_id,
@@ -95,12 +95,12 @@ class ChatUnansweredQuestionResource extends Resource
 
                         Notification::make()
                             ->success()
-                            ->title('Concept-leerpunt aangemaakt')
-                            ->body('Vul het antwoord aan en activeer het bij Leerpunten.')
+                            ->title(__('Concept-leerpunt aangemaakt'))
+                            ->body(__('Vul het antwoord aan en activeer het bij Leerpunten.'))
                             ->send();
                     }),
                 Action::make('resolve')
-                    ->label('Opgelost')
+                    ->label(__('Opgelost'))
                     ->icon('heroicon-m-check')
                     ->color('gray')
                     ->visible(fn (ChatUnansweredQuestion $record) => $record->status !== 'resolved')

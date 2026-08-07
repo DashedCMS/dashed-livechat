@@ -43,26 +43,26 @@ class ChatQuickReplyResource extends Resource
     {
         return $schema->schema([
             TextInput::make('title')
-                ->label('Titel')
+                ->label(__('Titel'))
                 ->required()
                 ->columnSpanFull()
-                ->helperText('Korte herkenbare titel voor dit antwoord.'),
+                ->helperText(__('Korte herkenbare titel voor dit antwoord.')),
 
             Textarea::make('content')
-                ->label('Antwoord')
+                ->label(__('Antwoord'))
                 ->rows(5)
                 ->required()
                 ->columnSpanFull()
-                ->helperText('De tekst die wordt ingevoegd wanneer dit antwoord wordt gekozen. Ondersteunt variabelen: {naam}, {shop}, {agent}, {email}.'),
+                ->helperText(__('De tekst die wordt ingevoegd wanneer dit antwoord wordt gekozen. Ondersteunt variabelen: {naam}, {shop}, {agent}, {email}.')),
 
             TextInput::make('shortcut')
-                ->label('Shortcut')
+                ->label(__('Shortcut'))
                 ->nullable()
-                ->prefix('/')
-                ->helperText('Typ /shortcut in de reply-box om dit antwoord direct in te voegen.'),
+                ->prefix(__('/'))
+                ->helperText(__('Typ /shortcut in de reply-box om dit antwoord direct in te voegen.')),
 
             Select::make('owner_id')
-                ->label('Zichtbaarheid')
+                ->label(__('Zichtbaarheid'))
                 ->options(fn () => [
                     '' => 'Gedeeld (team)',
                     (string) auth()->id() => 'Alleen ik',
@@ -70,10 +70,10 @@ class ChatQuickReplyResource extends Resource
                 ->default('')
                 ->dehydrateStateUsing(fn ($state) => $state === '' || $state === null ? null : (int) $state)
                 ->formatStateUsing(fn ($state) => $state === null ? '' : (string) $state)
-                ->helperText('Gedeelde antwoorden zijn zichtbaar voor alle medewerkers van deze site.'),
+                ->helperText(__('Gedeelde antwoorden zijn zichtbaar voor alle medewerkers van deze site.')),
 
             TextInput::make('sort')
-                ->label('Volgorde')
+                ->label(__('Volgorde'))
                 ->numeric()
                 ->default(0),
         ]);
@@ -84,24 +84,24 @@ class ChatQuickReplyResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')
-                    ->label('Titel')
+                    ->label(__('Titel'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('shortcut')
-                    ->label('Shortcut')
+                    ->label(__('Shortcut'))
                     ->formatStateUsing(fn (?string $state) => $state ? '/'.$state : '—')
                     ->searchable(),
                 TextColumn::make('content')
-                    ->label('Antwoord')
+                    ->label(__('Antwoord'))
                     ->limit(80)
                     ->searchable(),
                 TextColumn::make('owner_id')
-                    ->label('Zichtbaarheid')
+                    ->label(__('Zichtbaarheid'))
                     ->badge()
                     ->formatStateUsing(fn (?int $state) => $state === null ? 'Gedeeld' : 'Persoonlijk')
                     ->color(fn (?int $state) => $state === null ? 'info' : 'gray'),
                 TextColumn::make('sort')
-                    ->label('Volgorde')
+                    ->label(__('Volgorde'))
                     ->sortable(),
             ])
             ->defaultSort('sort')

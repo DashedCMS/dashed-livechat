@@ -42,17 +42,17 @@ class ChatTagResource extends Resource
     {
         return $schema->schema([
             TextInput::make('name')
-                ->label('Naam')
+                ->label(__('Naam'))
                 ->required()
                 ->maxLength(60)
-                ->helperText('Bijv. Verkoop, Support of Klacht.'),
+                ->helperText(__('Bijv. Verkoop, Support of Klacht.')),
 
             ColorPicker::make('color')
-                ->label('Kleur')
+                ->label(__('Kleur'))
                 ->default('#64748b'),
 
             TextInput::make('sort')
-                ->label('Volgorde')
+                ->label(__('Volgorde'))
                 ->numeric()
                 ->default(0),
         ]);
@@ -63,19 +63,19 @@ class ChatTagResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->badge()
                     ->color('gray')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('color')
-                    ->label('Kleur'),
+                    ->label(__('Kleur')),
                 TextColumn::make('conversations_count')
-                    ->label('Gesprekken')
+                    ->label(__('Gesprekken'))
                     ->counts('conversations')
                     ->sortable(),
                 TextColumn::make('sort')
-                    ->label('Volgorde')
+                    ->label(__('Volgorde'))
                     ->sortable(),
             ])
             ->defaultSort('sort')

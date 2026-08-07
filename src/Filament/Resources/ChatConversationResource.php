@@ -60,17 +60,17 @@ class ChatConversationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('visitor_name')
-                    ->label('Bezoeker')
+                    ->label(__('Bezoeker'))
                     ->state(fn ($record) => $record->visitor_name ?: ($record->visitor_email ?: 'Anoniem'))
                     ->searchable(['visitor_name', 'visitor_email']),
                 TextColumn::make('visitor_presence')
-                    ->label('Bezoeker online')
+                    ->label(__('Bezoeker online'))
                     ->badge()
                     ->state(fn ($record) => ['active' => 'Actief', 'idle' => 'Niet actief', 'away' => 'Weg'][$record->visitorPresence()] ?? 'Weg')
                     ->color(fn ($record) => ['active' => 'success', 'idle' => 'warning', 'away' => 'gray'][$record->visitorPresence()] ?? 'gray')
                     ->icon(fn ($record) => $record->visitorPresence() === 'active' ? 'heroicon-m-signal' : ($record->visitorPresence() === 'idle' ? 'heroicon-m-signal-slash' : 'heroicon-m-no-symbol')),
                 TextColumn::make('mode')
-                    ->label('Modus')
+                    ->label(__('Modus'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'ai' => 'AI',
@@ -84,20 +84,20 @@ class ChatConversationResource extends Resource
                         default => 'gray',
                     }),
                 TextColumn::make('awaiting')
-                    ->label('Beurt')
+                    ->label(__('Beurt'))
                     ->badge()
                     ->state(fn ($record): string => $record->awaiting)
                     ->formatStateUsing(fn (string $state): string => $state === 'agent' ? 'Jij' : 'Wachten op bezoeker')
                     ->color(fn (string $state): string => $state === 'agent' ? 'danger' : 'gray'),
                 SelectColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->options([
-                        'active' => 'Actief',
-                        'closed' => 'Afgerond',
+                        'active' => __('Actief'),
+                        'closed' => __('Afgerond'),
                     ])
                     ->selectablePlaceholder(false),
                 TextColumn::make('rating')
-                    ->label('Beoordeling')
+                    ->label(__('Beoordeling'))
                     ->tooltip(fn ($record) => $record->rating_comment ?: null)
                     ->state(fn ($record) => match (true) {
                         $record->rating === null => '—',
@@ -106,14 +106,14 @@ class ChatConversationResource extends Resource
                         default => '★ ' . $record->rating,
                     }),
                 TextColumn::make('tags.name')
-                    ->label('Tags')
+                    ->label(__('Tags'))
                     ->badge()
                     ->separator(','),
                 TextColumn::make('messages_count')
                     ->counts('messages')
-                    ->label('Berichten'),
+                    ->label(__('Berichten')),
                 TextColumn::make('last_message_at')
-                    ->label('Laatste bericht')
+                    ->label(__('Laatste bericht'))
                     ->dateTime()
                     ->sortable(),
             ])
@@ -127,13 +127,13 @@ class ChatConversationResource extends Resource
             ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('markClosed')
-                        ->label('Afronden')
+                        ->label(__('Afronden'))
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(function ($records): void {
                             $records->each(fn ($record) => $record->markClosed());
 
-                            Notification::make()->success()->title('Geselecteerde gesprekken afgerond')->send();
+                            Notification::make()->success()->title(__('Geselecteerde gesprekken afgerond'))->send();
                         })
                         ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),
@@ -141,25 +141,25 @@ class ChatConversationResource extends Resource
             ])
             ->filters([
                 Filter::make('awaiting_agent')
-                    ->label('Wacht op mijn antwoord')
+                    ->label(__('Wacht op mijn antwoord'))
                     ->query(fn (Builder $query): Builder => $query->awaitingAgent()->where('status', '!=', 'closed')),
                 SelectFilter::make('mode')
-                    ->label('Modus')
+                    ->label(__('Modus'))
                     ->options([
-                        'ai' => 'AI',
-                        'waiting_human' => 'Wacht op medewerker',
-                        'human' => 'Medewerker',
+                        'ai' => __('AI'),
+                        'waiting_human' => __('Wacht op medewerker'),
+                        'human' => __('Medewerker'),
                     ]),
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->options([
-                        'active' => 'Actief',
-                        'inactive' => 'Inactief',
-                        'closed' => 'Afgerond',
+                        'active' => __('Actief'),
+                        'inactive' => __('Inactief'),
+                        'closed' => __('Afgerond'),
                     ]),
                 SelectFilter::make('rating')
-                    ->label('Beoordeling')
-                    ->options(['rated' => 'Beoordeeld', 'positive' => 'Positief (≥4)', 'negative' => 'Negatief (≤2)'])
+                    ->label(__('Beoordeling'))
+                    ->options(['rated' => __('Beoordeeld'), 'positive' => __('Positief (≥4)'), 'negative' => __('Negatief (≤2)')])
                     ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
                         'rated' => $query->whereNotNull('rating'),
                         'positive' => $query->where('rating', '>=', 4),
@@ -167,7 +167,7 @@ class ChatConversationResource extends Resource
                         default => $query,
                     }),
                 SelectFilter::make('tag')
-                    ->label('Tag')
+                    ->label(__('Tag'))
                     ->options(fn () => \Dashed\DashedLivechat\Models\ChatTag::query()
                         ->where('site_id', (string) \Dashed\DashedCore\Classes\Sites::getActive())
                         ->orderBy('sort')->orderBy('name')->pluck('name', 'id'))

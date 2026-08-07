@@ -51,7 +51,7 @@ class WebPushSettingsPage extends Page
             ],
         );
 
-        Notification::make()->title('Voorkeuren opgeslagen')->success()->send();
+        Notification::make()->title(__('Voorkeuren opgeslagen'))->success()->send();
     }
 
     public function getVapidPublicKey(): ?string

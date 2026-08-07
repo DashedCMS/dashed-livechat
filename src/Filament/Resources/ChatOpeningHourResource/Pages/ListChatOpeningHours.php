@@ -18,12 +18,12 @@ class ListChatOpeningHours extends ListRecords
     {
         return [
             Action::make('standaard')
-                ->label('Standaard openingstijden')
+                ->label(__('Standaard openingstijden'))
                 ->icon('heroicon-o-clock')
                 ->color('gray')
                 ->requiresConfirmation()
-                ->modalHeading('Standaard openingstijden instellen')
-                ->modalDescription('Dit zet de wekelijkse openingstijden op maandag t/m vrijdag 08:00-17:00 en zaterdag 08:00-12:00. Bestaande wekelijkse regels worden vervangen (uitzonderingen op datum blijven staan).')
+                ->modalHeading(__('Standaard openingstijden instellen'))
+                ->modalDescription(__('Dit zet de wekelijkse openingstijden op maandag t/m vrijdag 08:00-17:00 en zaterdag 08:00-12:00. Bestaande wekelijkse regels worden vervangen (uitzonderingen op datum blijven staan).'))
                 ->action(function (): void {
                     $site = Sites::getActive();
 
@@ -49,8 +49,8 @@ class ListChatOpeningHours extends ListRecords
                     ]);
 
                     Notification::make()
-                        ->title('Standaard openingstijden ingesteld')
-                        ->body('Maandag t/m vrijdag 08:00-17:00, zaterdag 08:00-12:00.')
+                        ->title(__('Standaard openingstijden ingesteld'))
+                        ->body(__('Maandag t/m vrijdag 08:00-17:00, zaterdag 08:00-12:00.'))
                         ->success()
                         ->send();
                 }),

@@ -51,7 +51,7 @@ class WebPushKeyConfigPage extends Page implements HasSchemas
     public function generateKeysAction(string $siteId): Action
     {
         return Action::make("generate_{$siteId}")
-            ->label('Genereer sleutelpaar')
+            ->label(__('Genereer sleutelpaar'))
             ->icon('heroicon-o-key')
             ->action(fn () => $this->generateKeys($siteId));
     }
@@ -78,16 +78,16 @@ class WebPushKeyConfigPage extends Page implements HasSchemas
                         $this->generateKeysAction($id),
                     ]),
                     TextInput::make("web_push_public_key_{$id}")
-                        ->label('Publieke sleutel')
-                        ->helperText('Wordt aan de browser meegegeven bij het abonneren.'),
+                        ->label(__('Publieke sleutel'))
+                        ->helperText(__('Wordt aan de browser meegegeven bij het abonneren.')),
                     TextInput::make("web_push_private_key_{$id}")
-                        ->label('Private sleutel')
+                        ->label(__('Private sleutel'))
                         ->password()
                         ->revealable()
-                        ->helperText('Leeg laten houdt de opgeslagen sleutel ongewijzigd.'),
+                        ->helperText(__('Leeg laten houdt de opgeslagen sleutel ongewijzigd.')),
                     TextInput::make("web_push_subject_{$id}")
-                        ->label('Subject')
-                        ->helperText('mailto: of https: URL die jouw dienst identificeert.'),
+                        ->label(__('Subject'))
+                        ->helperText(__('mailto: of https: URL die jouw dienst identificeert.')),
                 ]);
         }
 
@@ -103,8 +103,8 @@ class WebPushKeyConfigPage extends Page implements HasSchemas
         $this->data["web_push_private_key_{$siteId}"] = $keys['privateKey'];
 
         Notification::make()
-            ->title('Sleutelpaar gegenereerd')
-            ->body('Controleer en sla op om het te bewaren.')
+            ->title(__('Sleutelpaar gegenereerd'))
+            ->body(__('Controleer en sla op om het te bewaren.'))
             ->success()
             ->send();
     }
@@ -134,7 +134,7 @@ class WebPushKeyConfigPage extends Page implements HasSchemas
         }
 
         Notification::make()
-            ->title('Web Push-instellingen opgeslagen')
+            ->title(__('Web Push-instellingen opgeslagen'))
             ->success()
             ->send();
     }
