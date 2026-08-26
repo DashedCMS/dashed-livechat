@@ -243,6 +243,11 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                     Termijn::make('chat_visitor_sessions', 30, 'last_seen_at')
                         ->label(__('Chatbezoeken bewaren (dagen)'))
                         ->uitleg(__('Eén regel per bezoeker die de chat op de site zag, ook zonder gesprek. Gemeten vanaf het laatst gezien zijn, niet vanaf het aanmaken, want een terugkerende bezoeker houdt dezelfde regel. Standaard: 30 dagen.'))
+                        // last_seen_at mag leeg zijn, en een vergelijking laat
+                        // NULL altijd staan. Zonder deze terugval blijft juist
+                        // de regel die nooit een tweede bezoek kreeg voor
+                        // altijd bewaard.
+                        ->terugvalkolom('created_at')
                 )
         );
     }
