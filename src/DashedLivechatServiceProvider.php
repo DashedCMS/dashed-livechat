@@ -5,6 +5,8 @@ namespace Dashed\DashedLivechat;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
+use Dashed\DashedCore\Retention\Termijn;
+use Dashed\DashedCore\Retention\Retention;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedLivechat\Livewire\Frontend\ChatWidget;
 use Dashed\DashedLivechat\Ai\Knowledge\CompositeSearchDriver;
@@ -217,5 +219,31 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
             $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
         }
+
+        self::registreerBewaartermijnen();
+    }
+
+    /**
+     * De chatbezoeken aanmelden bij het bewaartermijnenregister.
+     *
+     * Statisch en apart van bootingPackage(), zodat een test hem opnieuw kan
+     * aanroepen na app(RetentionRegistry::class)->flush(). Deze __()-aanroepen
+     * mogen niet in registeringPackage() of packageRegistered() staan: die
+     * fase draait voordat de vertaalservice klaarstaat en zou de hele boot
+     * laten klappen.
+     */
+    public static function registreerBewaartermijnen(): void
+    {
+        cms()->registerRetention(
+            Retention::make('chat_visitor_sessions')
+                ->label(__('Chatbezoeken'))
+                ->pakket('dashed-livechat', __('Chat'))
+                ->tabel('dashed__chat_visitor_sessions')
+                ->termijn(
+                    Termijn::make('chat_visitor_sessions', 30, 'last_seen_at')
+                        ->label(__('Chatbezoeken bewaren (dagen)'))
+                        ->uitleg(__('Eén regel per bezoeker die de chat op de site zag, ook zonder gesprek. Gemeten vanaf het laatst gezien zijn, niet vanaf het aanmaken, want een terugkerende bezoeker houdt dezelfde regel. Standaard: 30 dagen.'))
+                )
+        );
     }
 }
