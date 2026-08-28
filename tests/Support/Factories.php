@@ -7,9 +7,9 @@ namespace Dashed\DashedLivechat\Tests\Support;
 use Illuminate\Support\Str;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedLivechat\Models\ChatConversation;
 
 final class Factories
 {

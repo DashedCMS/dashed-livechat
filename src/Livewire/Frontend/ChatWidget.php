@@ -500,9 +500,9 @@ class ChatWidget extends Component
         $cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($siteId);
 
         $position = $cfg['position'] ?? 'right';
-        $offset   = (int) ($cfg['offset'] ?? 24);
-        $primary  = $cfg['primary'] ?? '#111827';
-        $radius   = (int) ($cfg['radius'] ?? 16);
+        $offset = (int) ($cfg['offset'] ?? 24);
+        $primary = $cfg['primary'] ?? '#111827';
+        $radius = (int) ($cfg['radius'] ?? 16);
 
         $side = $position === 'left' ? 'left' : 'right';
 

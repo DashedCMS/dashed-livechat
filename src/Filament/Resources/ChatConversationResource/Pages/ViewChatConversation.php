@@ -8,20 +8,19 @@ use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedLivechat\Ai\LivechatAi;
 use Filament\Notifications\Notification;
 use Dashed\DashedLivechat\Models\ChatTag;
 use Dashed\DashedLivechat\Models\ChatNote;
-use Dashed\DashedLivechat\Models\ChatUnansweredQuestion;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Support\ChatAccess;
 use Dashed\DashedLivechat\Models\ChatLearning;
 use Dashed\DashedLivechat\Models\ChatQuickReply;
-use Dashed\DashedLivechat\Support\SnippetRenderer;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\HandoffService;
+use Dashed\DashedLivechat\Support\SnippetRenderer;
 use Dashed\DashedLivechat\Services\ConversationManager;
+use Dashed\DashedLivechat\Models\ChatUnansweredQuestion;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource;
 
 class ViewChatConversation extends Page

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Dashed\DashedLivechat\Models\ChatEvent;
 use Dashed\DashedLivechat\Models\ChatMessage;
-use Dashed\DashedLivechat\Services\ChatAnalyticsService;
 use Dashed\DashedLivechat\Tests\Support\Factories;
+use Dashed\DashedLivechat\Services\ChatAnalyticsService;
 
 it('telt feedback en berekent % zelf-afgehandeld', function () {
     $c1 = Factories::makeConversation(['mode' => 'ai']);

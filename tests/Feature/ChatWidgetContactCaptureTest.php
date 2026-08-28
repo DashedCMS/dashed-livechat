@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Livewire\Livewire;
-use Dashed\DashedLivechat\Livewire\Frontend\ChatWidget;
 use Dashed\DashedLivechat\Tests\Support\Factories;
+use Dashed\DashedLivechat\Livewire\Frontend\ChatWidget;
 
 it('een gewoon chatbericht zet NOOIT visitor_name, ook niet tijdens de naam-stap', function () {
     $c = Factories::makeConversation(['mode' => 'ai']);

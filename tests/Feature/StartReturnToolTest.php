@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Queue;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedLivechat\Tests\Support\Factories;
 use Dashed\DashedLivechat\Ai\Tools\StartReturnTool;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
 
 it('start een retour voor een geverifieerde order', function () {
     // Order::registerReturn() -> restockOrderProduct() slaat het Product op,

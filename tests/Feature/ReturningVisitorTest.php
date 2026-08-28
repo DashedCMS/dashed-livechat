@@ -1,6 +1,5 @@
 <?php
 
-use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Tests\Support\Factories;
 
 it('markeert een tweede gesprek van dezelfde ip_hash als terugkerend', function () {

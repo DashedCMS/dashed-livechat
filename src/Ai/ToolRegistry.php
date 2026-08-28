@@ -8,16 +8,16 @@ use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Ai\Tools\GetPageTool;
 use Dashed\DashedLivechat\Ai\Contracts\ChatTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchFaqTool;
-use Dashed\DashedLivechat\Ai\Tools\StartReturnTool;
-use Dashed\DashedLivechat\Ai\Tools\SubscribeBackInStockTool;
 use Dashed\DashedLivechat\Ai\Tools\GetProductTool;
+use Dashed\DashedLivechat\Ai\Tools\StartReturnTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchContentTool;
 use Dashed\DashedLivechat\Ai\Tools\GetOrderStatusTool;
 use Dashed\DashedLivechat\Ai\Tools\SearchProductsTool;
 use Dashed\DashedLivechat\Ai\Tools\GetOpeningHoursTool;
-use Dashed\DashedLivechat\Ai\Tools\GetStockAndDeliveryTool;
 use Dashed\DashedLivechat\Ai\Tools\SaveContactDetailsTool;
+use Dashed\DashedLivechat\Ai\Tools\GetStockAndDeliveryTool;
 use Dashed\DashedLivechat\Ai\Tools\RequestHumanHandoffTool;
+use Dashed\DashedLivechat\Ai\Tools\SubscribeBackInStockTool;
 
 class ToolRegistry
 {

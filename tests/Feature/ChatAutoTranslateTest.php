@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedAi\Facades\Ai;
+use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Route;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Support\MessageTranslator;

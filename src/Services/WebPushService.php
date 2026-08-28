@@ -4,9 +4,9 @@ namespace Dashed\DashedLivechat\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Dashed\DashedLivechat\Enums\AgentType;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatAgent;
-use Dashed\DashedLivechat\Enums\AgentType;
 use Dashed\DashedLivechat\Jobs\SendWebPushJob;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Models\WebPushPreference;

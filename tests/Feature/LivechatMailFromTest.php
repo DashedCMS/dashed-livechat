@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedLivechat\Mail\ConversationTranscriptMail;
 use Dashed\DashedLivechat\Tests\Support\Factories;
+use Dashed\DashedLivechat\Mail\ConversationTranscriptMail;
 
 it('transcript-mail gebruikt de site-afzender', function () {
     Customsetting::set('site_from_email', 'shop@lovora.nl', 'main');

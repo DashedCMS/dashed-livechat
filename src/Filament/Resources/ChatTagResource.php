@@ -14,9 +14,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ColorPicker;
-use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedLivechat\Models\ChatTag;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\ColorPicker;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 use Dashed\DashedLivechat\Filament\Resources\ChatTagResource\Pages;
 

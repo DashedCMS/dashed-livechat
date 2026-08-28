@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Crypt;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedLivechat\Jobs\SendWebPushJob;
 use Dashed\DashedLivechat\Services\WebPushService;
-use Dashed\DashedLivechat\Models\WebPushSubscription;
 
 it('gebruikt de per-site sleutels van de subscription (geen config-fallback als DB gevuld is)', function () {
     // Geen env-sleutels; alleen DB voor site 'main'.

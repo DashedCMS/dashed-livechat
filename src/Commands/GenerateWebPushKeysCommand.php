@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedLivechat\Commands;
 
-use Illuminate\Console\Command;
 use Minishlink\WebPush\VAPID;
+use Illuminate\Console\Command;
 
 class GenerateWebPushKeysCommand extends Command
 {

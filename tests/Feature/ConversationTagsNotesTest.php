@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Route;
 use Dashed\DashedLivechat\Models\ChatTag;
 use Dashed\DashedLivechat\Models\ChatNote;
 use Dashed\DashedLivechat\Models\ChatConversation;

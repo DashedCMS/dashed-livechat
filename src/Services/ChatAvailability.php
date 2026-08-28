@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedLivechat\Services;
 
-use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Enums\AgentType;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedLivechat\Models\ChatAgent;
 
 /**
  * Bepaalt of de (mensen-bemande) chat nu bemand is en of er buiten
