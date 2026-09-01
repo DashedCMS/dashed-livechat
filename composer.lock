@@ -1000,16 +1000,16 @@
         },
         {
             "name": "dashed/dashed-core",
-            "version": "v4.26.0",
+            "version": "v4.49.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DashedCMS/dashed-core.git",
-                "reference": "1aa4a913fd49f41eaadc9c465ded402c9d96817c"
+                "reference": "417d0dff04c278363d26abc4e9d34f9eed32a971"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DashedCMS/dashed-core/zipball/1aa4a913fd49f41eaadc9c465ded402c9d96817c",
-                "reference": "1aa4a913fd49f41eaadc9c465ded402c9d96817c",
+                "url": "https://api.github.com/repos/DashedCMS/dashed-core/zipball/417d0dff04c278363d26abc4e9d34f9eed32a971",
+                "reference": "417d0dff04c278363d26abc4e9d34f9eed32a971",
                 "shasum": ""
             },
             "require": {
@@ -1100,7 +1100,7 @@
             ],
             "support": {
                 "issues": "https://github.com/DashedCMS/dashed-core/issues",
-                "source": "https://github.com/DashedCMS/dashed-core/tree/v4.26.0"
+                "source": "https://github.com/DashedCMS/dashed-core/tree/v4.49.0"
             },
             "funding": [
                 {
@@ -1108,7 +1108,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-07-02T15:41:21+00:00"
+            "time": "2026-08-31T13:40:59+00:00"
         },
         {
             "name": "dashed/filament-numpad-field",

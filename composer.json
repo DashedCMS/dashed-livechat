@@ -14,8 +14,8 @@
         "dashed/dashed-ecommerce-core": "Nodig voor product-tools en (fase 2) orderstatus"
     },
     "require-dev": {
-        "orchestra/testbench": "^9",
-        "pestphp/pest": "^2.35",
+        "orchestra/testbench": "^9|^10|^11",
+        "pestphp/pest": "^2.35|^3.0|^4.0",
         "dashed/dashed-ecommerce-core": "*",
         "dashed/dashed-pages": "*"
     },
