@@ -14,6 +14,7 @@ use Dashed\DashedLivechat\Jobs\GenerateAiReplyJob;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\ChatAvailability;
 use Dashed\DashedLivechat\Services\ConversationManager;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ChatWidget extends Component
 {
@@ -123,6 +124,19 @@ class ChatWidget extends Component
             'newAttachments' => ['array', 'max:5'],
             'newAttachments.*' => ['file', 'max:10240', \Dashed\DashedLivechat\Support\AttachmentRules::clientImageOrPdf()],
         ];
+    }
+
+    /**
+     * Livewire hydrateert echte uploads tot TemporaryUploadedFile; alles anders
+     * (bots sturen gemuteerde payloads zoals `[1]`) valt er hier al uit, zodat de
+     * widget-view nooit `getMimeType()` op een int aanroept.
+     */
+    public function updatedNewAttachments(): void
+    {
+        $this->newAttachments = array_values(array_filter(
+            $this->newAttachments,
+            fn ($attachment) => $attachment instanceof TemporaryUploadedFile,
+        ));
     }
 
     public function removeAttachment(int $index): void
