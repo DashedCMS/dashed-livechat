@@ -60,8 +60,8 @@ class SearchProductsTool implements ChatTool
                     'price' => $p->current_price ?? $p->price ?? null,
                     'in_stock' => rescue(fn () => $p->inStock(), null, false),
                     // Exact aantal alleen als het echt geteld wordt; anders null
-                    // (100000 is de "gewoon op voorraad"-sentinel).
-                    'stock' => ($stock !== null && $stock < 100000) ? $stock : null,
+                    // (Product::UNLIMITED_STOCK is de "gewoon op voorraad"-sentinel).
+                    'stock' => ($stock !== null && $stock < Product::UNLIMITED_STOCK) ? $stock : null,
                     'url' => rescue(fn () => $p->getUrl(), null, false),
                     'image' => rescue(fn () => mediaHelper()->getSingleMedia($p->firstImage, 'small')?->url, null, false),
                 ];
