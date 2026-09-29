@@ -2,25 +2,18 @@
 
 namespace Dashed\DashedLivechat\Mail;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Address;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 use Illuminate\Mail\Mailables\Envelope;
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\ChatMessage;
 use Dashed\DashedLivechat\Models\ChatConversation;
 
 /**
  * Stuurt één agent-/AI-antwoord naar een bezoeker die de chat heeft verlaten,
- * met een knop om het gesprek te hervatten (via de public_token in de URL).
+ * met de laatste vraag van de bezoeker erboven als context en een knop om het
+ * gesprek te hervatten (via de public_token in de URL).
  */
-class OfflineReplyMail extends Mailable
+class OfflineReplyMail extends ChatCustomerMail
 {
-    use Queueable;
-    use SerializesModels;
-
     /**
      * Let op de naam: niet $message. Illuminate\Mail\Mailer::send() doet
      * $data['message'] = $this->createMessage(), dus view-data met die sleutel
@@ -32,41 +25,46 @@ class OfflineReplyMail extends Mailable
     ) {
     }
 
+    public function conversation(): ChatConversation
+    {
+        return $this->conversation;
+    }
+
     public function envelope(): Envelope
     {
-        $siteId = $this->conversation->site_id;
-        $fromEmail = Customsetting::get('site_from_email', $siteId) ?: config('mail.from.address');
-        $fromName = Customsetting::get('site_name', $siteId) ?: config('mail.from.name');
-
         return new Envelope(
-            from: new Address($fromEmail, $fromName),
-            subject: 'Nieuw bericht van ' . config('app.name'),
+            from: $this->fromAddress(),
+            subject: 'Nieuw bericht van ' . $this->siteName(),
         );
     }
 
-    public function content(): Content
+    /** De laatste bezoekersvraag vóór dit antwoord, en het antwoord zelf. */
+    protected function messagesToShow(): Collection
     {
-        return new Content(
-            view: 'dashed-livechat::mail.offline-reply',
-            with: [
-                'conversation' => $this->conversation,
-                'chatMessage' => $this->chatMessage,
-                'businessName' => config('app.name'),
-                'agentName' => $this->chatMessage->agent?->name,
-                'resumeUrl' => $this->resumeUrl(),
-            ],
-        );
+        $question = $this->conversation->messages()
+            ->where('role', 'visitor')
+            ->where('is_internal', false)
+            ->where('id', '<', $this->chatMessage->id)
+            ->reorder('id', 'desc') // de relatie sorteert zelf al oplopend
+            ->first();
+
+        $this->chatMessage->loadMissing('agent');
+
+        return collect(array_filter([$question, $this->chatMessage]));
     }
 
-    /**
-     * Bouwt de hervat-URL: de pagina waar het gesprek begon (of de site-URL) met
-     * de public_token als query-parameter, die de widget oppikt om te hervatten.
-     */
-    private function resumeUrl(): string
+    protected function title(): string
     {
-        $base = $this->conversation->started_url ?: config('app.url');
-        $separator = str_contains((string) $base, '?') ? '&' : '?';
+        return 'Nieuw bericht van ' . $this->siteName();
+    }
 
-        return $base . $separator . 'dashed_chat=' . $this->conversation->public_token;
+    protected function intro(): string
+    {
+        return 'Je was net weg uit de chat, dus we sturen je het antwoord ook even per e-mail.';
+    }
+
+    protected function replyHint(): ?string
+    {
+        return 'Of reageer gewoon op deze e-mail, dan pakken we het daar op.';
     }
 }
