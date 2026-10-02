@@ -26,6 +26,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
         $package
             ->name('dashed-livechat')
+            ->hasTranslations()
             ->hasConfigFile()
             ->hasViews('dashed-livechat')
             ->hasCommands([
