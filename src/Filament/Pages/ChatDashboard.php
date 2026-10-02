@@ -12,6 +12,7 @@ use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
 
 class ChatDashboard extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HiddenWhenChatDisabled;
 
     protected static string|UnitEnum|null $navigationGroup = 'Chat';

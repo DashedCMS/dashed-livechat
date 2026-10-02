@@ -18,6 +18,7 @@ use Dashed\DashedLivechat\Filament\Resources\ChatLearningResource\Pages;
 
 class ChatLearningResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
 
     protected static ?string $model = ChatLearning::class;

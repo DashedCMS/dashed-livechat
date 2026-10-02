@@ -23,6 +23,7 @@ use Dashed\DashedLivechat\Models\WebPushSubscription;
 
 class WebPushKeyConfigPage extends Page implements HasSchemas
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use InteractsWithSchemas;
     use HasSettingsPermission;
 

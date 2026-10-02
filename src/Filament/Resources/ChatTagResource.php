@@ -22,6 +22,7 @@ use Dashed\DashedLivechat\Filament\Resources\ChatTagResource\Pages;
 
 class ChatTagResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
 
     protected static ?string $model = ChatTag::class;

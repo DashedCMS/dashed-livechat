@@ -11,6 +11,8 @@ use Dashed\DashedLivechat\Models\WebPushPreference;
 
 class WebPushSettingsPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
+
     protected static string|UnitEnum|null $navigationGroup = 'Chat';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';

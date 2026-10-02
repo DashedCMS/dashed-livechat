@@ -29,6 +29,7 @@ use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource\Pages;
 
 class ChatTriggerResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
 
     protected static ?string $model = ChatTrigger::class;

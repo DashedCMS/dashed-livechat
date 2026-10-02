@@ -25,6 +25,7 @@ use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource\Pages;
 
 class ChatAgentResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
 
     protected static ?string $model = ChatAgent::class;

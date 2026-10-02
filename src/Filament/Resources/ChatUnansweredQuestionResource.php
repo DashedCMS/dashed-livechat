@@ -19,6 +19,7 @@ use Dashed\DashedLivechat\Filament\Resources\ChatUnansweredQuestionResource\Page
 
 class ChatUnansweredQuestionResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
 
     protected static ?string $model = ChatUnansweredQuestion::class;

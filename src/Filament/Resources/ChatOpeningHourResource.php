@@ -21,6 +21,7 @@ use Dashed\DashedLivechat\Filament\Resources\ChatOpeningHourResource\Pages;
 
 class ChatOpeningHourResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
 
     protected static ?string $model = ChatOpeningHour::class;
