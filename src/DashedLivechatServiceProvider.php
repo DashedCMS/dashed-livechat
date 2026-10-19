@@ -85,6 +85,29 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
     public function bootingPackage(): void
     {
+        // Chat-openingstijden voeden het bedrijfsschema (dashed-core).
+        if (class_exists(\Dashed\DashedCore\Classes\Seo\BusinessProfile::class)) {
+            cms()->builder('organizationOpeningHours', [function (string $siteId): array {
+                $days = \Dashed\DashedCore\Classes\Seo\BusinessProfile::DAYS; // Monday .. Sunday
+
+                return \Dashed\DashedLivechat\Models\ChatOpeningHour::query()
+                    ->where('site_id', $siteId)
+                    ->whereNotNull('day_of_week')
+                    ->whereNull('date')
+                    ->where('is_closed', false)
+                    ->whereNotNull('opens_at')
+                    ->whereNotNull('closes_at')
+                    ->get()
+                    ->map(fn ($hour) => [
+                        // Carbon: 0 = zondag, 6 = zaterdag; DAYS begint op maandag.
+                        'days' => [$days[($hour->day_of_week + 6) % 7]],
+                        'opens' => substr((string) $hour->opens_at, 0, 5),
+                        'closes' => substr((string) $hour->closes_at, 0, 5),
+                    ])
+                    ->all();
+            }]);
+        }
+
         Livewire::component('chat.widget', ChatWidget::class);
         $this->app->booted(function () {
             $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
