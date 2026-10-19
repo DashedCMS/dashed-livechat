@@ -1,3 +1,14 @@
+<?php
+    // Pollen kost per verzoek een volledige app-boot. Zonder gesprek is er
+    // niets op te halen, dus dan pollt de widget niet; bij een gesprek met
+    // gesloten paneel langzaam (badge voor een nieuw antwoord), en alleen
+    // met open paneel op het snelle interval. Openen stuurt via
+    // markVisitorRead() meteen een verzoek, dus het snelle interval staat
+    // dan direct in de volgende render.
+    $pollMs = $open
+        ? (int) config('dashed-livechat.poll_interval_ms', 1500)
+        : ($publicToken ? (int) config('dashed-livechat.poll_interval_closed_ms', 10000) : null);
+?>
 @php($cfg = \Dashed\DashedLivechat\Support\WidgetConfig::for($siteId))
 <div
     x-data="{
@@ -172,8 +183,10 @@
         position: fixed; z-index: 2147483000;
         {{ $cfg['position'] === 'left' ? 'left' : 'right' }}: {{ $cfg['offset'] }}px; bottom: {{ $cfg['offset'] }}px;
     "
-    wire:poll.{{ config('dashed-livechat.poll_interval_ms', 1500) }}ms="pollReply"
 >
+    @if ($pollMs)
+        <div wire:poll.{{ $pollMs }}ms="pollReply" aria-hidden="true" style="display:none;"></div>
+    @endif
     <style>[x-cloak]{display:none !important;}
     .dashed-chat__panel{ display: flex; flex-direction: column; height: 600px; max-height: calc(100dvh - 48px); overflow: hidden; }
     .dashed-chat__panel--expanded{ width: min(960px, calc(100vw - 32px)) !important; height: calc(100dvh - 48px) !important; }

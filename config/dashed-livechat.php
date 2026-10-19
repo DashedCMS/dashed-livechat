@@ -3,7 +3,10 @@
 return [
     'max_tool_iterations' => 5,
     'history_limit' => 20,
+    // Poll-interval van de widget met open paneel. Zonder gesprek pollt de
+    // widget helemaal niet; met gesprek en gesloten paneel geldt het trage interval.
     'poll_interval_ms' => 1500,
+    'poll_interval_closed_ms' => 10000,
     'rate_limit_per_minute' => 15,
 
     // Bezoeker-aanwezigheid (chat-overzicht/CMS/app): 'active' zolang de
