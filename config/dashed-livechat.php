@@ -8,6 +8,11 @@ return [
     'poll_interval_ms' => 1500,
     'poll_interval_closed_ms' => 10000,
     'rate_limit_per_minute' => 15,
+    // Daarnaast per IP-adres, over alle gesprekken heen. Ruim gekozen omdat een
+    // kantoor achter één adres meerdere bezoekers kan hebben.
+    'rate_limit_per_ip_per_minute' => 30,
+    // Hoeveel nieuwe gesprekken één IP-adres per uur mag starten.
+    'conversations_per_ip_per_hour' => 20,
 
     // Bezoeker-aanwezigheid (chat-overzicht/CMS/app): 'active' zolang de
     // widget-voorgrond-poll binnen dit venster verse activiteit toont.

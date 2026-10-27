@@ -5,6 +5,7 @@
 namespace Dashed\DashedLivechat\Livewire\Frontend;
 
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Models\ChatAgent;
@@ -20,7 +21,17 @@ class ChatWidget extends Component
 {
     use WithFileUploads;
 
+    /**
+     * Beide alleen door de server te zetten. Een gesprek hervatten gaat via
+     * resumeConversation(), dat het token tegen een bestaand gesprek van deze
+     * site toetst; een nieuw gesprek ontstaat alleen in sendMessage(). Zonder
+     * vergrendeling kon een bezoeker elk verzoek een willekeurig token sturen,
+     * en kreeg hij per verzoek een nieuw gesprek, een betaald AI-antwoord en
+     * een web push naar de medewerkers, buiten de limiet per gesprek om.
+     */
+    #[Locked]
     public string $siteId = '';
+    #[Locked]
     public ?string $publicToken = null;
 
     /** Site-breed bezoekers-token (uit localStorage 'dashed_visitor_token') dat de
@@ -157,14 +168,32 @@ class ChatWidget extends Component
             $this->validate();
         }
 
-        // Rate-limit per conversatie/sessie.
-        $key = 'chat:' . ($this->publicToken ?: request()->ip());
-        if (RateLimiter::tooManyAttempts($key, (int) config('dashed-livechat.rate_limit_per_minute', 15))) {
+        // Rate-limit per conversatie/sessie, en daarnaast per IP-adres: een
+        // nieuw gesprek (of een nieuwe widget) begint anders met een lege teller.
+        $ip = (string) request()->ip();
+        $key = 'chat:' . ($this->publicToken ?: $ip);
+        $ipKey = 'chat-ip:' . $ip;
+        if (
+            RateLimiter::tooManyAttempts($key, (int) config('dashed-livechat.rate_limit_per_minute', 15))
+            || RateLimiter::tooManyAttempts($ipKey, (int) config('dashed-livechat.rate_limit_per_ip_per_minute', 30))
+        ) {
             $this->addError('draft', 'Je stuurt te snel berichten. Wacht heel even.');
 
             return;
         }
+
+        // Een nieuw gesprek kost een web push naar de medewerkers en een
+        // AI-antwoord; begrens hoeveel er per IP-adres per uur bij kunnen komen.
+        $newKey = 'chat-new:' . $ip;
+        $startsNewConversation = ! $this->conversation();
+        if ($startsNewConversation && RateLimiter::tooManyAttempts($newKey, (int) config('dashed-livechat.conversations_per_ip_per_hour', 20))) {
+            $this->addError('draft', 'Je hebt te veel gesprekken gestart. Probeer het later opnieuw.');
+
+            return;
+        }
+
         RateLimiter::hit($key, 60);
+        RateLimiter::hit($ipKey, 60);
 
         $agent = ChatAgent::where('site_id', $this->siteId)->where('type', 'ai')->where('is_active', true)->orderBy('sort_order')->first();
 
@@ -192,6 +221,9 @@ class ChatWidget extends Component
             'locale' => app()->getLocale(),
         ]);
         $isNewConversation = $conversation->wasRecentlyCreated;
+        if ($isNewConversation) {
+            RateLimiter::hit($newKey, 3600);
+        }
         $this->publicToken = $conversation->public_token;
         // Bezoeker is net actief (stuurde een bericht) → presence verversen.
         $this->touchVisitorActivity($conversation);
