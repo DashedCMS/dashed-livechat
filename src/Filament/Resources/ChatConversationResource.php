@@ -8,7 +8,6 @@ use Filament\Tables\Table;
 use Filament\Actions\BulkAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Filament\Tables\Filters\Filter;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
@@ -62,21 +61,40 @@ class ChatConversationResource extends Resource
             ->columns([
                 TextColumn::make('visitor_name')
                     ->label(__('Bezoeker'))
-                    ->state(fn ($record) => $record->visitor_name ?: ($record->visitor_email ?: 'Anoniem'))
-                    ->searchable(['visitor_name', 'visitor_email']),
-                TextColumn::make('visitor_presence')
-                    ->label(__('Bezoeker online'))
+                    ->state(fn ($record) => $record->visitor_name ?: ($record->visitor_email ?: __('Anoniem')))
+                    ->weight(fn ($record) => $record->awaiting === 'agent' && $record->status !== 'closed' ? 'bold' : null)
+                    ->description(fn ($record) => static::messagePreview($record))
+                    ->icon('heroicon-m-signal')
+                    ->iconColor(fn ($record) => ['active' => 'success', 'idle' => 'warning'][$record->visitorPresence()] ?? 'gray')
+                    ->tooltip(fn ($record) => ['active' => __('Bezoeker is nu actief'), 'idle' => __('Bezoeker is nog op de site')][$record->visitorPresence()] ?? __('Bezoeker is weg'))
+                    ->searchable(['visitor_name', 'visitor_email'])
+                    ->wrap(),
+                TextColumn::make('last_message_at')
+                    ->label(__('Laatste bericht'))
+                    ->since()
+                    ->dateTimeTooltip()
+                    ->sortable(),
+                TextColumn::make('awaiting')
+                    ->label(__('Aan zet'))
                     ->badge()
-                    ->state(fn ($record) => ['active' => 'Actief', 'idle' => 'Niet actief', 'away' => 'Weg'][$record->visitorPresence()] ?? 'Weg')
-                    ->color(fn ($record) => ['active' => 'success', 'idle' => 'warning', 'away' => 'gray'][$record->visitorPresence()] ?? 'gray')
-                    ->icon(fn ($record) => $record->visitorPresence() === 'active' ? 'heroicon-m-signal' : ($record->visitorPresence() === 'idle' ? 'heroicon-m-signal-slash' : 'heroicon-m-no-symbol')),
+                    ->state(fn ($record): string => $record->status === 'closed' ? 'closed' : $record->awaiting)
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'agent' => __('Jij'),
+                        'closed' => __('Afgerond'),
+                        default => __('Bezoeker'),
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'agent' => 'danger',
+                        'closed' => 'success',
+                        default => 'gray',
+                    }),
                 TextColumn::make('mode')
                     ->label(__('Modus'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'ai' => 'AI',
-                        'waiting_human' => 'Wacht op medewerker',
-                        'human' => 'Medewerker',
+                        'ai' => __('AI'),
+                        'waiting_human' => __('Wacht op medewerker'),
+                        'human' => __('Medewerker'),
                         default => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
@@ -84,19 +102,19 @@ class ChatConversationResource extends Resource
                         'human' => 'success',
                         default => 'gray',
                     }),
-                TextColumn::make('awaiting')
-                    ->label(__('Beurt'))
+                TextColumn::make('tags.name')
+                    ->label(__('Tags'))
                     ->badge()
-                    ->state(fn ($record): string => $record->awaiting)
-                    ->formatStateUsing(fn (string $state): string => $state === 'agent' ? 'Jij' : 'Wachten op bezoeker')
-                    ->color(fn (string $state): string => $state === 'agent' ? 'danger' : 'gray'),
+                    ->separator(','),
                 SelectColumn::make('status')
                     ->label(__('Status'))
                     ->options([
                         'active' => __('Actief'),
+                        'inactive' => __('Inactief'),
                         'closed' => __('Afgerond'),
                     ])
-                    ->selectablePlaceholder(false),
+                    ->selectablePlaceholder(false)
+                    ->toggleable(),
                 TextColumn::make('rating')
                     ->label(__('Beoordeling'))
                     ->tooltip(fn ($record) => $record->rating_comment ?: null)
@@ -105,22 +123,15 @@ class ChatConversationResource extends Resource
                         $record->rating >= 4 => '👍 ' . $record->rating,
                         $record->rating <= 2 => '👎 ' . $record->rating,
                         default => '★ ' . $record->rating,
-                    }),
-                TextColumn::make('tags.name')
-                    ->label(__('Tags'))
-                    ->badge()
-                    ->separator(','),
+                    })
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('messages_count')
                     ->counts('messages')
-                    ->label(__('Berichten')),
-                TextColumn::make('last_message_at')
-                    ->label(__('Laatste bericht'))
-                    ->dateTime()
-                    ->sortable(),
+                    ->label(__('Berichten'))
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort(fn (Builder $query): Builder => $query
-                ->orderByRaw("CASE WHEN last_message_role = 'visitor' THEN 0 ELSE 1 END")
-                ->orderByDesc('last_message_at'))
+            ->defaultSort('last_message_at', 'desc')
+            ->poll('15s')
             ->recordActions([
                 // Status wisselen gebeurt nu inline via de Status-keuzelijst hierboven.
                 DeleteAction::make(),
@@ -141,22 +152,12 @@ class ChatConversationResource extends Resource
                 ]),
             ])
             ->filters([
-                Filter::make('awaiting_agent')
-                    ->label(__('Wacht op mijn antwoord'))
-                    ->query(fn (Builder $query): Builder => $query->awaitingAgent()->where('status', '!=', 'closed')),
                 SelectFilter::make('mode')
                     ->label(__('Modus'))
                     ->options([
                         'ai' => __('AI'),
                         'waiting_human' => __('Wacht op medewerker'),
                         'human' => __('Medewerker'),
-                    ]),
-                SelectFilter::make('status')
-                    ->label(__('Status'))
-                    ->options([
-                        'active' => __('Actief'),
-                        'inactive' => __('Inactief'),
-                        'closed' => __('Afgerond'),
                     ]),
                 SelectFilter::make('rating')
                     ->label(__('Beoordeling'))
@@ -188,7 +189,31 @@ class ChatConversationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // visitorSession eager-loaden zodat de presence-badge geen N+1 doet.
-        return parent::getEloquentQuery()->with('visitorSession');
+        // visitorSession en latestMessage eager-loaden zodat presence en preview geen N+1 doen.
+        return parent::getEloquentQuery()->with(['visitorSession', 'latestMessage']);
+    }
+
+    /** Eerste regel van het laatste bericht, met wie het stuurde ervoor. */
+    public static function messagePreview(ChatConversation $record): ?string
+    {
+        $message = $record->latestMessage;
+
+        if (! $message) {
+            return null;
+        }
+
+        $text = trim(preg_replace('/\s+/', ' ', strip_tags((string) $message->content)));
+
+        if ($text === '' && filled($message->attachments)) {
+            $text = __('Bijlage');
+        }
+
+        $prefix = match ($message->role) {
+            'ai' => __('AI') . ': ',
+            'human' => __('Medewerker') . ': ',
+            default => '',
+        };
+
+        return $prefix . \Illuminate\Support\Str::limit($text, 90);
     }
 }

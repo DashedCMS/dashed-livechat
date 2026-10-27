@@ -5,6 +5,7 @@
 namespace Dashed\DashedLivechat\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -100,6 +101,15 @@ class ChatConversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(ChatMessage::class)->orderBy('id');
+    }
+
+    /** Het laatste bericht dat de bezoeker kan zien, voor de preview in het overzicht. */
+    public function latestMessage(): HasOne
+    {
+        return $this->hasOne(ChatMessage::class)->ofMany(
+            ['id' => 'max'],
+            fn ($query) => $query->where('is_internal', false),
+        );
     }
 
     public function events(): HasMany
