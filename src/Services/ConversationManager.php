@@ -262,8 +262,14 @@ class ConversationManager
 
                 continue;
             }
-            // Move onto the 'dashed' disk so MediaHelper can addMediaFromDisk it.
-            $path = $file->store('chat-tmp', 'dashed');
+            // Nogmaals de bijlageregel (ook voor aanroepers die niet via de validatie kwamen), en dan met een eigen
+            // naam en de gecontroleerde extensie op de 'dashed'-disk, zodat MediaHelper hem kan oppakken.
+            if (($reden = \Dashed\DashedLivechat\Support\AttachmentRules::rejectionReason($file)) !== null) {
+                Log::warning('livechat: bijlage geweigerd', ['name' => $file->getClientOriginalName(), 'reden' => $reden]);
+
+                continue;
+            }
+            $path = $file->storeAs('chat-tmp', \Dashed\DashedLivechat\Support\AttachmentRules::storageName($file), 'dashed');
             if (! $path) {
                 Log::warning('livechat: bijlage opslaan op disk mislukt', ['name' => $file->getClientOriginalName()]);
 
