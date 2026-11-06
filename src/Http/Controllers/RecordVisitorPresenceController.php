@@ -3,6 +3,8 @@
 namespace Dashed\DashedLivechat\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
@@ -39,7 +41,7 @@ class RecordVisitorPresenceController
         // korting), zodat "actieve mandjes" alleen mandjes met producten telt.
         $cartTotal = rescue(
             fn () => class_exists(\Dashed\DashedEcommerceCore\Classes\ShoppingCart::class)
-                ? (float) cartHelper()->getSubtotal()
+                ? $this->cartSubtotal($request)
                 : null,
             null,
             false
@@ -71,6 +73,34 @@ class RecordVisitorPresenceController
             'ok' => true,
             'nudge' => $this->cartNudge($siteId, $token, (float) $cartTotal, $session),
         ]);
+    }
+
+    /**
+     * Som over de winkelwagenregels, zelfde volgorde als CartHelper: eerst de
+     * wagen van het cookie, zonder regels die van de ingelogde klant.
+     * cartHelper()->getSubtotal() kan hier niet: zonder initialize() is dat
+     * altijd 0, en initialize() rekent alles door en maakt per hartslag een
+     * wagen aan. De web-groep op deze route ontsleutelt de cookie.
+     */
+    protected function cartSubtotal(Request $request): float
+    {
+        // Eén wagen, net als CartHelper: er kunnen er meer op dezelfde gebruiker staan.
+        $sum = function (string $column, mixed $value): float {
+            $cartId = DB::table('dashed__carts')->where('type', 'default')->where($column, $value)->orderBy('id')->value('id');
+
+            return $cartId
+                ? (float) DB::table('dashed__cart_items')->where('cart_id', $cartId)->sum(DB::raw('unit_price * quantity'))
+                : 0.0;
+        };
+
+        $token = (string) $request->cookie(config('dashed-ecommerce.cart_cookie', 'cart_token'));
+        $total = Str::isUuid($token) ? $sum('token', $token) : 0.0;
+
+        if ($total <= 0 && auth()->id()) {
+            $total = $sum('user_id', auth()->id());
+        }
+
+        return round($total, 2);
     }
 
     /**
