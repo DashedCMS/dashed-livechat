@@ -7,7 +7,7 @@ namespace Dashed\DashedLivechat\Http\Middleware;
 use Closure;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Blade;
-use Dashed\DashedLivechat\Support\WidgetConfig;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Services\TriggerMatcher;
 
 class InjectChatWidget
@@ -20,9 +20,9 @@ class InjectChatWidget
     {
         $response = $next($request);
 
-        // Alleen HTML-responses op de frontend (geen admin/api).
+        // Alleen geslaagde HTML-responses op de frontend (geen admin/api).
         $contentType = $response->headers->get('Content-Type', '');
-        if (! str_contains($contentType, 'text/html')) {
+        if ($response->getStatusCode() !== 200 || ! str_contains($contentType, 'text/html')) {
             return $response;
         }
         // Alleen op de frontend: nooit in het Filament-admin (panel-routes heten
@@ -41,7 +41,7 @@ class InjectChatWidget
         }
 
         $siteId = Sites::getActive();
-        if (! WidgetConfig::for($siteId)['enabled']) {
+        if (! Customsetting::get('chat_enabled', $siteId)) {
             return $response;
         }
 

@@ -19,6 +19,11 @@ class VisitorSession extends Model
     ];
 
     /** Bezoekers die in de laatste $seconds seconden actief waren. */
+    public static function pruneOld(): void
+    {
+        static::where('last_seen_at', '<', now()->subDay())->delete();
+    }
+
     public function scopeLive(Builder $query, int $seconds = 60): Builder
     {
         return $query->where('last_seen_at', '>=', now()->subSeconds($seconds));

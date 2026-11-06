@@ -10,9 +10,25 @@ use Dashed\DashedLivechat\Models\AppNotification;
 
 class NotifyVisitorCountCommand extends Command
 {
+    private const NOTIFICATION_CENTER = '\Dashed\DashedMobileApi\Support\NotificationCenter';
+
     protected $signature = 'dashed-livechat:notify-visitor-count';
 
     protected $description = 'Stuurt een push met het aantal live bezoekers naar app-gebruikers die "Live bezoekers" aan hebben (max 1 per 5 min per site).';
+
+    /**
+     * Zonder live bezoekers is er niets te melden, en zonder mobiele app is er
+     * niemand om het aan te melden: AppNotification is dan alleen de
+     * throttle-marker, die nergens gelezen wordt.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(
+            fn () => class_exists(self::NOTIFICATION_CENTER) && VisitorSession::query()->live(120)->exists(),
+            true,
+            false
+        );
+    }
 
     public function handle(): int
     {
@@ -52,7 +68,7 @@ class NotifyVisitorCountCommand extends Command
 
             // Push naar app-gebruikers die het type 'visitors.live' aan hebben staan.
             // De per-gebruiker-voorkeur (default uit) bepaalt wie 'm krijgt.
-            $center = '\Dashed\DashedMobileApi\Support\NotificationCenter';
+            $center = self::NOTIFICATION_CENTER;
             if (class_exists($center)) {
                 try {
                     app($center)->push()

@@ -68,7 +68,7 @@ class InjectVisitorPresence
                 .catch(function () {});
         }
         beat();
-        setInterval(beat, 25000);
+        setInterval(beat, 45000);
         document.addEventListener('visibilitychange', function () { if (! document.hidden) beat(); });
     } catch (e) {}
 })();

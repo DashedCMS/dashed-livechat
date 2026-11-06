@@ -14,11 +14,22 @@ class SweepStaleConversationsCommand extends Command
 
     protected $description = 'Markeert gesprekken inactief na 15 minuten en afgerond na 1 uur zonder reactie.';
 
+    /**
+     * Snelle controle voor de scheduler: dezelfde gesprekken als handle(), met
+     * dezelfde grenzen. Lukt de query niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(fn () => ChatConversation::query()
+            ->whereNotNull('last_message_at')
+            ->where(fn ($query) => $query
+                ->where(fn ($q) => $q->where('status', 'active')->where('last_message_at', '<=', now()->subMinutes(15)))
+                ->orWhere(fn ($q) => $q->where('status', 'inactive')->where('last_message_at', '<=', now()->subHour())))
+            ->exists(), true, false);
+    }
+
     public function handle(): int
     {
-        // Oude presence-sessies opruimen (ouder dan een dag).
-        \Dashed\DashedLivechat\Models\VisitorSession::where('last_seen_at', '<', now()->subDay())->delete();
-
         // Afgerond na 1 uur geen reactie (vanuit actief of inactief).
         $closed = ChatConversation::query()
             ->whereIn('status', ['active', 'inactive'])

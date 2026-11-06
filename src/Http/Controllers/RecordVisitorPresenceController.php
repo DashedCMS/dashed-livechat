@@ -45,21 +45,27 @@ class RecordVisitorPresenceController
             false
         );
 
-        $session = VisitorSession::updateOrCreate(
-            ['site_id' => $siteId, 'token' => $token],
-            [
-                'last_seen_at' => now(),
-                'url' => mb_substr((string) $request->input('url', ''), 0, 255) ?: null,
-                'referrer' => mb_substr((string) $request->input('referrer', ''), 0, 255) ?: null,
-                'ip_hash' => $ipHash,
-                'country' => $geo['country'],
-                'country_code' => $geo['country_code'],
-                'city' => $geo['city'],
-                'latitude' => $geo['latitude'],
-                'longitude' => $geo['longitude'],
-                'cart_total' => $cartTotal,
-            ],
-        );
+        $values = [
+            'last_seen_at' => now(),
+            'url' => mb_substr((string) $request->input('url', ''), 0, 255) ?: null,
+            'referrer' => mb_substr((string) $request->input('referrer', ''), 0, 255) ?: null,
+            'ip_hash' => $ipHash,
+            'country' => $geo['country'],
+            'country_code' => $geo['country_code'],
+            'city' => $geo['city'],
+            'latitude' => $geo['latitude'],
+            'longitude' => $geo['longitude'],
+            'cart_total' => $cartTotal,
+        ];
+
+        // Bestaande rij is hierboven al gelezen. Alleen een nieuwe gaat via
+        // updateOrCreate, die een gelijktijdige eerste hartslag opvangt.
+        if ($existing) {
+            $existing->update($values);
+            $session = $existing;
+        } else {
+            $session = VisitorSession::updateOrCreate(['site_id' => $siteId, 'token' => $token], $values);
+        }
 
         return response()->json([
             'ok' => true,

@@ -119,9 +119,18 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
             $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
             // Markeer gesprekken inactief (15 min) en afgerond (1 uur) zonder reactie.
-            $schedule->command('dashed-livechat:sweep-stale-conversations')->everyFiveMinutes();
+            $schedule->command('dashed-livechat:sweep-stale-conversations')
+                ->everyFiveMinutes()
+                ->withoutOverlapping()
+                ->when(fn () => \Dashed\DashedLivechat\Commands\SweepStaleConversationsCommand::hasWork());
+            // Oude presence-sessies opruimen kan zonder eigen proces en hoeft maar één keer per dag.
+            $schedule->call(fn () => \Dashed\DashedLivechat\Models\VisitorSession::pruneOld())
+                ->dailyAt('04:15')
+                ->name('dashed-livechat:prune-visitor-sessions');
             // Zet (max 1 per 5 min) een app-notificatie klaar met het aantal live bezoekers.
-            $schedule->command('dashed-livechat:notify-visitor-count')->everyFiveMinutes();
+            $schedule->command('dashed-livechat:notify-visitor-count')
+                ->everyFiveMinutes()
+                ->when(fn () => \Dashed\DashedLivechat\Commands\NotifyVisitorCountCommand::hasWork());
             // Houd de semantische kennis-index (embeddings) dagelijks vers; de
             // command slaat zichzelf over op sites zonder embedding-zoekstrategie.
             $schedule->command('chat:index-embeddings')->dailyAt('04:00');

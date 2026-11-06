@@ -11,7 +11,7 @@ class TriggerMatcher
     public function matches(string $siteId, string $path): bool
     {
         // Site speelt geen rol bij triggers; alle actieve triggers tellen mee.
-        $triggers = ChatTrigger::where('is_active', true)->get();
+        $triggers = ChatTrigger::activeCached();
 
         // Geen triggers ingesteld -> standaard overal tonen.
         if ($triggers->isEmpty()) {
@@ -24,7 +24,7 @@ class TriggerMatcher
     public function matchingTrigger(string $siteId, string $path): ?ChatTrigger
     {
         $path = '/' . ltrim($path, '/');
-        $triggers = ChatTrigger::where('is_active', true)->orderByDesc('sort_order')->get();
+        $triggers = ChatTrigger::activeCached();
 
         $lineage = [];
         if ($triggers->contains(fn ($t) => $t->placement === 'models')) {
