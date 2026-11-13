@@ -15,8 +15,10 @@ class AttachmentRules
      * type moet een afbeelding of PDF zijn (of onbekend: libmagic en iPhones geven HEIC vaak als
      * application/octet-stream). Tot v4.34.0 was één van beide genoeg, dus kwam `shell.php` met type
      * image/png erdoor. Daarbovenop de wachter van dashed-core: geen verstopte extensie (foto.php.jpg) en geen
-     * servercode in de inhoud. Bewust geen inhoud-sniffing op het type zelf: HEIC van iPhone-foto's werd
-     * daarop onterecht geweigerd.
+     * servercode in de inhoud. Bewust geen allowlist op het gesnoven type: HEIC van iPhone-foto's werd
+     * daarop onterecht geweigerd. Wel een blokkade op wat de inhoud aantoonbaar is: tekst, HTML, XML/SVG of
+     * script onder een afbeeldingsnaam. De opslag schrijft het Content-Type namelijk uit de inhoud, dus
+     * `x.jpg` met HTML erin werd anders als text/html uitgeserveerd vanaf de publieke bibliotheek.
      */
     public static function clientImageOrPdf(): Closure
     {
@@ -45,7 +47,32 @@ class AttachmentRules
             return $reden;
         }
 
+        if (static::contentIsMarkupOrText($value)) {
+            return 'Alleen afbeeldingen of een PDF zijn toegestaan.';
+        }
+
         return null;
+    }
+
+    private static function contentIsMarkupOrText(UploadedFile $file): bool
+    {
+        try {
+            $sniffed = strtolower((string) $file->getMimeType());
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if (str_starts_with($sniffed, 'text/')) {
+            return true;
+        }
+
+        foreach (['html', 'xml', 'svg', 'javascript', 'ecmascript', 'json'] as $needle) {
+            if (str_contains($sniffed, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Opslagnaam: willekeurig, met de gecontroleerde extensie (nooit de door de inhoud geraden extensie). */

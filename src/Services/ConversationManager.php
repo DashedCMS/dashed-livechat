@@ -269,6 +269,30 @@ class ConversationManager
 
                 continue;
             }
+            // Rechtstreeks de inname van de bibliotheek in, zonder tussenstop op de publieke schijf. De naam blijft
+            // de willekeurige opslagnaam (de url van een bijlage mag niet te raden zijn), en elke bijlage wordt een
+            // eigen item: een gedeeld item zou met het ene gesprek ook uit het andere verdwijnen.
+            if (class_exists(\Dashed\DashedFiles\Classes\Ingest\IncomingMedia::class) && method_exists(\Dashed\DashedFiles\Classes\MediaLibrary::class, 'ingest')) {
+                try {
+                    $incoming = \Dashed\DashedFiles\Classes\Ingest\IncomingMedia::fromUploadedFile($file, 'chat', mediaHelper()->getFolderId('chat'));
+                    $incoming = new \Dashed\DashedFiles\Classes\Ingest\IncomingMedia(
+                        localPath: $incoming->localPath,
+                        fileName: \Dashed\DashedLivechat\Support\AttachmentRules::storageName($file),
+                        source: 'chat',
+                        folderId: $incoming->folderId,
+                        uploadedByUserId: $incoming->uploadedByUserId,
+                    );
+
+                    $ids[] = (int) app(\Dashed\DashedFiles\Classes\MediaLibrary::class)->ingest($incoming, 'create')->item->id;
+                } catch (\Dashed\DashedFiles\Classes\Ingest\MediaRejectedException $exception) {
+                    Log::warning('livechat: bijlage geweigerd bij de inname', ['name' => $file->getClientOriginalName(), 'reden' => $exception->getMessage()]);
+                } catch (\Throwable $exception) {
+                    report($exception);
+                }
+
+                continue;
+            }
+
             $path = $file->storeAs('chat-tmp', \Dashed\DashedLivechat\Support\AttachmentRules::storageName($file), 'dashed');
             if (! $path) {
                 Log::warning('livechat: bijlage opslaan op disk mislukt', ['name' => $file->getClientOriginalName()]);
