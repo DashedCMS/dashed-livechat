@@ -70,11 +70,15 @@ class ConversationController extends Controller
 
         $perPage = (int) config('dashed-mobile-api.default_page_size', 25);
 
-        // Gesprekken die op jou wachten bovenaan, daarna nieuwste eerst.
+        // Nieuwste eerst (zoals het CMS-overzicht). De vorige "wie-op-jou-wacht
+        // eerst"-sortering begroef recent beantwoorde gesprekken onder een stapel
+        // oudere 'visitor-laatst'-gesprekken, waardoor ze buiten de eerste pagina
+        // vielen en in de app ontbraken. Prioriteren op wie wacht gaat via het
+        // 'awaiting'-filter + de badge, niet via de volgorde.
         return ConversationResource::collection(
             $query
-                ->orderByRaw("CASE WHEN last_message_role = 'visitor' THEN 0 ELSE 1 END")
                 ->orderByDesc('last_message_at')
+                ->orderByDesc('id')
                 ->paginate($perPage),
         );
     }
