@@ -23,8 +23,9 @@ class ConversationController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        // visitorSession + tags eager-loaden zodat visitorPresence()/tags geen N+1 doen.
-        $query = ChatConversation::query()->with(['visitorSession', 'tags'])->where('site_id', Sites::getActive());
+        // visitorSession + tags + laatste bericht eager-loaden zodat
+        // visitorPresence()/tags/preview geen N+1 doen.
+        $query = ChatConversation::query()->with(['visitorSession', 'tags', 'latestMessage'])->where('site_id', Sites::getActive());
 
         if ($mode = $request->query('mode')) {
             $query->where('mode', (string) $mode);
