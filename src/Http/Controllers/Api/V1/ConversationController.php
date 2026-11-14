@@ -36,7 +36,17 @@ class ConversationController extends Controller
         }
 
         if (($status = $request->query('status')) && $status !== 'all') {
-            $query->where('status', (string) $status);
+            if ($status === 'active') {
+                // 'Actief' in de app = alle lopende gesprekken, net als de
+                // "open"-weergave in het CMS (status != closed). Belangrijk: de
+                // sweep zet een gesprek na 15 min stilte op 'inactive' (en pas na
+                // een uur op 'closed'). Met een exacte match op 'active' zouden die
+                // 'inactive'-gesprekken (vaak van eerder vandaag) uit de app-lijst
+                // verdwijnen terwijl ze in het CMS gewoon zichtbaar blijven.
+                $query->where('status', '!=', 'closed');
+            } else {
+                $query->where('status', (string) $status);
+            }
         }
 
         if ($search = trim((string) $request->query('search'))) {
