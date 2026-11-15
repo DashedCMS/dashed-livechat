@@ -56,6 +56,15 @@ class ChatWidget extends Component
     public ?string $contactError = null;
     public string $ratingComment = '';
 
+
+    /**
+     * Uploadpoort van dashed-core (Security\Uploads\UploadGate): bezoekers
+     * mogen alleen bijlagen toevoegen aan het chatbericht.
+     */
+    public function acceptsGuestUpload(string $property): bool
+    {
+        return $property === 'newAttachments' || str_starts_with($property, 'newAttachments.');
+    }
     public function mount(?string $siteId = null, ?array $trigger = null): void
     {
         $this->siteId = $siteId ?: Sites::getActive();
