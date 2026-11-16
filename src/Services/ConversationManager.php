@@ -7,7 +7,6 @@ namespace Dashed\DashedLivechat\Services;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Dashed\DashedLivechat\Models\ChatAgent;
 use Dashed\DashedLivechat\Enums\MessageRole;
 use Dashed\DashedLivechat\Models\ChatMessage;
@@ -262,50 +261,21 @@ class ConversationManager
 
                 continue;
             }
-            // Nogmaals de bijlageregel (ook voor aanroepers die niet via de validatie kwamen), en dan met een eigen
-            // naam en de gecontroleerde extensie op de 'dashed'-disk, zodat MediaHelper hem kan oppakken.
+            // Nogmaals de bijlageregel (ook voor aanroepers die niet via de validatie kwamen).
             if (($reden = \Dashed\DashedLivechat\Support\AttachmentRules::rejectionReason($file)) !== null) {
                 Log::warning('livechat: bijlage geweigerd', ['name' => $file->getClientOriginalName(), 'reden' => $reden]);
 
                 continue;
             }
-            // Rechtstreeks de inname van de bibliotheek in, zonder tussenstop op de publieke schijf. De naam blijft
-            // de willekeurige opslagnaam (de url van een bijlage mag niet te raden zijn), en elke bijlage wordt een
-            // eigen item: een gedeeld item zou met het ene gesprek ook uit het andere verdwijnen.
-            if (class_exists(\Dashed\DashedFiles\Classes\Ingest\IncomingMedia::class) && method_exists(\Dashed\DashedFiles\Classes\MediaLibrary::class, 'ingest')) {
-                try {
-                    $incoming = \Dashed\DashedFiles\Classes\Ingest\IncomingMedia::fromUploadedFile($file, 'chat', mediaHelper()->getFolderId('chat'));
-                    $incoming = new \Dashed\DashedFiles\Classes\Ingest\IncomingMedia(
-                        localPath: $incoming->localPath,
-                        fileName: \Dashed\DashedLivechat\Support\AttachmentRules::storageName($file),
-                        source: 'chat',
-                        folderId: $incoming->folderId,
-                        uploadedByUserId: $incoming->uploadedByUserId,
-                    );
-
-                    $ids[] = (int) app(\Dashed\DashedFiles\Classes\MediaLibrary::class)->ingest($incoming, 'create')->item->id;
-                } catch (\Dashed\DashedFiles\Classes\Ingest\MediaRejectedException $exception) {
-                    Log::warning('livechat: bijlage geweigerd bij de inname', ['name' => $file->getClientOriginalName(), 'reden' => $exception->getMessage()]);
-                } catch (\Throwable $exception) {
-                    report($exception);
-                }
-
-                continue;
-            }
-
-            $path = $file->storeAs('chat-tmp', \Dashed\DashedLivechat\Support\AttachmentRules::storageName($file), 'dashed');
+            // Privé (dashed-core PrivateUploads), nooit in de publieke mediabibliotheek:
+            // alleen te openen via een tijdelijke, gesigneerde link (zie ChatMessage::attachmentsData()).
+            $path = \Dashed\DashedCore\Security\Uploads\PrivateUploads::store($file, 'livechat');
             if (! $path) {
-                Log::warning('livechat: bijlage opslaan op disk mislukt', ['name' => $file->getClientOriginalName()]);
+                Log::warning('livechat: bijlage niet opgeslagen (type niet toegestaan of opslag mislukt)', ['name' => mb_substr((string) $file->getClientOriginalName(), 0, 100)]);
 
                 continue;
             }
-            $id = mediaHelper()->uploadFromPath($path, 'chat');
-            Storage::disk('dashed')->delete($path);
-            if ($id) {
-                $ids[] = (int) $id;
-            } else {
-                Log::warning('livechat: media-upload gaf geen id terug', ['path' => $path]);
-            }
+            $ids[] = $path;
         }
 
         return $ids;

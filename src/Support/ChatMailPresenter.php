@@ -55,7 +55,7 @@ class ChatMailPresenter
                 'time' => $message->created_at?->format('d-m-Y H:i'),
                 'avatar' => $avatar,
                 'html' => $isVisitor ? nl2br(e((string) $message->content)) : self::markdown($message),
-                'attachments' => rescue(fn () => $message->attachmentsData(), [], false),
+                'attachments' => rescue(fn () => $message->attachmentsData(7 * 24 * 60), [], false), // mail: link 7 dagen geldig
                 'cards' => self::productCards($message),
             ];
         })->values()->all();

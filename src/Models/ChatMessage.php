@@ -48,7 +48,7 @@ class ChatMessage extends Model
      *
      * @return array<int, array{id:int,url:string,thumb_url:string,mime:string,name:string,is_image:bool}>
      */
-    public function attachmentsData(): array
+    public function attachmentsData(int $linkMinutes = 60): array
     {
         $ids = $this->attachments ?? [];
         if (! is_array($ids) || empty($ids)) {
@@ -57,6 +57,22 @@ class ChatMessage extends Model
 
         $out = [];
         foreach ($ids as $id) {
+            // Nieuwe bijlagen: privé pad (dashed-core PrivateUploads) met een
+            // tijdelijke, gesigneerde link. Oudere berichten bevatten media-id's.
+            if (\Dashed\DashedCore\Security\Uploads\PrivateUploads::isPrivate($id)) {
+                $url = \Dashed\DashedCore\Security\Uploads\PrivateUploads::temporaryUrl($id, $linkMinutes);
+                $out[] = [
+                    'id' => (int) sprintf('%u', crc32($id)),
+                    'url' => $url,
+                    'thumb_url' => $url,
+                    'mime' => \Dashed\DashedCore\Security\Uploads\PrivateUploads::CONTENT_TYPES[\Dashed\DashedCore\Security\Uploads\PrivateUploads::extension($id)] ?? 'application/octet-stream',
+                    'name' => basename($id),
+                    'is_image' => \Dashed\DashedCore\Security\Uploads\PrivateUploads::isImage($id),
+                ];
+
+                continue;
+            }
+
             $full = mediaHelper()->getSingleMedia($id, 'large');
             if (! is_object($full) || empty($full->url ?? null)) {
                 continue;
