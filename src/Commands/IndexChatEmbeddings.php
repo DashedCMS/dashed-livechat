@@ -5,6 +5,7 @@ namespace Dashed\DashedLivechat\Commands;
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Schema;
+use Dashed\DashedCore\Models\BackgroundTask;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Ai\Knowledge\EmbeddingService;
 
@@ -14,7 +15,32 @@ class IndexChatEmbeddings extends Command
 
     protected $description = 'Index product and content embeddings for semantic search per site.';
 
+    /**
+     * De taak in het takenicoon van dashed-core. Pas aangemaakt bij de eerste
+     * site die echt indexeert: op een site zonder embedding-zoekstrategie
+     * doet deze dagelijkse ronde niets en hoort er ook geen taak te staan.
+     */
+    private ?BackgroundTask $task = null;
+
+    private int $indexed = 0;
+
     public function handle(EmbeddingService $embeddings): int
+    {
+        try {
+            $result = $this->indexSites($embeddings);
+        } catch (\Throwable $e) {
+            $this->task?->fail($e);
+
+            throw $e;
+        }
+
+        $this->task?->progress($this->indexed);
+        $this->task?->finish(__(':aantal items geïndexeerd.', ['aantal' => $this->indexed]));
+
+        return $result;
+    }
+
+    private function indexSites(EmbeddingService $embeddings): int
     {
         $siteArg = $this->argument('site');
 
@@ -34,6 +60,13 @@ class IndexChatEmbeddings extends Command
             }
 
             $this->line("Site {$siteId}: embeddings indexeren...");
+
+            // Achter class_exists, want een oudere dashed-core kent
+            // BackgroundTask nog niet. Zonder starter en zonder melding: dit
+            // draait elke nacht vanuit de planner.
+            if (! $this->task && class_exists(BackgroundTask::class)) {
+                $this->task = BackgroundTask::begin('chat-embeddings', __('Kennisindex van de chat bijwerken'), notify: false);
+            }
 
             // Products (always available via dashed-ecommerce-core).
             $this->indexModel(
@@ -70,6 +103,7 @@ class IndexChatEmbeddings extends Command
                     $text = trim(($l->question ?? '') . ' ' . ($l->answer ?? ''));
                     if ($text !== '') {
                         $embeddings->upsertFor($l, $text, $siteId);
+                        $this->indexedOne();
                     }
                 });
 
@@ -106,6 +140,20 @@ class IndexChatEmbeddings extends Command
                 return;
             }
             $embeddings->upsertFor($record, $text, $siteId);
+            $this->indexedOne();
         });
+    }
+
+    /**
+     * Elke 25 items naar de taak, niet bij elk item: een shop heeft er
+     * duizenden.
+     */
+    private function indexedOne(): void
+    {
+        $this->indexed++;
+
+        if ($this->indexed % 25 === 0) {
+            $this->task?->progress($this->indexed);
+        }
     }
 }

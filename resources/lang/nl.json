@@ -1,4 +1,5 @@
 {
+    ":aantal items geïndexeerd.": ":aantal items geïndexeerd.",
     ":aantal trigger(s) toegevoegd": ":aantal trigger(s) toegevoegd",
     ":naam wacht op een medewerker": ":naam wacht op een medewerker",
     "Aangemaakt": "Aangemaakt",
@@ -104,6 +105,7 @@
     "Jij": "Jij",
     "Jij bent aan zet": "Jij bent aan zet",
     "Kan ik je ergens mee helpen met je bestelling? 🛒": "Kan ik je ergens mee helpen met je bestelling? 🛒",
+    "Kennisindex van de chat bijwerken": "Kennisindex van de chat bijwerken",
     "Kleur": "Kleur",
     "Kon geen suggestie ophalen": "Kon geen suggestie ophalen",
     "Korte beschrijving van karakter en rol, bv. \"Vriendelijke webshop-assistent\".": "Korte beschrijving van karakter en rol, bv. \"Vriendelijke webshop-assistent\".",
