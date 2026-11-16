@@ -30,6 +30,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews('dashed-livechat')
             ->hasCommands([
+                \Dashed\DashedLivechat\Commands\PrivatizeChatAttachmentsCommand::class,
                 \Dashed\DashedLivechat\Commands\IndexChatEmbeddings::class,
                 \Dashed\DashedLivechat\Commands\SweepStaleConversationsCommand::class,
                 \Dashed\DashedLivechat\Commands\NotifyVisitorCountCommand::class,
@@ -63,6 +64,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 'add_receive_outside_hours_to_chat_agents_table',
                 'escalation_toggles_for_chat_agents_table',
                 'is_sandbox_to_chat_conversations_table',
+                'privatize_chat_attachments',
                 'create_web_push_subscriptions_table',
                 'create_web_push_preferences_table',
                 '2026_07_30_120000_add_visitor_metadata_to_chat_conversations_table',
