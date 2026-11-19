@@ -56,6 +56,40 @@ class ConversationTranscriptMail extends ChatCustomerMail
         return 'Hierbij een overzicht van je chatgesprek, zodat je het nog eens rustig kunt teruglezen.';
     }
 
+    /**
+     * De tevredenheidsvraag van dashed-core onder het gesprek, als die voor
+     * de site van het gesprek aanstaat (Instellingen, Klanttevredenheid,
+     * standaard uit). De vraag hangt aan het gesprek en, als een medewerker
+     * het gesprek had, aan die medewerker.
+     */
+    protected function extraBlocks(array $data): array
+    {
+        $satisfaction = \Dashed\DashedCore\Satisfaction\Satisfaction::class;
+
+        if (! class_exists($satisfaction) || ! $satisfaction::enabled($satisfaction::SOURCE_CHAT, $this->conversation->site_id)) {
+            return [];
+        }
+
+        return array_filter([rescue(function () use ($satisfaction, $data) {
+            $agent = $this->conversation->assignedAgent;
+            $human = $agent && $agent->type === 'human';
+
+            $rating = $satisfaction::request($satisfaction::SOURCE_CHAT, $this->conversation, [
+                'site_id' => $this->conversation->site_id,
+                'staff_user_id' => $human ? $agent->user_id : null,
+                'staff_name' => $agent?->name,
+                'email' => $this->conversation->visitor_email,
+                'locale' => $this->conversation->locale ?? app()->getLocale(),
+            ]);
+
+            return $satisfaction::mailBlock(
+                $rating,
+                $satisfaction::text('question-chat', 'Hoe tevreden ben je over ons chatgesprek?'),
+                $data['chat']['primary'] ?? null,
+            );
+        }, null, true)]);
+    }
+
     protected function replyHint(): ?string
     {
         return $this->replyToEmail

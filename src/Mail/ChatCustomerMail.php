@@ -37,6 +37,16 @@ abstract class ChatCustomerMail extends Mailable
         return null;
     }
 
+    /**
+     * Extra rijen onder het gesprek, zoals de tevredenheidsvraag.
+     *
+     * @return array<int, string>
+     */
+    protected function extraBlocks(array $data): array
+    {
+        return [];
+    }
+
     protected function siteName(): string
     {
         return (string) (Customsetting::get('site_name', $this->conversation()->site_id) ?: config('app.name'));
@@ -63,6 +73,7 @@ abstract class ChatCustomerMail extends Mailable
             ])->render(),
             view('dashed-livechat::mail.blocks.conversation', $data)->render(),
             view('dashed-livechat::mail.blocks.actions', $data + ['replyHint' => $this->replyHint()])->render(),
+            ...$this->extraBlocks($data),
         ];
 
         return new Content(

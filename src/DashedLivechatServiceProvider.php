@@ -87,6 +87,9 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
 
     public function bootingPackage(): void
     {
+        // Sectie op het klantprofiel van ec-core; zonder webshop leest niemand hem.
+        cms()->builder('customerProfileSections', ['chats' => \Dashed\DashedLivechat\CustomerProfile\ChatCustomerSection::class]);
+
         // Chat-openingstijden voeden het bedrijfsschema (dashed-core).
         if (class_exists(\Dashed\DashedCore\Classes\Seo\BusinessProfile::class)) {
             cms()->builder('organizationOpeningHours', [function (string $siteId): array {
@@ -256,6 +259,11 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
         }
 
         self::registreerBewaartermijnen();
+
+        // AVG-verzoeken: gesprekken van een bezoeker inzien en verwijderen.
+        if (method_exists(cms(), 'registerPersonalDataProvider')) {
+            cms()->registerPersonalDataProvider(\Dashed\DashedLivechat\PersonalData\LivechatPersonalDataProvider::class);
+        }
     }
 
     /**
