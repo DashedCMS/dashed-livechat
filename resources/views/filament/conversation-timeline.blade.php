@@ -66,9 +66,32 @@
         <div class="dlc__layout">
             <div class="dlc__main">
         <x-filament::section class="dlc__panel">
-            <div class="dlc__thread" wire:poll.3s="pollMessages"
-                 x-data="{ lastId: @entangle('lastMessageId') }"
-                 x-effect="lastId; $nextTick(() => { $el.scrollTop = $el.scrollHeight; })">
+            {{-- Scroll pas als de morph klaar is: een MutationObserver op data-last-id
+                 vuurt na de DOM-update, waar een entangle/x-effect ervoor kwam. --}}
+            <div class="dlc__thread" wire:poll.keep-alive.3s="pollMessages"
+                 data-last-id="{{ $lastMessageId }}"
+                 x-data="{
+                     seen: null,
+                     toBottom(revealComposer) {
+                         this.$el.scrollTop = this.$el.scrollHeight;
+                         if (! revealComposer) return;
+                         const composer = document.querySelector('.dlc__composer');
+                         if (! composer) return;
+                         const rect = composer.getBoundingClientRect();
+                         if (rect.bottom > window.innerHeight || rect.top < 0) {
+                             composer.scrollIntoView({ block: 'end', behavior: 'smooth' });
+                         }
+                     },
+                 }"
+                 x-init="
+                     seen = $el.dataset.lastId;
+                     $nextTick(() => toBottom(true));
+                     new MutationObserver(() => {
+                         if ($el.dataset.lastId === seen) return;
+                         seen = $el.dataset.lastId;
+                         requestAnimationFrame(() => toBottom(true));
+                     }).observe($el, { attributes: true, attributeFilter: ['data-last-id'], childList: true, subtree: true });
+                 ">
                 @forelse($conversation->messages as $message)
                     @if($message->role === 'system')
                         <div class="dlc__sysrow">
