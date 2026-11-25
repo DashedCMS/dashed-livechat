@@ -17,12 +17,19 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 use Dashed\DashedLivechat\Filament\Resources\ChatConversationResource\Pages;
 
 class ChatConversationResource extends Resource
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
+
+    protected static function requiredChatPermission(): string
+    {
+        return 'view_chat';
+    }
 
     protected static ?string $model = ChatConversation::class;
 

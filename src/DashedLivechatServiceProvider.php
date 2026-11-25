@@ -76,6 +76,7 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
                 '2026_07_31_130000_add_translation_to_chat_messages_table',
                 '2026_07_31_130100_add_auto_translate_to_chat_conversations_table',
                 '2026_07_31_140000_add_rating_to_chat_conversations_table',
+                '2026_11_25_000001_grant_chat_permissions_to_existing_roles',
             ])
             ->runsMigrations();
     }
@@ -171,6 +172,15 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             new \Dashed\DashedLivechat\DashedLivechatPlugin(),
         ]);
 
+        // Tot november 2026 had de livechat geen eigen rechten in het CMS. De
+        // migratie grant_chat_permissions_to_existing_roles geeft ze aan elke
+        // bestaande rol, zodat niemand bij het uitrollen toegang verliest. Zie
+        // RequiresChatPermission voor wat elk recht opent.
+        $cms->registerRolePermissions('Chat', [
+            'view_chat' => __('Chatgesprekken bekijken en beantwoorden'),
+            'manage_chat' => __('Chat inrichten (agents, kennis, triggers en openingstijden)'),
+        ]);
+
         if (class_exists(\Dashed\DashedMobileApi\MobileApiRegistry::class)) {
             /** @var \Dashed\DashedMobileApi\MobileApiRegistry $mobileApi */
             $mobileApi = $this->app->make(\Dashed\DashedMobileApi\MobileApiRegistry::class);
@@ -181,6 +191,13 @@ class DashedLivechatServiceProvider extends PackageServiceProvider
             $mobileApi->registerCapability('livechat', ['version' => $version]);
 
             $mobileApi->registerAbilities(['chat.read', 'chat.reply', 'chat.takeover', 'chat.manage']);
+
+            // De CMS-rechten achter de chat-abilities. De chatroutes zelf toetsen
+            // daarnaast ChatAccess: buiten de superadmin heeft alleen een actieve
+            // medewerker (ChatAgent) van die site toegang.
+            if (method_exists($mobileApi, 'registerAbilityPermissions')) {
+                $mobileApi->registerAbilityPermissions(\Dashed\DashedLivechat\Support\ChatAccess::PERMISSIONS);
+            }
 
             // Middleware die livechat-toegang per site + per medewerker afdwingt.
             app('router')->aliasMiddleware('chat.ability', \Dashed\DashedLivechat\Http\Middleware\EnsureChatAgentAbility::class);

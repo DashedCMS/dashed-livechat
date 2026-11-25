@@ -25,12 +25,14 @@ use Dashed\DashedLivechat\Models\ChatTrigger;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Schema as DbSchema;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 use Dashed\DashedLivechat\Filament\Resources\ChatTriggerResource\Pages;
 
 class ChatTriggerResource extends Resource
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
 
     protected static ?string $model = ChatTrigger::class;
 

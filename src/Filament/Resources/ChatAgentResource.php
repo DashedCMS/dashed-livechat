@@ -21,12 +21,14 @@ use Dashed\DashedLivechat\Models\ChatAgent;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 use Dashed\DashedLivechat\Filament\Resources\ChatAgentResource\Pages;
 
 class ChatAgentResource extends Resource
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
 
     protected static ?string $model = ChatAgent::class;
 
@@ -65,14 +67,14 @@ class ChatAgentResource extends Resource
                     Select::make('user_id')
                         ->label(__('Gekoppelde gebruiker'))
                         ->options(
-                            User::whereIn('role', ['admin', 'superadmin'])->orderBy('name')->get()
+                            User::panelUsers()->orderBy('name')->get()
                                 ->mapWithKeys(fn ($u) => [$u->id => $u->name ?: ($u->email ?: 'Gebruiker #' . $u->id)])
                                 ->all()
                         )
                         ->searchable()
                         ->visible(fn (Get $get) => $get('type') === 'human')
                         ->required(fn (Get $get) => $get('type') === 'human')
-                        ->helperText(__('De medewerker (admin of superadmin) die deze gesprekken voert. Naam en e-mail komen automatisch van deze gebruiker.')),
+                        ->helperText(__('De medewerker (een beheerder met toegang tot het CMS) die deze gesprekken voert. Naam en e-mail komen automatisch van deze gebruiker.')),
                     TextInput::make('name')
                         ->label(__('Naam'))
                         ->visible(fn (Get $get) => $get('type') === 'ai')

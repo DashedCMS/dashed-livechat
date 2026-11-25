@@ -18,12 +18,14 @@ use Dashed\DashedLivechat\Models\ChatTag;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\ColorPicker;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 use Dashed\DashedLivechat\Filament\Resources\ChatTagResource\Pages;
 
 class ChatTagResource extends Resource
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
 
     protected static ?string $model = ChatTag::class;
 

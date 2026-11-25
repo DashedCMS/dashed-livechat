@@ -4,6 +4,7 @@ namespace Dashed\DashedLivechat\Commands;
 
 use Throwable;
 use Illuminate\Console\Command;
+use Dashed\DashedLivechat\Support\ChatPush;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedLivechat\Models\VisitorSession;
 use Dashed\DashedLivechat\Models\AppNotification;
@@ -66,19 +67,18 @@ class NotifyVisitorCountCommand extends Command
                 'data' => ['visitor_count' => $count, 'cart_total' => $cartTotal],
             ]);
 
-            // Push naar app-gebruikers die het type 'visitors.live' aan hebben staan.
-            // De per-gebruiker-voorkeur (default uit) bepaalt wie 'm krijgt.
-            $center = self::NOTIFICATION_CENTER;
-            if (class_exists($center)) {
+            // Push naar app-gebruikers die het type 'visitors.live' aan hebben staan
+            // (standaard uit) en voor deze site bij de chat mogen (ChatAccess).
+            if (class_exists(self::NOTIFICATION_CENTER)) {
                 try {
-                    app($center)->push()
-                        ->type('visitors.live')
-                        ->site((string) $siteId)
-                        ->title($title)
-                        ->body($body)
-                        ->route('/visitors')
-                        ->data(['type' => 'visitors', 'count' => $count])
-                        ->send();
+                    ChatPush::send(
+                        siteId: (string) $siteId,
+                        type: 'visitors.live',
+                        title: $title,
+                        body: $body,
+                        route: '/visitors',
+                        data: ['type' => 'visitors', 'count' => $count],
+                    );
                     $pushed++;
                 } catch (Throwable $e) {
                     report($e);

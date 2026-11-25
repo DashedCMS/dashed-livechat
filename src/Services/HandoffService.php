@@ -89,17 +89,17 @@ class HandoffService
             ($c->visitor_name ?: 'Een bezoeker') . ' wacht op een medewerker',
         );
 
-        // Push-notificatie naar de app (alleen als de mobile-api geïnstalleerd is).
-        if (class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
-            app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
-                ->type('chat.handoff')
-                ->title(__('Nieuwe chat'))
-                ->body(__(':naam wacht op een medewerker', ['naam' => $c->visitor_name ?: __('Een bezoeker')]))
-                ->route("/conversation/{$c->id}")
-                ->data(['type' => 'conversation', 'id' => $c->id])
-                ->category('chat_handoff')
-                ->send();
-        }
+        // Push-notificatie naar de app (alleen als de mobile-api geïnstalleerd is),
+        // naar precies wie ChatAccess voor deze site toelaat.
+        rescue(fn () => \Dashed\DashedLivechat\Support\ChatPush::send(
+            siteId: (string) $c->site_id,
+            type: 'chat.handoff',
+            title: __('Nieuwe chat'),
+            body: __(':naam wacht op een medewerker', ['naam' => $c->visitor_name ?: __('Een bezoeker')]),
+            route: "/conversation/{$c->id}",
+            data: ['type' => 'conversation', 'id' => $c->id],
+            category: 'chat_handoff',
+        ));
     }
 
     public function takeOver(ChatConversation $c, ChatAgent $humanAgent): void

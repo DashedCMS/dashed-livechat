@@ -15,12 +15,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedLivechat\Models\ChatLearning;
 use Dashed\DashedLivechat\Models\ChatUnansweredQuestion;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 use Dashed\DashedLivechat\Filament\Resources\ChatUnansweredQuestionResource\Pages;
 
 class ChatUnansweredQuestionResource extends Resource
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
 
     protected static ?string $model = ChatUnansweredQuestion::class;
 

@@ -7,11 +7,18 @@ use BackedEnum;
 use Filament\Pages\Page;
 use Dashed\DashedLivechat\Models\VisitorSession;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 
 class VisitorsLivePage extends Page
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
+
+    protected static function requiredChatPermission(): string
+    {
+        return 'view_chat';
+    }
 
     protected static string|UnitEnum|null $navigationGroup = 'Chat';
 

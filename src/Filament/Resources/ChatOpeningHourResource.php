@@ -17,12 +17,14 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TimePicker;
 use Dashed\DashedLivechat\Models\ChatOpeningHour;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 use Dashed\DashedLivechat\Filament\Resources\ChatOpeningHourResource\Pages;
 
 class ChatOpeningHourResource extends Resource
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
 
     protected static ?string $model = ChatOpeningHour::class;
 

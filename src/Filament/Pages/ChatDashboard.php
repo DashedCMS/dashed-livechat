@@ -9,11 +9,18 @@ use Filament\Pages\Page;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedLivechat\Services\ChatAnalyticsService;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 
 class ChatDashboard extends Page
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
+
+    protected static function requiredChatPermission(): string
+    {
+        return 'view_chat';
+    }
 
     protected static string|UnitEnum|null $navigationGroup = 'Chat';
 

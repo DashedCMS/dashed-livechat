@@ -13,6 +13,7 @@ use Dashed\DashedLivechat\Ai\ChatAgentRunner;
 use Dashed\DashedLivechat\Models\ChatConversation;
 use Dashed\DashedLivechat\Services\ConversationManager;
 use Dashed\DashedLivechat\Filament\Concerns\HiddenWhenChatDisabled;
+use Dashed\DashedLivechat\Filament\Concerns\RequiresChatPermission;
 
 /**
  * Sandbox waarin een admin live met een gekozen AI-agent chat, geïsoleerd van
@@ -24,6 +25,7 @@ class ChatAgentPlayground extends Page
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HiddenWhenChatDisabled;
+    use RequiresChatPermission;
 
     protected static string|UnitEnum|null $navigationGroup = 'Chat';
 

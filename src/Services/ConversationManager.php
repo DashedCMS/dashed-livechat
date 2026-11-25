@@ -78,24 +78,22 @@ class ConversationManager
      */
     private function notifyNewVisitorMessage(ChatConversation $c, string $content, array $attachmentIds = []): void
     {
-        $center = '\Dashed\DashedMobileApi\Support\NotificationCenter';
-        if (class_exists($center)) {
-            try {
-                $body = Str::limit(trim($content), 120);
-                if ($body === '') {
-                    $body = ! empty($attachmentIds) ? __('📷 Afbeelding') : __('Nieuw bericht in de chat');
-                }
-                app($center)->push()
-                    ->type('chat.message')
-                    ->site((string) $c->site_id)
-                    ->title($c->visitor_name ?: __('Nieuw chatbericht'))
-                    ->body($body)
-                    ->route("/conversation/{$c->id}")
-                    ->data(['type' => 'conversation', 'id' => $c->id])
-                    ->send();
-            } catch (\Throwable $e) {
-                report($e);
+        try {
+            $body = Str::limit(trim($content), 120);
+            if ($body === '') {
+                $body = ! empty($attachmentIds) ? __('📷 Afbeelding') : __('Nieuw bericht in de chat');
             }
+            // Naar precies wie ChatAccess voor deze site toelaat.
+            \Dashed\DashedLivechat\Support\ChatPush::send(
+                siteId: (string) $c->site_id,
+                type: 'chat.message',
+                title: $c->visitor_name ?: __('Nieuw chatbericht'),
+                body: $body,
+                route: "/conversation/{$c->id}",
+                data: ['type' => 'conversation', 'id' => $c->id],
+            );
+        } catch (\Throwable $e) {
+            report($e);
         }
 
         app(\Dashed\DashedLivechat\Services\WebPushService::class)->notify(
