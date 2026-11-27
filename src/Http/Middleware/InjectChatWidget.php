@@ -12,6 +12,13 @@ use Dashed\DashedLivechat\Services\TriggerMatcher;
 
 class InjectChatWidget
 {
+    /**
+     * Internal response header an app can set to opt a single page out of the
+     * chat widget and the visitor presence script. Value `off` (case-insensitive)
+     * skips injection; the header is removed before the response is returned.
+     */
+    public const SKIP_HEADER = 'X-Dashed-Livechat';
+
     public function __construct(private TriggerMatcher $matcher)
     {
     }
@@ -19,6 +26,12 @@ class InjectChatWidget
     public function handle($request, Closure $next)
     {
         $response = $next($request);
+
+        if (strtolower(trim((string) $response->headers->get(self::SKIP_HEADER))) === 'off') {
+            $response->headers->remove(self::SKIP_HEADER);
+
+            return $response;
+        }
 
         // Alleen geslaagde HTML-responses op de frontend (geen admin/api).
         $contentType = $response->headers->get('Content-Type', '');

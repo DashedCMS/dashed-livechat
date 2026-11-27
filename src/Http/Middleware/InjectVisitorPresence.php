@@ -11,6 +11,12 @@ class InjectVisitorPresence
     {
         $response = $next($request);
 
+        if (strtolower(trim((string) $response->headers->get(InjectChatWidget::SKIP_HEADER))) === 'off') {
+            $response->headers->remove(InjectChatWidget::SKIP_HEADER);
+
+            return $response;
+        }
+
         if (! $this->shouldInject($request, $response)) {
             return $response;
         }

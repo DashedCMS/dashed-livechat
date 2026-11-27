@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.43.0 - 2026-11-27
+
+### Added
+- Een app kan één pagina uit de chatwidget en het bezoekerspresence-script halen door de responseheader `X-Dashed-Livechat: off` te zetten (constante `InjectChatWidget::SKIP_HEADER`, waarde `off`, hoofdletterongevoelig). Beide middlewares injecteren dan niets en verwijderen de header voor ze de response teruggeven.
+
 ## v4.42.0 - 2026-11-25
 
 ### Changed
