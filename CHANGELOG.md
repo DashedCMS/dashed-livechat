@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.43.1
+
+- Fix: the `X-Dashed-Livechat: off` opt-out now works with both middlewares. `InjectVisitorPresence` (inner) removed the header before `InjectChatWidget` (outer) saw it, so the widget was still injected. Neither middleware removes the header any more.
+
 ## v4.43.0 - 2026-11-27
 
 ### Added

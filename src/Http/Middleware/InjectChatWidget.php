@@ -28,8 +28,6 @@ class InjectChatWidget
         $response = $next($request);
 
         if (strtolower(trim((string) $response->headers->get(self::SKIP_HEADER))) === 'off') {
-            $response->headers->remove(self::SKIP_HEADER);
-
             return $response;
         }
 
